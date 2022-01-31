@@ -19,5 +19,14 @@ pub fn main() {
 
   io.println("Appending payment to Google sheets")
 
-  sheets.append_payment(access_token, spreadsheet_id)
+  sheets.append_payment(
+    access_token,
+    spreadsheet_id,
+    sheets.Payment(
+      date: "2022-01-05",
+      counterparty: "Louis",
+      amount: 1000,
+      reference: "From Louis",
+    ),
+  )
 }

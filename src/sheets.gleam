@@ -1,4 +1,5 @@
 import gleam/io
+import gleam/int
 import gleam/http
 import gleam/string
 import gleam/bit_string
@@ -6,6 +7,10 @@ import gleam/hackney
 import gleam/result
 import gleam/dynamic
 import gleam/json as j
+
+pub type Payment {
+  Payment(date: String, counterparty: String, amount: Int, reference: String)
+}
 
 pub type Error {
   HttpError(hackney.Error)
@@ -81,16 +86,27 @@ fn ensure_status(
 pub fn append_payment(
   access_token: String,
   spreadsheet_id: String,
+  payment: Payment,
 ) -> Result(Nil, Error) {
   let json =
-    "{
-    \"range\": \"payments!A:E\",
-    \"majorDimension\": \"ROWS\",
-    \"values\": [
-      [\"Thingy\", \"$15\", \"2\", \"3/15/2016\"],
-      [\"Engine\", \"$100\", \"1\", \"3/20/2016\"],
-    ],
-  }"
+    j.to_string(j.object([
+      #("range", j.string("payments!A:E")),
+      #("majorDimension", j.string("ROWS")),
+      #(
+        "values",
+        j.array(
+          of: j.array(_, j.string),
+          from: [
+            [
+              payment.date,
+              payment.counterparty,
+              int.to_string(payment.amount),
+              payment.reference,
+            ],
+          ],
+        ),
+      ),
+    ]))
 
   let path =
     string.concat([
