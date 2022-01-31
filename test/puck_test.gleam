@@ -1,7 +1,12 @@
-import puck
-import gleam/expect
+import gleeunit
+import gleeunit/should
 
+pub fn main() {
+  gleeunit.main()
+}
+
+// gleeunit test functions end in `_test`
 pub fn hello_world_test() {
-  puck.hello_world()
-  |> expect.equal(_, "Hello, from puck!")
+  1
+  |> should.equal(1)
 }

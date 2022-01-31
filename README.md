@@ -1,17 +1,24 @@
 # puck
 
-A Gleam program
+[![Package Version](https://img.shields.io/hexpm/v/puck)](https://hex.pm/packages/puck)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/puck/)
 
+A Gleam project
 
 ## Quick start
 
 ```sh
-# Build the project
-rebar3 compile
-
-# Run the eunit tests
-rebar3 eunit
-
-# Run the Erlang REPL
-rebar3 shell
+gleam run   # Run the project
+gleam test  # Run the tests
+gleam shell # Run an Erlang shell
 ```
+
+## Installation
+
+If available on Hex this package can be added to your Gleam project:
+
+```sh
+gleam add puck
+```
+
+and its documentation can be found at <https://hexdocs.pm/puck>.

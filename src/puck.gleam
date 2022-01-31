@@ -1,3 +1,5 @@
-pub fn hello_world() {
-  "Hello, from puck!"
+import gleam/io
+
+pub fn main() {
+  io.println("Hello from puck!")
 }
