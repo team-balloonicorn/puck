@@ -1,10 +1,28 @@
 import puck/sheets
-import puck/config
+import puck/config.{Config}
 import gleam/io
+import gleam/erlang
+
+const usage = "USAGE:
+
+  puck test-payment-recording
+"
 
 pub fn main() {
   let config = config.load_from_env_or_crash()
 
+  case erlang.start_arguments() {
+    ["test-payment-recording"] -> test_payment_recording(config)
+    _ -> unknown()
+  }
+}
+
+fn unknown() {
+  io.println(usage)
+  halt(1)
+}
+
+fn test_payment_recording(config: Config) {
   io.println("Appending payment to Google sheets")
 
   assert Ok(_) =
@@ -18,3 +36,6 @@ pub fn main() {
 
   io.println("Done")
 }
+
+external fn halt(Int) -> Nil =
+  "erlang" "halt"
