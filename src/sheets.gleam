@@ -1,5 +1,4 @@
 import gleam/io
-import gleam/int
 import gleam/http
 import gleam/string
 import gleam/bit_string
@@ -94,17 +93,14 @@ pub fn append_payment(
       #("majorDimension", j.string("ROWS")),
       #(
         "values",
-        j.array(
-          of: j.array(_, j.string),
-          from: [
-            [
-              payment.date,
-              payment.counterparty,
-              int.to_string(payment.amount),
-              payment.reference,
-            ],
-          ],
-        ),
+        j.preprocessed_array([
+          j.preprocessed_array([
+            j.string(payment.date),
+            j.string(payment.counterparty),
+            j.int(payment.amount),
+            j.string(payment.reference),
+          ]),
+        ]),
       ),
     ]))
 
