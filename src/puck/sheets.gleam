@@ -1,3 +1,4 @@
+import puck/config.{Config}
 import gleam/io
 import gleam/http
 import gleam/string
@@ -17,19 +18,15 @@ pub type Error {
   UnexpectedHttpStatus(expected: Int, response: http.Response(String))
 }
 
-pub type Credentials {
-  Credentials(client_id: String, client_secret: String, refresh_token: String)
-}
-
-pub fn get_access_token(credentials: Credentials) -> Result(String, Error) {
+pub fn get_access_token(config: Config) -> Result(String, Error) {
   let formdata =
     string.concat([
       "client_id=",
-      credentials.client_id,
+      config.client_id,
       "&client_secret=",
-      credentials.client_secret,
+      config.client_secret,
       "&refresh_token=",
-      credentials.refresh_token,
+      config.refresh_token,
       "&grant_type=refresh_token",
     ])
 
@@ -67,26 +64,9 @@ fn ensure_status(
   }
 }
 
-// https://developers.google.com/sheets/api/samples/writing#append_values
-//
-// PUT https://sheets.googleapis.com/v4/spreadsheets/spreadsheetId/values/Sheet1!A1:D5?valueInputOption=USER_ENTERED
-//
-// ```json
-// {
-//   "range": "Sheet1!A1:E1",
-//   "majorDimension": "ROWS",
-//   "values": [
-//     ["Door", "$15", "2", "3/15/2016"],
-//     ["Engine", "$100", "1", "3/20/2016"],
-//   ],
-// }
-// ```
-//
-pub fn append_payment(
-  access_token: String,
-  spreadsheet_id: String,
-  payment: Payment,
-) -> Result(Nil, Error) {
+pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
+  try access_token = get_access_token(config)
+
   let json =
     j.to_string(j.object([
       #("range", j.string("payments!A:E")),
@@ -107,7 +87,7 @@ pub fn append_payment(
   let path =
     string.concat([
       "/v4/spreadsheets/",
-      spreadsheet_id,
+      config.spreadsheet_id,
       "/values/payments!A:E:append?valueInputOption=USER_ENTERED&access_token=",
       access_token,
     ])
@@ -120,11 +100,10 @@ pub fn append_payment(
     |> http.set_path(path)
     |> http.prepend_req_header("content-type", "application/json")
 
-  assert Ok(response) = hackney.send(request)
-
-  // TODO: check status
-  // TODO: return errors
-  io.println(response.body)
+  try _ =
+    hackney.send(request)
+    |> result.map_error(HttpError)
+    |> result.then(ensure_status(_, is: 200))
 
   Ok(Nil)
 }
