@@ -87,7 +87,7 @@ pub fn append_payment(
     \"range\": \"payments!A:E\",
     \"majorDimension\": \"ROWS\",
     \"values\": [
-      [\"Door\", \"$15\", \"2\", \"3/15/2016\"],
+      [\"Thingy\", \"$15\", \"2\", \"3/15/2016\"],
       [\"Engine\", \"$100\", \"1\", \"3/20/2016\"],
     ],
   }"
@@ -96,13 +96,13 @@ pub fn append_payment(
     string.concat([
       "/v4/spreadsheets/",
       spreadsheet_id,
-      "/values/payments!A:E?valueInputOption=USER_ENTERED&access_token=",
+      "/values/payments!A:E:append?valueInputOption=USER_ENTERED&access_token=",
       access_token,
     ])
 
   let request =
     http.default_req()
-    |> http.set_method(http.Put)
+    |> http.set_method(http.Post)
     |> http.set_req_body(json)
     |> http.set_host("sheets.googleapis.com")
     |> http.set_path(path)
