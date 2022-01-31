@@ -1,6 +1,8 @@
 import puck/config.{Config}
 import gleam/io
 import gleam/http
+import gleam/http/request
+import gleam/http/response.{Response}
 import gleam/string
 import gleam/bit_string
 import gleam/hackney
@@ -15,7 +17,7 @@ pub type Payment {
 pub type Error {
   HttpError(hackney.Error)
   UnexpectedJson(j.DecodeError)
-  UnexpectedHttpStatus(expected: Int, response: http.Response(String))
+  UnexpectedHttpStatus(expected: Int, response: Response(String))
 }
 
 pub fn get_access_token(config: Config) -> Result(String, Error) {
@@ -31,15 +33,15 @@ pub fn get_access_token(config: Config) -> Result(String, Error) {
     ])
 
   let request =
-    http.default_req()
-    |> http.set_method(http.Post)
-    |> http.set_host("oauth2.googleapis.com")
-    |> http.set_path("/token")
-    |> http.prepend_req_header(
+    request.new()
+    |> request.set_method(http.Post)
+    |> request.set_host("oauth2.googleapis.com")
+    |> request.set_path("/token")
+    |> request.prepend_header(
       "content-type",
       "application/x-www-form-urlencoded",
     )
-    |> http.set_req_body(formdata)
+    |> request.set_body(formdata)
 
   try response =
     hackney.send(request)
@@ -55,9 +57,9 @@ pub fn get_access_token(config: Config) -> Result(String, Error) {
 }
 
 fn ensure_status(
-  response: http.Response(String),
+  response: Response(String),
   is code: Int,
-) -> Result(http.Response(String), Error) {
+) -> Result(Response(String), Error) {
   case response.status == code {
     True -> Ok(response)
     False -> Error(UnexpectedHttpStatus(expected: code, response: response))
@@ -93,12 +95,12 @@ pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
     ])
 
   let request =
-    http.default_req()
-    |> http.set_method(http.Post)
-    |> http.set_req_body(json)
-    |> http.set_host("sheets.googleapis.com")
-    |> http.set_path(path)
-    |> http.prepend_req_header("content-type", "application/json")
+    request.new()
+    |> request.set_method(http.Post)
+    |> request.set_body(json)
+    |> request.set_host("sheets.googleapis.com")
+    |> request.set_path(path)
+    |> request.prepend_header("content-type", "application/json")
 
   try _ =
     hackney.send(request)
