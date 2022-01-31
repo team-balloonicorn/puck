@@ -3,8 +3,9 @@
 A magical Gleam web application.
 
 ```sh
-gleam run   # Run the project
-gleam test  # Run the tests
+gleam run server  # Run the server
+gleam test        # Run the tests
+flyctl deploy     # Deploy
 ```
 
 ## Environment variables
