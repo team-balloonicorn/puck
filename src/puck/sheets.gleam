@@ -1,4 +1,5 @@
 import puck/config.{Config}
+import puck/payment.{Payment}
 import gleam/io
 import gleam/http
 import gleam/http/request
@@ -9,10 +10,6 @@ import gleam/hackney
 import gleam/result
 import gleam/dynamic
 import gleam/json as j
-
-pub type Payment {
-  Payment(date: String, counterparty: String, amount: Int, reference: String)
-}
 
 pub type Error {
   HttpError(hackney.Error)
@@ -77,7 +74,7 @@ pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
         "values",
         j.preprocessed_array([
           j.preprocessed_array([
-            j.string(payment.date),
+            j.string(payment.created_at),
             j.string(payment.counterparty),
             j.int(payment.amount),
             j.string(payment.reference),
