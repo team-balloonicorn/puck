@@ -16,6 +16,7 @@ gleam_http = "~> 3.0"
 gleam_json = "~> 0.3"
 gleam_erlang = "~> 0.9"
 gleam_elli = "~> 1.0"
+gleam_bbmustache = "~> 2.0"
 
 [dev-dependencies]
 gleeunit = "~> 0.6"
