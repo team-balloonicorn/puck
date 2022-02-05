@@ -107,11 +107,14 @@ h1 {
   text-align: center;
 }
 
+.heart-rule {
+  text-align: center;
+  margin: var(--space-xxl) 0;
+}
+
 .heart-rule:after {
   content: "❤️🧡💛💚💙💜";
   font-size: 1.5rem;
   display: block;
-  text-align: center;
   min-width: 100%;
-  margin: var(--space-xxl) 0;
 }
