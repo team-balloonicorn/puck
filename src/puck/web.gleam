@@ -31,7 +31,7 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
-    [] -> home(state)
+    ["2022"] -> home(state)
     ["api", "payment", key] -> payments(request, key, state.config)
     _ -> not_found()
   }

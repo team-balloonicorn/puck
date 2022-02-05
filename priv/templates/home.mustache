@@ -1,5 +1,35 @@
 {{> page_header }}
 
-<h1>🦩</h1>
+<div class="content">
+  <div class="flamingo">🦩</div>
+  <h1>Midsummer Night's Tea Party 2022</h1>
+  <p>Welcome, it's good to have you!</p>
+
+  <form class="attendee-form" action="/attendee" method="post">
+    <div class="form-group">
+      <label for="name">Your name</label>
+      <p>
+        What would you like to be called?
+      </p>
+      <input type="text" name="name" id="name" required>
+    </div>
+
+    <div class="form-group">
+      <label for="attended-before">Have you attended before?</label>
+      <label for="attended-before-yes">
+        <input type="radio" name="attended-before" id="attended-before-yes" value="yes" required>
+        Yes
+      </label>
+      <label for="attended-before-no">
+        <input type="radio" name="attended-before" id="attended-before-no" value="no" required>
+        No
+      </label>
+    </div>
+
+    <div class="form-group center">
+      <button type="submit">Let's go!</button>
+    </div>
+  </form>
+</div>
 
 {{> page_footer }}
