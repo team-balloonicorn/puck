@@ -34,6 +34,7 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     ["2022"] -> home(state)
     ["licence"] -> licence(state)
+    ["the-pal-system"] -> pal_system(state)
     ["api", "payment", key] -> payments(request, key, state.config)
     _ -> not_found()
   }
@@ -48,6 +49,13 @@ fn home(state: State) {
 
 fn licence(state: State) {
   let html = state.templates.licence()
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
+}
+
+fn pal_system(state: State) {
+  let html = state.templates.pal_system()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
