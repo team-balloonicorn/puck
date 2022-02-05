@@ -33,6 +33,7 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
 fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     ["2022"] -> home(state)
+    ["licence"] -> licence(state)
     ["api", "payment", key] -> payments(request, key, state.config)
     _ -> not_found()
   }
@@ -40,6 +41,13 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
 
 fn home(state: State) {
   let html = state.templates.home()
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
+}
+
+fn licence(state: State) {
+  let html = state.templates.licence()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
