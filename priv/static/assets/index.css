@@ -1,6 +1,6 @@
 * {
   box-sizing: border-box;
-  font-family: sans-serif;
+  font-family: "Average", sans-serif;
 }
 
 html {
@@ -9,6 +9,7 @@ html {
   --space-xs: calc(var(--space) / 3);
   --space-l: calc(var(--space) * 2);
   --space-xl: calc(var(--space) * 3);
+  --space-xxl: calc(var(--space) * 3);
 
   --pretty-font: "Quintessential", cursive;
 
@@ -18,7 +19,7 @@ html {
 
   background-color: var(--color-faint-pink);
   font-size: 17px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 h1,
@@ -28,10 +29,20 @@ h4,
 h5,
 h6 {
   font-family: var(--pretty-font);
+  margin: var(--space-xl) 0 var(--space) 0;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: normal;
 }
 
 h1 {
   text-align: center;
+  margin-bottom: var(--space-xxl);
 }
 
 .content {
@@ -50,22 +61,24 @@ h1 {
 }
 
 .form-group {
-  margin-bottom: var(--space-l);
+  margin-bottom: var(--space-xl);
 }
 
 .form-group label {
   display: block;
-  margin: var(--space-s) 0;
+  margin: var(--space) 0;
 }
 
 .form-group label:first-of-type {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-family: var(--pretty-font);
 }
 
 .form-group button,
-.form-group input {
+.form-group input,
+.form-group textarea {
+  resize: none;
   border-radius: 7px;
   padding: var(--space);
   margin: var(--space-xs) 0;
@@ -75,22 +88,30 @@ h1 {
   background: var(--color-white);
 }
 
-.form-group input[type=radio] {
+.form-group input[type="radio"] {
   min-width: auto;
   padding-right: var(--space);
 }
 
-.form-group button[type=submit] {
+.form-group button[type="submit"] {
   min-width: auto;
   padding-left: var(--space-xl);
   padding-right: var(--space-xl);
 }
 
-.form-group p:first-of-type,
-.form-group p:last-of-type {
-  margin: var(--space-xs) 0;
+.form-group p {
+  margin: var(--space) 0;
 }
 
 .center {
   text-align: center;
+}
+
+.heart-rule:after {
+  content: "❤️🧡💛💚💙💜";
+  font-size: 1.5rem;
+  display: block;
+  text-align: center;
+  min-width: 100%;
+  margin: var(--space-xxl) 0;
 }

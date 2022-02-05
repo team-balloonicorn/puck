@@ -3,7 +3,50 @@
 <div class="content">
   <div class="flamingo">🦩</div>
   <h1>Midsummer Night's Tea Party 2022</h1>
-  <p>Welcome, it's good to see you!</p>
+  <p>Hello friend! It's good to see you!</p>
+
+  <h2>When is it?</h2>
+  <p>3pm Thursday the 2nd June to 10am Thursday the 6th of June.</p>
+
+  <h2>Where is it?</h2>
+  <p>The same site as usual, 20 minutes drive from King's Lynn in Norfolk.</p>
+
+  <h2>How many people will there be?</h2>
+  <p>At most 100 people will be attending.</p>
+
+  <h2>Will meals be included?</h2>
+  <p>
+    Yes, that's the plan!
+  </p>
+  <p>
+    With COVID and Nest running at the same time we are unsure how many people
+    will be attending. If we don't raise enough money to cover the cost of the
+    site and also food we may need to cancel one or both. In this event we will
+    get in touch to arrange refunds.
+  </p>
+
+  <h2>
+    Can I come?
+  </h2>
+
+  <p>
+    Yes! So long as you or <a href="/the-pal-system" target="_blank">your
+      pal</a> have attended previously.
+  </p>
+  <ol>
+    <li>You submit your details using the form below.
+    <li>We give you a reference number and bank details on the next page.
+    <li>You make a bank transfer to us with these details.
+    <li>We send you an email confirmation and get everything ready.
+    <li>We all have a delightful time in the woods ✨
+  </ol>
+  <p>
+    If you've any questions <a href="mailto:midsummer@lpil.uk">email us</a> and
+    we'll help you out.
+  </p>
+
+  <div class="heart-rule">
+  </div>
 
   <form class="attendee-form" action="/attendee" method="post">
     <div class="form-group">
@@ -12,19 +55,115 @@
     </div>
 
     <div class="form-group">
-      <label for="attended-before">Have you attended before?</label>
-      <label for="attended-before-yes">
-        <input type="radio" name="attended-before" id="attended-before-yes" value="yes" required>
+      <label for="email">What's your email?</label>
+      <p>
+        We will use this to send you an email with additional information closer
+        to the date. Your email will be viewable by the organisers and will not
+        be shared with anyone else.
+      </p>
+      <input type="email" name="email" id="email" required>
+    </div>
+
+    <div class="form-group">
+      <label for="attended">Have you attended before?</label>
+      <label for="attended-yes">
+        <input type="radio" name="attended" id="attended-yes" value="yes" required>
         Yes
       </label>
-      <label for="attended-before-no">
-        <input type="radio" name="attended-before" id="attended-before-no" value="no" required>
+      <label for="attended-no">
+        <input type="radio" name="attended" id="attended-no" value="no" required>
         No
       </label>
     </div>
 
+    <div class="form-group">
+      <label for="pal">What is the name of your PAL?</label>
+      <p>
+        You and your PAL are responsible for each other, and either you are your
+        PAL must have attended Midsummer Night's Teaparty before.
+        <a href="/the-pal-system" target="_blank">
+          Read here for more information on the PAL system here.
+        </a>
+      </p>
+      <input type="text" name="pal" id="pal" required>
+    </div>
+
+    <div class="form-group">
+      <label for="pal-attended">Has your PAL attended before?</label>
+      <label for="pal-attended-yes">
+        <input type="radio" name="pal-attended" id="pal-attended-yes" value="yes" required>
+        Yes
+      </label>
+      <label for="pal-attended-no">
+        <input type="radio" name="pal-attended" id="pal-attended-no" value="no" required>
+        No
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label for="dietary-requirements">Do you have any dietary requirements?</label>
+      <textarea rows=5 name="dietary-requirements" id="dietary-requirements"
+        placeholder="Vegeterian, vegan, dairy free. Allergies to nuts, intolerant to dairy."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="accessibility-requirements">Do you have any accessibility requirements?</label>
+      <p>
+        Please be as detailed about what you need and we will aim to provide it
+        for you as best we can.
+      </p>
+      <textarea rows=5 name="accessibility-requirements" id="accessibility-requirements"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price">How much will you be contributing to event costs?</label>
+
+      <p>
+        We're not a company and this event doesn't make a profit, so please be
+        honest with your tier selection. If you are unable to afford any of
+        these tiers please get in touch with the organisers and we will see how
+        we can help.
+      </p>
+
+      <label for="price-120">
+        <input type="radio" name="price" id="price-120" value="yes" required>
+        £120 - You want to help a less well off person be able to attend 💖
+      </label>
+
+      <label for="price-95">
+        <input type="radio" name="price" id="price-95" value="yes" required>
+        £95 - You are financially comfortable
+      </label>
+
+      <label for="price-80">
+        <input type="radio" name="price" id="price-80" value="yes" required>
+        £80 - You low income, are on living wage etc
+      </label>
+
+      <label for="price-50">
+        <input type="radio" name="price" id="price-50" value="yes" required>
+        £50 - You are unable to find work, etc
+      </label>
+
+      <label for="price-rollover">
+        <input type="radio" name="price" id="price-rollover" value="yes" required>
+        You have a ticket from last year that you'd like to use.
+      </label>
+
+      <p>
+        If you want a refund we will be facilitating sale of tickets to people
+        on our ticket waitlist, up to 1 weeks before the event.
+      </p>
+      <p>
+        If you wish to sell your ticket please get in touch with us and we will
+        handle this for you. Because this event is not open to just anyone, AND
+        there is a waitlist, tickets sold via other means will not be accepted.
+        Thank you.
+      </p>
+    </div>
+
     <div class="form-group center">
-      <button type="submit">Let's go!</button>
+      <button type="submit">Submit!</button>
     </div>
   </form>
 </div>
