@@ -126,3 +126,8 @@ h1 {
   opacity: 0.8;
   text-align: center;
 }
+
+dt {
+  font-weight: bold;
+  margin-bottom: var(--space-s);
+}

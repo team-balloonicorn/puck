@@ -20,7 +20,7 @@ pub type State {
 }
 
 pub fn service(config: Config) -> Service(BitString, BitBuilder) {
-  let state = State(config: config, templates: templates.load())
+  let state = State(config: config, templates: templates.load(config))
 
   router(_, state)
   |> service.map_response_body(bit_builder.from_string)

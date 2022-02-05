@@ -1,3 +1,5 @@
+import puck/config.{Config}
+import gleam/string
 import gleam/bbmustache
 
 pub type Templates {
@@ -8,28 +10,31 @@ pub type Templates {
   )
 }
 
-pub fn load() -> Templates {
+pub fn load(config: Config) -> Templates {
+  let home = load_template("home", config)
+  let licence = load_template("licence", config)
+  let pal_system = load_template("pal_system", config)
   Templates(
-    home: load_home(),
-    licence: load_licence(),
-    pal_system: load_pal_system(),
+    home: fn() { home([]) },
+    licence: fn() { licence([]) },
+    pal_system: fn() { pal_system([]) },
   )
 }
 
-fn load_pal_system() {
-  assert Ok(pal_system_template) =
-    bbmustache.compile_file("priv/templates/the_pal_system.mustache")
-  fn() { bbmustache.render(pal_system_template, []) }
-}
+fn load_template(
+  name: String,
+  config: Config,
+) -> fn(List(#(String, bbmustache.Argument))) -> String {
+  let path = string.concat(["priv/templates/", name, ".mustache"])
 
-fn load_home() {
-  assert Ok(home_template) =
-    bbmustache.compile_file("priv/templates/home.mustache")
-  fn() { bbmustache.render(home_template, []) }
-}
-
-fn load_licence() {
-  assert Ok(licence_template) =
-    bbmustache.compile_file("priv/templates/licence.mustache")
-  fn() { bbmustache.render(licence_template, []) }
+  case config.reload_templates {
+    True -> fn(arguments) {
+      assert Ok(template) = bbmustache.compile_file(path)
+      bbmustache.render(template, arguments)
+    }
+    False -> {
+      assert Ok(template) = bbmustache.compile_file(path)
+      fn(arguments) { bbmustache.render(template, arguments) }
+    }
+  }
 }
