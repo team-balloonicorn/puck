@@ -64,6 +64,7 @@ h1 {
   font-family: var(--pretty-font);
 }
 
+.form-group button,
 .form-group input {
   border-radius: 7px;
   padding: var(--space);
@@ -79,7 +80,7 @@ h1 {
   padding-right: var(--space);
 }
 
-.form-group input[type=button] {
+.form-group button[type=submit] {
   min-width: auto;
   padding-left: var(--space-xl);
   padding-right: var(--space-xl);
