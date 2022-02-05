@@ -23,11 +23,11 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
   let state = State(config: config, templates: templates.load())
 
   router(_, state)
-  |> service.prepend_response_header("made-with", "Gleam")
-  |> service.prepend_response_header("x-robots-tag", "noindex")
   |> service.map_response_body(bit_builder.from_string)
   |> logger.middleware
   |> static.middleware()
+  |> service.prepend_response_header("made-with", "Gleam")
+  |> service.prepend_response_header("x-robots-tag", "noindex")
 }
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
