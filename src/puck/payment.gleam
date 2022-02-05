@@ -16,7 +16,13 @@ pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
     dynamic.decode4(
       Payment,
       field("data", field("created", string)),
-      field("data", field("counterparty", field("name", string))),
+      field(
+        "data",
+        dynamic.any([
+          field("counterparty", field("name", string)),
+          field("merchant", field("name", string)),
+        ]),
+      ),
       field("data", field("amount", int)),
       field(
         "data",
