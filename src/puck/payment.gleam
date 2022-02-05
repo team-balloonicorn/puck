@@ -11,7 +11,7 @@ pub type Payment {
   )
 }
 
-pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
+pub fn from_json(json: BitString) -> Result(Payment, json.DecodeError) {
   let decoder =
     dynamic.decode4(
       Payment,
@@ -30,5 +30,5 @@ pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
       ),
     )
 
-  json.decode(from: json, using: decoder)
+  json.decode_bits(from: json, using: decoder)
 }

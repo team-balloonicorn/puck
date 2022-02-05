@@ -12,6 +12,7 @@ import gleam/erlang/file
 import gleam/bit_string
 import gleam/result
 import gleam/string
+import gleam/json
 import gleam/io
 
 pub type State {
@@ -48,19 +49,49 @@ fn not_found() {
   |> response.set_body("There's nothing here...")
 }
 
-// TODO: nicer error handling
+type WebError {
+  UnexpectedJson(json.DecodeError)
+  SaveFailed(sheets.Error)
+}
+
 // TODO: verify key
 // TODO: tests
 fn payments(request: Request(BitString), _key: String, config: Config) {
-  {
-    try json = bit_string.to_string(request.body)
-    try payment =
-      payment.from_json(json)
-      |> result.nil_error
-    payment
-    |> sheets.append_payment(config)
-    |> result.map(fn(_) { response.new(200) })
-    |> result.nil_error
+  payment.from_json(request.body)
+  |> result.map_error(UnexpectedJson)
+  |> result.then(fn(payment) {
+    try _ =
+      payment
+      |> sheets.append_payment(config)
+      |> result.map_error(SaveFailed)
+    Ok(response.new(200))
+  })
+  |> result.map_error(io.debug)
+  |> result.map_error(error_to_response(_, request))
+  |> unwrap_both
+}
+
+fn unwrap_both(result: Result(a, a)) -> a {
+  case result {
+    Ok(value) -> value
+    Error(value) -> value
   }
-  |> result.unwrap(response.new(400))
+}
+
+fn error_to_response(
+  error: WebError,
+  request: Request(BitString),
+) -> Response(String) {
+  case error {
+    UnexpectedJson(_) -> {
+      request.body
+      |> bit_string.to_string
+      |> result.unwrap("")
+      |> string.append("ERROR: Unexpected JSON: ", _)
+      |> io.println
+      response.new(400)
+    }
+
+    SaveFailed(_) -> response.new(500)
+  }
 }

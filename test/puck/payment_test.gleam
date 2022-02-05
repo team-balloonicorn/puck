@@ -1,4 +1,5 @@
 import gleeunit/should
+import gleam/bit_string
 import puck/payment.{Payment}
 
 pub fn from_json_transfer_test() {
@@ -53,6 +54,7 @@ pub fn from_json_transfer_test() {
     \"parent_account_id\": \"\"
   }
 }"
+  |> bit_string.from_string
   |> payment.from_json
   |> should.equal(Ok(Payment(
     created_at: "2022-02-01T20:47:19.022Z",
@@ -95,6 +97,7 @@ pub fn from_json_purchase_test() {
         }
     }
 }"
+  |> bit_string.from_string
   |> payment.from_json
   |> should.equal(Ok(Payment(
     created_at: "2015-09-04T14:28:40Z",
