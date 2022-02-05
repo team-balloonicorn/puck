@@ -17,6 +17,7 @@ gleam_json = "~> 0.4"
 gleam_erlang = "~> 0.9"
 gleam_elli = "~> 1.0"
 gleam_bbmustache = "~> 2.0"
+gleam_otp = "~> 0.3"
 
 [dev-dependencies]
 gleeunit = "~> 0.6"

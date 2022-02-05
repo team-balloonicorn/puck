@@ -9,7 +9,10 @@ import gleam/bit_string
 import gleam/hackney
 import gleam/result
 import gleam/dynamic
+import gleam/option
 import gleam/json as j
+import gleam/otp/actor
+import gleam/otp/process
 
 pub type Error {
   HttpError(hackney.Error)
@@ -105,4 +108,45 @@ pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
     |> result.then(ensure_status(_, is: 200))
 
   Ok(Nil)
+}
+
+type RefresherState {
+  RefresherState(config: Config, sender: process.Sender(Nil))
+}
+
+pub fn start_refresher(config: Config) -> Result(Nil, Nil) {
+  actor.start_spec(actor.Spec(
+    init: fn() { refresher_init(config) },
+    init_timeout: 500,
+    loop: refresher_loop,
+  ))
+  |> result.nil_error
+  |> result.map(fn(_) { Nil })
+}
+
+fn refresher_init(config: Config) -> actor.InitResult(RefresherState, Nil) {
+  let #(sender, receiver) = process.new_channel()
+  let state = RefresherState(sender: sender, config: config)
+  process.send_after(state.sender, 1000, Nil)
+  actor.Ready(state, option.Some(receiver))
+}
+
+fn refresher_loop(
+  _message: Nil,
+  state: RefresherState,
+) -> actor.Next(RefresherState) {
+  io.println("Periodically refreshing Google Sheets OAuth token")
+  let sleep_period = case get_access_token(state.config) {
+    Ok(_) -> {
+      io.println("Token refreshed successfully")
+      1000 * 60 * 60 * 24
+    }
+    Error(error) -> {
+      io.println("Token refresh failed")
+      io.debug(error)
+      1000 * 60 * 60
+    }
+  }
+  process.send_after(state.sender, sleep_period, Nil)
+  actor.Continue(state)
 }

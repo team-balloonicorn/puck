@@ -25,6 +25,9 @@ fn unknown() {
 }
 
 fn server(config: Config) {
+  // Refreshing the Google Sheets access token in the background
+  assert Ok(_) = sheets.start_refresher(config)
+
   // Start the web server process
   assert Ok(_) = elli.start(web.service(config), on_port: 3000)
   io.println("Started listening on localhost:3000 ✨")
