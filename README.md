@@ -16,3 +16,6 @@ flyctl deploy     # Deploy
 - `CLIENT_SECRET`: GCP oauth2 client secret.
 - `REFRESH_TOKEN`: GCP oauth2 refresh token. See `bin/gcp-oauth-dance` for help
   generating one.
+
+Be sure to put the GCP application into production mode to ensure refresh tokens
+do not expire. Application verification is not required.
