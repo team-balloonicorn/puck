@@ -4,6 +4,7 @@ import puck/config.{Config}
 import puck/web/logger
 import puck/web/static
 import puck/web/templates.{Templates}
+import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/http/service.{Service}
@@ -32,7 +33,7 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
-    ["2022"] -> attendance(state)
+    ["2022"] -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
     ["api", "payment", key] -> payments(request, key, state.config)
@@ -42,12 +43,29 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
   |> unwrap_both
 }
 
-fn attendance(state: State) {
+fn attendance(request: Request(BitString), state: State) {
+  case request.method {
+    http.Get -> attendance_form(state)
+    http.Post -> register_attendance(request, state)
+    _ -> Error(HttpMethodNotAllowed)
+  }
+}
+
+fn attendance_form(state: State) {
   let html = state.templates.home()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
   |> Ok
+}
+
+fn register_attendance(request: Request(BitString), state: State) {
+  // TODO: Generate reference code
+  // TODO: Extract parameters
+  // TODO: Validate (re-rendering the form if it fails)
+  // TODO: Save to sheets
+  // TODO: Present (and email?) transfer information to the user
+  todo
 }
 
 fn licence(state: State) {
@@ -75,6 +93,7 @@ fn not_found() {
 type WebError {
   UnexpectedJson(json.DecodeError)
   SaveFailed(sheets.Error)
+  HttpMethodNotAllowed
 }
 
 // TODO: verify key
@@ -102,6 +121,8 @@ fn error_to_response(
   request: Request(BitString),
 ) -> Response(String) {
   case error {
+    HttpMethodNotAllowed -> response.new(405)
+
     UnexpectedJson(_) -> {
       request.body
       |> bit_string.to_string
