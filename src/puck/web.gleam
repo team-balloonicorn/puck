@@ -25,26 +25,29 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
   router(_, state)
   |> service.map_response_body(bit_builder.from_string)
   |> logger.middleware
-  |> static.middleware()
+  |> static.middleware
   |> service.prepend_response_header("made-with", "Gleam")
   |> service.prepend_response_header("x-robots-tag", "noindex")
 }
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
-    ["2022"] -> home(state)
+    ["2022"] -> attendance(state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
     ["api", "payment", key] -> payments(request, key, state.config)
     _ -> not_found()
   }
+  |> result.map_error(error_to_response(_, request))
+  |> unwrap_both
 }
 
-fn home(state: State) {
+fn attendance(state: State) {
   let html = state.templates.home()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+  |> Ok
 }
 
 fn licence(state: State) {
@@ -52,6 +55,7 @@ fn licence(state: State) {
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+  |> Ok
 }
 
 fn pal_system(state: State) {
@@ -59,11 +63,13 @@ fn pal_system(state: State) {
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+  |> Ok
 }
 
 fn not_found() {
   response.new(404)
   |> response.set_body("There's nothing here...")
+  |> Ok
 }
 
 type WebError {
@@ -74,18 +80,14 @@ type WebError {
 // TODO: verify key
 // TODO: tests
 fn payments(request: Request(BitString), _key: String, config: Config) {
-  payment.from_json(request.body)
-  |> result.map_error(UnexpectedJson)
-  |> result.then(fn(payment) {
-    try _ =
-      payment
-      |> sheets.append_payment(config)
-      |> result.map_error(SaveFailed)
-    Ok(response.new(200))
-  })
-  |> result.map_error(io.debug)
-  |> result.map_error(error_to_response(_, request))
-  |> unwrap_both
+  try payment =
+    payment.from_json(request.body)
+    |> result.map_error(UnexpectedJson)
+  try _ =
+    payment
+    |> sheets.append_payment(config)
+    |> result.map_error(SaveFailed)
+  Ok(response.new(200))
 }
 
 fn unwrap_both(result: Result(a, a)) -> a {
@@ -109,6 +111,10 @@ fn error_to_response(
       response.new(400)
     }
 
-    SaveFailed(_) -> response.new(500)
+    SaveFailed(error) -> {
+      io.print("ERROR: Save failed: ")
+      io.debug(error)
+      response.new(500)
+    }
   }
 }
