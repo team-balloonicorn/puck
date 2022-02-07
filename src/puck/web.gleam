@@ -1,4 +1,5 @@
 import puck/payment
+import puck/attendee
 import puck/sheets
 import puck/config.{Config}
 import puck/web/logger
@@ -14,6 +15,7 @@ import gleam/bit_string
 import gleam/result
 import gleam/string
 import gleam/json
+import gleam/uri
 import gleam/io
 
 pub type State {
@@ -60,6 +62,13 @@ fn attendance_form(state: State) {
 }
 
 fn register_attendance(request: Request(BitString), state: State) {
+  try params =
+    form_urlencoded_body(request)
+    |> io.debug
+  try attendee =
+    attendee.from_query(params)
+    |> result.replace_error(InvalidParameters)
+    |> io.debug
   // TODO: Generate reference code
   // TODO: Extract parameters
   // TODO: Validate (re-rendering the form if it fails)
@@ -90,10 +99,13 @@ fn not_found() {
   |> Ok
 }
 
-type WebError {
+type Error {
   UnexpectedJson(json.DecodeError)
   SaveFailed(sheets.Error)
   HttpMethodNotAllowed
+  InvalidParameters
+  InvalidFormUrlencoded
+  InvalidUtf8
 }
 
 // TODO: verify key
@@ -117,11 +129,13 @@ fn unwrap_both(result: Result(a, a)) -> a {
 }
 
 fn error_to_response(
-  error: WebError,
+  error: Error,
   request: Request(BitString),
 ) -> Response(String) {
   case error {
     HttpMethodNotAllowed -> response.new(405)
+    InvalidUtf8 | InvalidFormUrlencoded -> response.new(400)
+    InvalidParameters -> response.new(422)
 
     UnexpectedJson(_) -> {
       request.body
@@ -138,4 +152,14 @@ fn error_to_response(
       response.new(500)
     }
   }
+}
+
+fn form_urlencoded_body(
+  request: Request(BitString),
+) -> Result(List(#(String, String)), Error) {
+  try body =
+    bit_string.to_string(request.body)
+    |> result.replace_error(InvalidUtf8)
+  uri.parse_query(body)
+  |> result.replace_error(InvalidFormUrlencoded)
 }
