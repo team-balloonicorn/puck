@@ -139,12 +139,12 @@ fn refresher_loop(
   let sleep_period = case get_access_token(state.config) {
     Ok(_) -> {
       io.println("Token refreshed successfully")
-      1000 * 60 * 60 * 24
+      1000 * 60 * 60 * 3
     }
     Error(error) -> {
       io.println("Token refresh failed")
       io.debug(error)
-      1000 * 60 * 60
+      1000 * 60 * 10
     }
   }
   process.send_after(state.sender, sleep_period, Nil)
