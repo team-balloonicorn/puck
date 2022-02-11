@@ -16,7 +16,7 @@ pub fn middleware(service: Service(a, BitBuilder)) -> Service(a, BitBuilder) {
         response.new(500)
         |> response.prepend_header("content-type", "text/html")
         |> response.set_body(bit_builder.from_string(
-          "<h1>Internal server error</h1><p>Sorry! Please try again later</p>",
+          "<h1>Internal server error</h1><p>Sorry! Please try again in an hour or so to give us time to fix this.</p>",
         ))
       }
     }
