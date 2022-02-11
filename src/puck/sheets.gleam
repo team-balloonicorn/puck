@@ -11,7 +11,7 @@ import gleam/hackney
 import gleam/result
 import gleam/dynamic
 import gleam/option
-import gleam/json as j
+import gleam/json.{Json} as j
 import gleam/otp/actor
 import gleam/otp/process
 
@@ -67,36 +67,18 @@ fn ensure_status(
   }
 }
 
-pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error) {
+fn append_row(
+  sheet: String,
+  row: List(Json),
+  config: Config,
+) -> Result(Nil, Error) {
   try access_token = get_access_token(config)
 
   let json =
     j.to_string(j.object([
-      #("range", j.string("attendees!A:A")),
+      #("range", j.string(string.append(sheet, "!A:A"))),
       #("majorDimension", j.string("ROWS")),
-      #(
-        "values",
-        j.preprocessed_array([
-          j.preprocessed_array([
-            j.string(attendee.reference),
-            j.string(timestamp()),
-            j.string(attendee.name),
-            j.string(attendee.email),
-            j.string(attendee.pal),
-            j.bool(attendee.attended),
-            j.bool(attendee.pal_attended),
-            j.string(case attendee.contribution {
-              attendee.RolloverTicket -> "Rollover ticket"
-              attendee.Contribute120 -> "120"
-              attendee.Contribute95 -> "95"
-              attendee.Contribute80 -> "80"
-              attendee.Contribute50 -> "50"
-            }),
-            j.string(attendee.diet),
-            j.string(attendee.accessibility),
-          ]),
-        ]),
-      ),
+      #("values", j.preprocessed_array([j.preprocessed_array(row)])),
     ]))
 
   let path =
@@ -123,48 +105,37 @@ pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error)
   Ok(Nil)
 }
 
+pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error) {
+  let row = [
+    j.string(attendee.reference),
+    j.string(timestamp()),
+    j.string(attendee.name),
+    j.string(attendee.email),
+    j.string(attendee.pal),
+    j.bool(attendee.attended),
+    j.bool(attendee.pal_attended),
+    j.string(case attendee.contribution {
+      attendee.RolloverTicket -> "Rollover ticket"
+      attendee.Contribute120 -> "120"
+      attendee.Contribute95 -> "95"
+      attendee.Contribute80 -> "80"
+      attendee.Contribute50 -> "50"
+    }),
+    j.string(attendee.diet),
+    j.string(attendee.accessibility),
+  ]
+  append_row("attendees", row, config)
+}
+
 pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
-  try access_token = get_access_token(config)
+  let row = [
+    j.string(payment.created_at),
+    j.string(payment.counterparty),
+    j.int(payment.amount),
+    j.string(payment.reference),
+  ]
 
-  let json =
-    j.to_string(j.object([
-      #("range", j.string("payments!A:E")),
-      #("majorDimension", j.string("ROWS")),
-      #(
-        "values",
-        j.preprocessed_array([
-          j.preprocessed_array([
-            j.string(payment.created_at),
-            j.string(payment.counterparty),
-            j.int(payment.amount),
-            j.string(payment.reference),
-          ]),
-        ]),
-      ),
-    ]))
-
-  let path =
-    string.concat([
-      "/v4/spreadsheets/",
-      config.spreadsheet_id,
-      "/values/payments!A:E:append?valueInputOption=USER_ENTERED&access_token=",
-      access_token,
-    ])
-
-  let request =
-    request.new()
-    |> request.set_method(http.Post)
-    |> request.set_body(json)
-    |> request.set_host("sheets.googleapis.com")
-    |> request.set_path(path)
-    |> request.prepend_header("content-type", "application/json")
-
-  try _ =
-    hackney.send(request)
-    |> result.map_error(HttpError)
-    |> result.then(ensure_status(_, is: 200))
-
-  Ok(Nil)
+  append_row("payments", row, config)
 }
 
 type RefresherState {
