@@ -1,6 +1,11 @@
 import gleam/list
 import gleam/string
 import gleam/result
+import gleam/crypto
+import gleam/string
+import gleam/bit_string
+import gleam/base
+import gleam/result
 
 pub type Attendee {
   Attendee(
@@ -47,9 +52,6 @@ pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
     list.key_find(query, "contribution")
     |> result.then(contribution_from_string)
 
-  // TODO: generate reference
-  let reference = "123"
-
   Ok(Attendee(
     name: name,
     email: email,
@@ -59,8 +61,32 @@ pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
     diet: diet,
     accessibility: accessibility,
     contribution: contribution,
-    reference: reference,
+    reference: generate_reference(),
   ))
+}
+
+pub fn generate_reference() -> String {
+  // Generate random string
+  crypto.strong_random_bytes(50)
+  |> base.url_encode64(False)
+  // Remove ambiguous characters
+  |> string.replace("o", "")
+  |> string.replace("O", "")
+  |> string.replace("0", "")
+  |> string.replace("l", "")
+  |> string.replace("L", "")
+  |> string.replace("1", "")
+  |> string.replace("i", "")
+  |> string.replace("_", "")
+  |> string.replace("-", "")
+  // Slice it down to a desired size
+  |> bit_string.from_string
+  |> bit_string.slice(0, 10)
+  // Convert it back to a string. This should never fail.
+  |> result.then(bit_string.to_string)
+  |> result.map(string.append("m-", _))
+  // Try again it if fails. It never should.
+  |> result.lazy_unwrap(fn() { generate_reference() })
 }
 
 fn radio_button(
