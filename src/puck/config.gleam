@@ -8,11 +8,13 @@ pub type Config {
     client_secret: String,
     refresh_token: String,
     spreadsheet_id: String,
-    // Payment webhook secret
+    /// Payment webhook secret
     payment_secret: String,
+    /// Secret route to sign up
+    attend_secret: String,
     /// Whether to recompile templates on each request
     reload_templates: Bool,
-    // Email config
+    /// Email config
     smtp_host: String,
     smtp_name: String,
     smtp_username: String,
@@ -30,6 +32,7 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(client_secret) = os.get_env("CLIENT_SECRET")
   assert Ok(refresh_token) = os.get_env("REFRESH_TOKEN")
   assert Ok(payment_secret) = os.get_env("PAYMENT_SECRET")
+  assert Ok(attend_secret) = os.get_env("ATTEND_SECRET")
   assert Ok(smtp_host) = os.get_env("SMTP_HOST")
   assert Ok(smtp_name) = os.get_env("SMTP_NAME")
   assert Ok(smtp_username) = os.get_env("SMTP_USERNAME")
@@ -38,7 +41,7 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(smtp_port) = int.parse(smtp_port)
   assert Ok(smtp_from_email) = os.get_env("SMTP_FROM_EMAIL")
   assert Ok(smtp_from_name) = os.get_env("SMTP_FROM_NAME")
-  let reload_templates = os.get_env("PAYMENT_SECRET") != Error(Nil)
+  let reload_templates = os.get_env("RELOAD_TEMPLATES") != Error(Nil)
 
   Config(
     environment: environment,
@@ -46,6 +49,7 @@ pub fn load_from_env_or_crash() -> Config {
     client_id: client_id,
     client_secret: client_secret,
     refresh_token: refresh_token,
+    attend_secret: attend_secret,
     payment_secret: payment_secret,
     reload_templates: reload_templates,
     smtp_host: smtp_host,

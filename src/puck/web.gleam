@@ -34,11 +34,14 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
 }
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
+  let pay = state.config.payment_secret
+  let attend = state.config.attend_secret
+
   case request.path_segments(request) {
-    ["2022"] -> attendance(request, state)
+    [key] if key == attend -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
-    ["api", "payment", key] -> payments(request, key, state.config)
+    ["api", "payment", key] if key == pay -> payments(request, state.config)
     _ -> not_found()
   }
   |> result.map_error(error_to_response(_, request))
@@ -110,7 +113,7 @@ type Error {
 
 // TODO: verify key
 // TODO: tests
-fn payments(request: Request(BitString), _key: String, config: Config) {
+fn payments(request: Request(BitString), config: Config) {
   try payment =
     payment.from_json(request.body)
     |> result.map_error(UnexpectedJson)
