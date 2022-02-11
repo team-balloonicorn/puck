@@ -73,8 +73,10 @@ fn register_attendance(request: Request(BitString), state: State) {
     |> result.replace_error(InvalidParameters)
   assert Ok(_) = sheets.append_attendee(attendee, state.config)
 
-  // TODO: Present (and email?) transfer information to the user
+  let html = state.templates.submitted()
   response.new(201)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
   |> Ok
 }
 
