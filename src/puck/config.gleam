@@ -4,6 +4,8 @@ import gleam/int
 pub type Config {
   Config(
     environment: String,
+    help_email: String,
+    // Google sheets
     client_id: String,
     client_secret: String,
     refresh_token: String,
@@ -22,6 +24,10 @@ pub type Config {
     smtp_port: Int,
     smtp_from_email: String,
     smtp_from_name: String,
+    // Account details
+    account_name: String,
+    account_number: String,
+    sort_code: String,
   )
 }
 
@@ -41,6 +47,10 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(smtp_port) = int.parse(smtp_port)
   assert Ok(smtp_from_email) = os.get_env("SMTP_FROM_EMAIL")
   assert Ok(smtp_from_name) = os.get_env("SMTP_FROM_NAME")
+  assert Ok(account_name) = os.get_env("ACCOUNT_NAME")
+  assert Ok(account_number) = os.get_env("ACCOUNT_NUMBER")
+  assert Ok(sort_code) = os.get_env("SORT_CODE")
+  assert Ok(help_email) = os.get_env("HELP_EMAIL")
   let reload_templates = os.get_env("RELOAD_TEMPLATES") != Error(Nil)
 
   Config(
@@ -59,5 +69,9 @@ pub fn load_from_env_or_crash() -> Config {
     smtp_port: smtp_port,
     smtp_from_email: smtp_from_email,
     smtp_from_name: smtp_from_name,
+    account_name: account_name,
+    account_number: account_number,
+    sort_code: sort_code,
+    help_email: help_email,
   )
 }

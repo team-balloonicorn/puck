@@ -76,12 +76,10 @@ fn register_attendance(request: Request(BitString), state: State) {
 
   let html =
     state.templates.submitted(templates.Submitted(
-      // TODO
-      account_name: "account_name",
-      // TODO
-      account_number: "accouenwkj",
-      // TODO
-      sort_code: "sorfff",
+      help_email: state.config.help_email,
+      account_name: state.config.account_name,
+      account_number: state.config.account_number,
+      sort_code: state.config.sort_code,
       reference: attendee.reference,
       amount: attendee.contribtion_amount(attendee),
     ))

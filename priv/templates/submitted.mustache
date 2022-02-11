@@ -14,23 +14,23 @@
   <table>
     <tr>
       <td>Name:</td>
-      <td>{{account_name}}</td>
+      <td class="monospace">{{account_name}}</td>
     </tr>
     <tr>
-      <td>Account number:</td>
-      <td>{{account_number}}</td>
+      <td>Account no:</td>
+      <td class="monospace">{{account_number}}</td>
     </tr>
     <tr>
       <td>Sort code:</td>
-      <td>{{sort_code}}</td>
+      <td class="monospace">{{sort_code}}</td>
     </tr>
     <tr>
       <td>Reference:</td>
-      <td>{{reference}}</td>
+      <td class="monospace">{{reference}}</td>
     </tr>
     <tr>
       <td>Amount:</td>
-      <td>£{{amount}}</td>
+      <td class="monospace">£{{amount}}</td>
     </tr>
   </table>
 
@@ -47,6 +47,9 @@
   </p>
   {{/rollover}}
 
+  <p>
+    If you have any questions or problems please email us at
+    <a href="mailto:{{help_email}}">{{help_email}}</a>.
   </p>
 </main>
 

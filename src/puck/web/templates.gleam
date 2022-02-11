@@ -14,6 +14,7 @@ pub type Templates {
 
 pub type Submitted {
   Submitted(
+    help_email: String,
     account_name: String,
     account_number: String,
     sort_code: String,
@@ -40,6 +41,7 @@ fn submitted_template(
   template: fn(List(#(String, bbmustache.Argument))) -> String,
 ) -> String {
   template([
+    #("help_email", bbmustache.string(data.help_email)),
     #("account_name", bbmustache.string(data.account_name)),
     #("account_number", bbmustache.string(data.account_number)),
     #("sort_code", bbmustache.string(data.sort_code)),
