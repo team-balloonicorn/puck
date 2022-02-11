@@ -2,7 +2,8 @@ import puck/payment
 import puck/attendee
 import puck/sheets
 import puck/config.{Config}
-import puck/web/logger
+import puck/web/print_requests
+import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates.{Templates}
 import gleam/http
@@ -27,10 +28,11 @@ pub fn service(config: Config) -> Service(BitString, BitBuilder) {
 
   router(_, state)
   |> service.map_response_body(bit_builder.from_string)
-  |> logger.middleware
+  |> print_requests.middleware
   |> static.middleware
   |> service.prepend_response_header("made-with", "Gleam")
   |> service.prepend_response_header("x-robots-tag", "noindex")
+  |> rescue_errors.middleware
 }
 
 fn router(request: Request(BitString), state: State) -> Response(String) {

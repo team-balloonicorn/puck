@@ -9,7 +9,8 @@ WORKDIR /app/
 COPY . ./
 
 # Compile the Gleam application
-RUN gleam build
+RUN gleam build && \
+  cp build/packages/ranch/ebin/ranch.app build/dev/erlang/ranch/ebin/ranch.app
 
 # Run the application
 CMD ["gleam", "run", "server"]
