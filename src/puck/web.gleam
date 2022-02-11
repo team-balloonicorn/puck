@@ -61,11 +61,11 @@ fn attendance_form(state: State) {
   |> Ok
 }
 
-fn register_attendance(request: Request(BitString), state: State) {
+fn register_attendance(request: Request(BitString), _state: State) {
   try params =
     form_urlencoded_body(request)
     |> io.debug
-  try attendee =
+  try _attendee =
     attendee.from_query(params)
     |> result.replace_error(InvalidParameters)
     |> io.debug

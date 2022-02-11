@@ -4,6 +4,7 @@ import puck/config.{Config}
 import gleam/io
 import gleam/erlang
 import gleam/http/elli
+import gleam/gen_smtp
 
 const usage = "USAGE:
 
@@ -15,6 +16,7 @@ pub fn main() {
 
   case erlang.start_arguments() {
     ["server"] -> server(config)
+    ["email"] -> email(config)
     _ -> unknown()
   }
 }
@@ -38,3 +40,28 @@ fn server(config: Config) {
 
 external fn halt(Int) -> Nil =
   "erlang" "halt"
+
+fn email(config: Config) {
+  let options =
+    gen_smtp.Options(
+      relay: config.smtp_host,
+      port: config.smtp_port,
+      username: config.smtp_username,
+      password: config.smtp_password,
+      auth: gen_smtp.Always,
+      ssl: True,
+      retries: 2,
+    )
+
+  let email =
+    gen_smtp.Email(
+      from_email: config.smtp_from_email,
+      from_name: config.smtp_from_name,
+      to: ["louispilfold@gmail.com"],
+      subject: "Hello, Joe!",
+      content: "System still-still working?",
+    )
+
+  assert Ok(_) = gen_smtp.send(email, options)
+  Nil
+}
