@@ -60,7 +60,7 @@ fn attendance(request: Request(BitString), state: State) {
 }
 
 fn attendance_form(state: State) {
-  let html = state.templates.home()
+  let html = state.templates.home(state.config.help_email)
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)

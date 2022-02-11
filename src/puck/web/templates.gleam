@@ -1,11 +1,11 @@
 import gleam/option.{None, Option, Some}
 import puck/config.{Config}
 import gleam/string
-import gleam/bbmustache
+import gleam/bbmustache as bbm
 
 pub type Templates {
   Templates(
-    home: fn() -> String,
+    home: fn(String) -> String,
     licence: fn() -> String,
     pal_system: fn() -> String,
     submitted: fn(Submitted) -> String,
@@ -29,7 +29,7 @@ pub fn load(config: Config) -> Templates {
   let pal_system = load_template("pal_system", config)
   let submitted = load_template("submitted", config)
   Templates(
-    home: fn() { home([]) },
+    home: fn(email) { home([#("help_email", bbm.string(email))]) },
     licence: fn() { licence([]) },
     pal_system: fn() { pal_system([]) },
     submitted: submitted_template(_, submitted),
@@ -38,18 +38,18 @@ pub fn load(config: Config) -> Templates {
 
 fn submitted_template(
   data: Submitted,
-  template: fn(List(#(String, bbmustache.Argument))) -> String,
+  template: fn(List(#(String, bbm.Argument))) -> String,
 ) -> String {
   template([
-    #("help_email", bbmustache.string(data.help_email)),
-    #("account_name", bbmustache.string(data.account_name)),
-    #("account_number", bbmustache.string(data.account_number)),
-    #("sort_code", bbmustache.string(data.sort_code)),
-    #("reference", bbmustache.string(data.reference)),
-    #("amount", bbmustache.int(option.unwrap(data.amount, 0))),
+    #("help_email", bbm.string(data.help_email)),
+    #("account_name", bbm.string(data.account_name)),
+    #("account_number", bbm.string(data.account_number)),
+    #("sort_code", bbm.string(data.sort_code)),
+    #("reference", bbm.string(data.reference)),
+    #("amount", bbm.int(option.unwrap(data.amount, 0))),
     #(
       "rollover",
-      bbmustache.string(case data.amount {
+      bbm.string(case data.amount {
         None -> "yes"
         Some(_) -> ""
       }),
@@ -60,17 +60,17 @@ fn submitted_template(
 fn load_template(
   name: String,
   config: Config,
-) -> fn(List(#(String, bbmustache.Argument))) -> String {
+) -> fn(List(#(String, bbm.Argument))) -> String {
   let path = string.concat(["priv/templates/", name, ".mustache"])
 
   case config.reload_templates {
     True -> fn(arguments) {
-      assert Ok(template) = bbmustache.compile_file(path)
-      bbmustache.render(template, arguments)
+      assert Ok(template) = bbm.compile_file(path)
+      bbm.render(template, arguments)
     }
     False -> {
-      assert Ok(template) = bbmustache.compile_file(path)
-      fn(arguments) { bbmustache.render(template, arguments) }
+      assert Ok(template) = bbm.compile_file(path)
+      fn(arguments) { bbm.render(template, arguments) }
     }
   }
 }
