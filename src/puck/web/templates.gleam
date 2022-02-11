@@ -1,3 +1,4 @@
+import gleam/option.{None, Option, Some}
 import puck/config.{Config}
 import gleam/string
 import gleam/bbmustache
@@ -7,7 +8,17 @@ pub type Templates {
     home: fn() -> String,
     licence: fn() -> String,
     pal_system: fn() -> String,
-    submitted: fn() -> String,
+    submitted: fn(Submitted) -> String,
+  )
+}
+
+pub type Submitted {
+  Submitted(
+    account_name: String,
+    account_number: String,
+    sort_code: String,
+    reference: String,
+    amount: Option(Int),
   )
 }
 
@@ -20,8 +31,28 @@ pub fn load(config: Config) -> Templates {
     home: fn() { home([]) },
     licence: fn() { licence([]) },
     pal_system: fn() { pal_system([]) },
-    submitted: fn() { submitted([]) },
+    submitted: submitted_template(_, submitted),
   )
+}
+
+fn submitted_template(
+  data: Submitted,
+  template: fn(List(#(String, bbmustache.Argument))) -> String,
+) -> String {
+  template([
+    #("account_name", bbmustache.string(data.account_name)),
+    #("account_number", bbmustache.string(data.account_number)),
+    #("sort_code", bbmustache.string(data.sort_code)),
+    #("reference", bbmustache.string(data.reference)),
+    #("amount", bbmustache.int(option.unwrap(data.amount, 0))),
+    #(
+      "rollover",
+      bbmustache.string(case data.amount {
+        None -> "yes"
+        Some(_) -> ""
+      }),
+    ),
+  ])
 }
 
 fn load_template(

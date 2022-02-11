@@ -4,18 +4,35 @@
   <div class="flamingo">🦩</div>
   <h1>Thank you!</h1>
 
+
   {{^rollover}}
   <p>
     The next step is to send us your contribution via bank transfer with these
     details:
   </p>
-  <ul>
-    <li>Name: <code>{{account_name}}</code>
-    <li>Account number: <code>{{account_number}}</code>
-    <li>Sort code: <code>{{sort_code}}</code>
-    <li>Reference: <code>{{reference}}</code>
-    <li>Amount: <code>£{{amount}}</code>
-  </ul>
+
+  <table>
+    <tr>
+      <td>Name:</td>
+      <td>{{account_name}}</td>
+    </tr>
+    <tr>
+      <td>Account number:</td>
+      <td>{{account_number}}</td>
+    </tr>
+    <tr>
+      <td>Sort code:</td>
+      <td>{{sort_code}}</td>
+    </tr>
+    <tr>
+      <td>Reference:</td>
+      <td>{{reference}}</td>
+    </tr>
+    <tr>
+      <td>Amount:</td>
+      <td>£{{amount}}</td>
+    </tr>
+  </table>
 
   <p>
     After your payment have been received and and after your place has been

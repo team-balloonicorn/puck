@@ -2,6 +2,7 @@ import puck/payment
 import puck/attendee
 import puck/sheets
 import puck/config.{Config}
+import puck/web/templates
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
@@ -73,7 +74,18 @@ fn register_attendance(request: Request(BitString), state: State) {
     |> result.replace_error(InvalidParameters)
   assert Ok(_) = sheets.append_attendee(attendee, state.config)
 
-  let html = state.templates.submitted()
+  let html =
+    state.templates.submitted(templates.Submitted(
+      // TODO
+      account_name: "account_name",
+      // TODO
+      account_number: "accouenwkj",
+      // TODO
+      sort_code: "sorfff",
+      reference: attendee.reference,
+      amount: attendee.contribtion_amount(attendee),
+    ))
+
   response.new(201)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)

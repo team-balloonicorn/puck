@@ -23,6 +23,15 @@ html {
   line-height: 1.35;
 }
 
+pre,
+code {
+  font-family: monospace;
+}
+
+td:not(:last-child) {
+  padding-right: var(--space);
+}
+
 h1,
 h2,
 h3,

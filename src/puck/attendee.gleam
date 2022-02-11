@@ -6,6 +6,7 @@ import gleam/string
 import gleam/bit_string
 import gleam/base
 import gleam/result
+import gleam/option.{Option}
 
 pub type Attendee {
   Attendee(
@@ -37,6 +38,16 @@ pub fn contribution_from_string(input: String) -> Result(ContributionTier, Nil) 
     "50" -> Ok(Contribute50)
     "rollover" -> Ok(RolloverTicket)
     _ -> Error(Nil)
+  }
+}
+
+pub fn contribtion_amount(attendee: Attendee) -> Option(Int) {
+  case attendee.contribution {
+    RolloverTicket -> option.None
+    Contribute120 -> option.Some(120)
+    Contribute95 -> option.Some(95)
+    Contribute80 -> option.Some(80)
+    Contribute50 -> option.Some(50)
   }
 }
 
