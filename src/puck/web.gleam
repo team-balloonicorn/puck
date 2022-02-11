@@ -46,7 +46,7 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
     ["api", "payment", key] if key == pay -> payments(request, state.config)
     _ -> not_found()
   }
-  |> result.map_error(error_to_response(_, request))
+  |> result.map_error(error_to_response)
   |> unwrap_both
 }
 
@@ -66,20 +66,16 @@ fn attendance_form(state: State) {
   |> Ok
 }
 
-fn register_attendance(request: Request(BitString), _state: State) {
-  try params =
-    form_urlencoded_body(request)
-    |> io.debug
-  try _attendee =
+fn register_attendance(request: Request(BitString), state: State) {
+  try params = form_urlencoded_body(request)
+  try attendee =
     attendee.from_query(params)
     |> result.replace_error(InvalidParameters)
-    |> io.debug
-  // TODO: Generate reference code
-  // TODO: Extract parameters
-  // TODO: Validate (re-rendering the form if it fails)
-  // TODO: Save to sheets
+  assert Ok(_) = sheets.append_attendee(attendee, state.config)
+
   // TODO: Present (and email?) transfer information to the user
-  todo
+  response.new(201)
+  |> Ok
 }
 
 fn licence(state: State) {
@@ -105,24 +101,21 @@ fn not_found() {
 }
 
 type Error {
-  UnexpectedJson(json.DecodeError)
-  SaveFailed(sheets.Error)
+  UnexpectedJson(String, json.DecodeError)
   HttpMethodNotAllowed
   InvalidParameters
   InvalidFormUrlencoded
   InvalidUtf8
 }
 
-// TODO: verify key
-// TODO: tests
 fn payments(request: Request(BitString), config: Config) {
+  try json =
+    bit_string.to_string(request.body)
+    |> result.replace_error(InvalidUtf8)
   try payment =
-    payment.from_json(request.body)
-    |> result.map_error(UnexpectedJson)
-  try _ =
-    payment
-    |> sheets.append_payment(config)
-    |> result.map_error(SaveFailed)
+    payment.from_json(json)
+    |> result.map_error(UnexpectedJson(json, _))
+  assert Ok(_) = sheets.append_payment(payment, config)
   Ok(response.new(200))
 }
 
@@ -133,31 +126,26 @@ fn unwrap_both(result: Result(a, a)) -> a {
   }
 }
 
-fn error_to_response(
-  error: Error,
-  request: Request(BitString),
-) -> Response(String) {
+fn error_to_response(error: Error) -> Response(String) {
   case error {
     HttpMethodNotAllowed -> response.new(405)
     InvalidUtf8 | InvalidFormUrlencoded -> response.new(400)
-    InvalidParameters -> response.new(422)
+    InvalidParameters ->
+      response.new(422)
+      |> response.set_body(
+        "Unprocessable entity. Please try again and contact the organisers if the problem continues",
+      )
 
-    UnexpectedJson(_) -> {
-      request.body
-      |> bit_string.to_string
-      |> result.unwrap("")
-      |> string.append("ERROR: Unexpected JSON: ", _)
-      |> io.println
+    UnexpectedJson(_, _) -> {
+      // Crash to get the error reported via email
+      throw(error)
       response.new(400)
-    }
-
-    SaveFailed(error) -> {
-      io.print("ERROR: Save failed: ")
-      io.debug(error)
-      response.new(500)
     }
   }
 }
+
+external fn throw(anything) -> Nil =
+  "erlang" "throw"
 
 fn form_urlencoded_body(
   request: Request(BitString),
