@@ -1,6 +1,6 @@
 # Puck 🧚
 
-A magical Gleam web application.
+A magical Gleam web application for organising a birthday party.
 
 ```sh
 gleam run server  # Run the server
