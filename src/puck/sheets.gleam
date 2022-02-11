@@ -1,5 +1,6 @@
 import puck/config.{Config}
 import puck/payment.{Payment}
+import puck/attendee.{Attendee}
 import gleam/io
 import gleam/http
 import gleam/http/request
@@ -64,6 +65,62 @@ fn ensure_status(
     True -> Ok(response)
     False -> Error(UnexpectedHttpStatus(expected: code, response: response))
   }
+}
+
+pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error) {
+  try access_token = get_access_token(config)
+
+  let json =
+    j.to_string(j.object([
+      #("range", j.string("attendees!A:A")),
+      #("majorDimension", j.string("ROWS")),
+      #(
+        "values",
+        j.preprocessed_array([
+          j.preprocessed_array([
+            j.string(attendee.reference),
+            j.string(timestamp()),
+            j.string(attendee.name),
+            j.string(attendee.email),
+            j.string(attendee.pal),
+            j.bool(attendee.attended),
+            j.bool(attendee.pal_attended),
+            j.string(case attendee.contribution {
+              attendee.RolloverTicket -> "Rollover ticket"
+              attendee.Contribute120 -> "120"
+              attendee.Contribute95 -> "95"
+              attendee.Contribute80 -> "80"
+              attendee.Contribute50 -> "50"
+            }),
+            j.string(attendee.diet),
+            j.string(attendee.accessibility),
+          ]),
+        ]),
+      ),
+    ]))
+
+  let path =
+    string.concat([
+      "/v4/spreadsheets/",
+      config.spreadsheet_id,
+      "/values/attendees!A:A:append?valueInputOption=USER_ENTERED&access_token=",
+      access_token,
+    ])
+
+  let request =
+    request.new()
+    |> request.set_method(http.Post)
+    |> request.set_body(json)
+    |> request.set_host("sheets.googleapis.com")
+    |> request.set_path(path)
+    |> request.prepend_header("content-type", "application/json")
+
+  try _ =
+    hackney.send(request)
+    |> result.map_error(HttpError)
+    |> result.then(ensure_status(_, is: 200))
+
+  Ok(Nil)
 }
 
 pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
@@ -150,3 +207,6 @@ fn refresher_loop(
   process.send_after(state.sender, sleep_period, Nil)
   actor.Continue(state)
 }
+
+external fn timestamp() -> String =
+  "puck_ffi" "timestamp"

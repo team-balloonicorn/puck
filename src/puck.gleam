@@ -1,5 +1,6 @@
 import puck/web
 import puck/sheets
+import puck/attendee
 import puck/config.{Config}
 import gleam/io
 import gleam/erlang
@@ -17,6 +18,7 @@ pub fn main() {
   case erlang.start_arguments() {
     ["server"] -> server(config)
     ["email"] -> email(config)
+    ["attendee"] -> append_attendee(config)
     _ -> unknown()
   }
 }
@@ -39,9 +41,6 @@ fn server(config: Config) {
   // Put the main process to sleep while the web server does its thing
   erlang.sleep_forever()
 }
-
-external fn err(String) -> Nil =
-  "logger" "error"
 
 external fn halt(Int) -> Nil =
   "erlang" "halt"
@@ -96,5 +95,23 @@ fn error_email(error: String, config: Config) {
     )
 
   assert Ok(_) = gen_smtp.send(email, options)
+  Nil
+}
+
+fn append_attendee(config) {
+  let attendee =
+    attendee.Attendee(
+      name: "Lou",
+      email: "louis@lpil.uk",
+      attended: True,
+      pal: "Al",
+      pal_attended: False,
+      diet: "fud",
+      accessibility: "nothing",
+      contribution: attendee.RolloverTicket,
+      reference: attendee.generate_reference(),
+    )
+
+  assert Ok(_) = sheets.append_attendee(attendee, config)
   Nil
 }
