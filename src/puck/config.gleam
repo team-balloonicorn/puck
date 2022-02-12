@@ -18,7 +18,6 @@ pub type Config {
     reload_templates: Bool,
     /// Email config
     smtp_host: String,
-    smtp_name: String,
     smtp_username: String,
     smtp_password: String,
     smtp_port: Int,
@@ -40,7 +39,6 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(payment_secret) = os.get_env("PAYMENT_SECRET")
   assert Ok(attend_secret) = os.get_env("ATTEND_SECRET")
   assert Ok(smtp_host) = os.get_env("SMTP_HOST")
-  assert Ok(smtp_name) = os.get_env("SMTP_NAME")
   assert Ok(smtp_username) = os.get_env("SMTP_USERNAME")
   assert Ok(smtp_password) = os.get_env("SMTP_PASSWORD")
   assert Ok(smtp_port) = os.get_env("SMTP_PORT")
@@ -63,7 +61,6 @@ pub fn load_from_env_or_crash() -> Config {
     payment_secret: payment_secret,
     reload_templates: reload_templates,
     smtp_host: smtp_host,
-    smtp_name: smtp_name,
     smtp_username: smtp_username,
     smtp_password: smtp_password,
     smtp_port: smtp_port,
