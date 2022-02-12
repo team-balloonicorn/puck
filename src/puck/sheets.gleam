@@ -85,7 +85,9 @@ fn append_row(
     string.concat([
       "/v4/spreadsheets/",
       config.spreadsheet_id,
-      "/values/attendees!A:A:append?valueInputOption=USER_ENTERED&access_token=",
+      "/values/",
+      sheet,
+      "!A:A:append?valueInputOption=USER_ENTERED&access_token=",
       access_token,
     ])
 
