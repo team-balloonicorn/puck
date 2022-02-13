@@ -2,15 +2,18 @@ import puck/config.{Config}
 import puck/payment.{Payment}
 import puck/attendee.{Attendee}
 import gleam/io
+import gleam/list
 import gleam/http
 import gleam/http/request
 import gleam/http/response.{Response}
+import gleam/int
+import gleam/map.{Map}
 import gleam/string
 import gleam/bit_string
 import gleam/hackney
 import gleam/result
 import gleam/dynamic
-import gleam/option
+import gleam/option.{Option}
 import gleam/json.{Json} as j
 import gleam/otp/actor
 import gleam/otp/process
@@ -105,6 +108,118 @@ fn append_row(
     |> result.then(ensure_status(_, is: 200))
 
   Ok(Nil)
+}
+
+pub fn all_references(
+  access_token: String,
+  config: Config,
+) -> Result(Map(String, Int), Error) {
+  let path =
+    string.concat([
+      "/v4/spreadsheets/",
+      config.spreadsheet_id,
+      "/values/attendees",
+      "!A2:A1002?majorDimension=COLUMNS&access_token=",
+      access_token,
+    ])
+
+  let request =
+    request.new()
+    |> request.set_method(http.Get)
+    |> request.set_host("sheets.googleapis.com")
+    |> request.set_path(path)
+
+  try response =
+    hackney.send(request)
+    |> result.map_error(HttpError)
+    |> result.then(ensure_status(_, is: 200))
+
+  try references =
+    response.body
+    |> j.decode(using: dynamic.field(
+      "values",
+      of: dynamic.list(of: dynamic.list(of: dynamic.string)),
+    ))
+    |> result.map_error(UnexpectedJson)
+
+  references
+  |> list.flatten
+  |> list.index_map(fn(i, ref) { #(ref, i + 2) })
+  |> map.from_list
+  |> Ok
+}
+
+pub fn get_row(
+  sheet: String,
+  row_number: Int,
+  row_decoder: dynamic.Decoder(t),
+  access_token: String,
+  config: Config,
+) -> Result(Option(t), Error) {
+  let row_number = int.to_string(row_number)
+  let path =
+    string.concat([
+      "/v4/spreadsheets/",
+      config.spreadsheet_id,
+      "/values/",
+      sheet,
+      "!A",
+      row_number,
+      ":Z",
+      row_number,
+      "?majorDimension=ROWS&access_token=",
+      access_token,
+    ])
+
+  let request =
+    request.new()
+    |> request.set_method(http.Get)
+    |> request.set_host("sheets.googleapis.com")
+    |> request.set_path(path)
+
+  try response =
+    hackney.send(request)
+    |> result.map_error(HttpError)
+    |> result.then(ensure_status(_, is: 200))
+
+  try rows =
+    response.body
+    |> j.decode(using: dynamic.field(
+      "values",
+      of: dynamic.list(of: row_decoder),
+    ))
+    |> result.map_error(UnexpectedJson)
+
+  case rows {
+    [row] -> Ok(option.Some(row))
+    _ -> Ok(option.None)
+  }
+}
+
+pub fn get_attendee_email(
+  reference: String,
+  config: Config,
+) -> Result(Option(String), Error) {
+  try access_token = get_access_token(config)
+  try references = all_references(access_token, config)
+
+  let decoder = fn(dyn) {
+    try list = dynamic.shallow_list(dyn)
+    case list {
+      [_ref, _timestamp, _name, email, ..] -> dynamic.string(email)
+      _ -> {
+        let error =
+          dynamic.DecodeError(expected: "String", found: "nothing", path: ["3"])
+        Error([error])
+      }
+    }
+  }
+
+  case map.get(references, reference) {
+    Error(Nil) -> Ok(option.None)
+    Ok(row_number) ->
+      get_row("attendees", row_number, decoder, access_token, config)
+  }
 }
 
 pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error) {
