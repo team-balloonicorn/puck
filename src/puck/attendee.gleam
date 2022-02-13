@@ -107,7 +107,7 @@ fn radio_button(
   try value = list.key_find(query, name)
   case value {
     "yes" -> Ok(True)
-    "no" -> Ok(True)
+    "no" -> Ok(False)
     _ -> Error(Nil)
   }
 }
