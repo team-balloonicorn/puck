@@ -7,12 +7,14 @@ import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates.{Templates}
+import gleam/option
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/http/service.{Service}
 import gleam/bit_builder.{BitBuilder}
 import gleam/erlang/file
+import gleam/otp/process
 import gleam/bit_string
 import gleam/result
 import gleam/string
@@ -127,7 +129,20 @@ fn payments(request: Request(BitString), config: Config) {
   try payment =
     payment.from_json(json)
     |> result.map_error(UnexpectedJson(json, _))
+
+  // Record the payment in Google sheets
   assert Ok(_) = sheets.append_payment(payment, config)
+
+  // In the background send check if the payment if for an attendee and send
+  // them a confirmation email if so
+  process.start(fn() {
+    assert Ok(attendee) = sheets.get_attendee_email(payment.reference, config)
+    option.map(
+      attendee,
+      attendee.send_payment_confirmation_email(payment.amount, _, config),
+    )
+  })
+
   Ok(response.new(200))
 }
 

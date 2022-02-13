@@ -59,3 +59,15 @@ pub fn from_query_test() {
   accessibility
   |> should.equal("")
 }
+
+pub fn payment_confirmation_email_test() {
+  attendee.payment_confirmation_email(1234)
+  |> should.equal(
+    "Hello!
+
+We received your payment of £12.34.
+
+Thanks,
+The Midsummer crew",
+  )
+}

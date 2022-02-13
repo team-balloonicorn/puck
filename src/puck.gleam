@@ -1,4 +1,5 @@
 import puck/web
+import puck/email
 import puck/sheets
 import puck/attendee
 import puck/config.{Config}
@@ -48,18 +49,7 @@ external fn install_log_handler(fn(String) -> Nil) -> Nil =
   "puck_log_handler" "install"
 
 fn send_error_email(error: String, config: Config) {
-  let options =
-    gen_smtp.Options(
-      relay: config.smtp_host,
-      port: config.smtp_port,
-      username: config.smtp_username,
-      password: config.smtp_password,
-      auth: gen_smtp.Always,
-      ssl: True,
-      retries: 2,
-    )
-
-  let email =
+  assert Ok(_) =
     gen_smtp.Email(
       from_email: config.smtp_from_email,
       from_name: config.smtp_from_name,
@@ -67,8 +57,8 @@ fn send_error_email(error: String, config: Config) {
       subject: "Puck error occurred!",
       content: error,
     )
+    |> email.send(config)
 
-  assert Ok(_) = gen_smtp.send(email, options)
   Nil
 }
 

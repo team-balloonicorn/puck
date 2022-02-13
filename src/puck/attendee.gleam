@@ -1,3 +1,5 @@
+import gleam/io
+import gleam/int
 import gleam/list
 import gleam/string
 import gleam/result
@@ -7,6 +9,9 @@ import gleam/bit_string
 import gleam/base
 import gleam/result
 import gleam/option.{Option}
+import gleam/gen_smtp
+import puck/config.{Config}
+import puck/email
 
 pub type Attendee {
   Attendee(
@@ -117,4 +122,41 @@ fn escape(input: String) -> String {
     True -> string.append(" ", input)
     False -> input
   }
+}
+
+pub type ConfirmationError {
+  EmailSendingFailed
+}
+
+pub fn payment_confirmation_email(pence: Int) -> String {
+  string.concat([
+    "Hello!
+
+We received your payment of £",
+    int.to_string(pence / 100),
+    ".",
+    int.to_string(pence % 100),
+    ".
+
+Thanks,
+The Midsummer crew",
+  ])
+}
+
+pub fn send_payment_confirmation_email(
+  pence: Int,
+  email_address: String,
+  config: Config,
+) -> Result(Nil, ConfirmationError) {
+  let content = payment_confirmation_email(pence)
+
+  gen_smtp.Email(
+    from_email: config.smtp_from_email,
+    from_name: config.smtp_from_name,
+    to: [email_address],
+    subject: "Midsummer Night's Tea Party payment received",
+    content: content,
+  )
+  |> email.send(config)
+  |> result.replace_error(EmailSendingFailed)
 }
