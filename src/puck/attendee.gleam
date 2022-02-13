@@ -64,13 +64,13 @@ pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
     |> result.then(contribution_from_string)
 
   Ok(Attendee(
-    name: name,
-    email: email,
+    name: escape(name),
+    email: escape(email),
     attended: attended,
-    pal: pal,
+    pal: escape(pal),
     pal_attended: pal_attended,
-    diet: diet,
-    accessibility: accessibility,
+    diet: escape(diet),
+    accessibility: escape(accessibility),
     contribution: contribution,
     reference: generate_reference(),
   ))
@@ -109,5 +109,12 @@ fn radio_button(
     "yes" -> Ok(True)
     "no" -> Ok(False)
     _ -> Error(Nil)
+  }
+}
+
+fn escape(input: String) -> String {
+  case string.starts_with(input, "=") {
+    True -> string.append(" ", input)
+    False -> input
   }
 }

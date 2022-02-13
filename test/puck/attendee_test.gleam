@@ -16,7 +16,7 @@ pub fn from_query_test() {
   )) =
     attendee.from_query([
       #("email", "email@example.com"),
-      #("dietary-requirements", "veggie food"),
+      #("dietary-requirements", "=1+1"),
       #("attended", "yes"),
       #("name", "Bob"),
       #("pal", "George"),
@@ -40,8 +40,10 @@ pub fn from_query_test() {
   pal_attended
   |> should.be_false
 
+  // `from_query` escapes input that sheets would interpret as a formula by
+  // adding a space.
   diet
-  |> should.equal("veggie food")
+  |> should.equal(" =1+1")
 
   reference
   |> string.length
