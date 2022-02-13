@@ -1,4 +1,4 @@
- Puck 🧚
+# Puck 🧚
 
 A magical Gleam web application for organising a birthday party.
 
