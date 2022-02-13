@@ -16,6 +16,7 @@ html {
 
   --color-grey: #ccc;
   --color-white: white;
+  --color-black: black;
   --color-faint-pink: #f0e5ea;
 
   background-color: var(--color-faint-pink);
@@ -100,6 +101,7 @@ h1 {
   border: 1px solid var(--grey);
   font-size: 1.05rem;
   background: var(--color-white);
+  color: var(--color-black);
 }
 
 .form-group input[type="radio"] {
