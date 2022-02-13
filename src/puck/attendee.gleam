@@ -177,21 +177,25 @@ The Midsummer crew",
 }
 
 pub fn send_attendance_email(
-  email_address: String,
-  amount: Int,
-  referece: String,
+  attendee: Attendee,
   config: Config,
 ) -> Result(Nil, NotificationError) {
-  let content = attendance_email(amount, referece, config)
-  gen_smtp.Email(
-    from_email: config.smtp_from_email,
-    from_name: config.smtp_from_name,
-    to: [email_address],
-    subject: "Midsummer Night's Tea Party 2022",
-    content: content,
-  )
-  |> email.send(config)
-  |> result.replace_error(EmailSendingFailed)
+  case contribtion_amount(attendee) {
+    option.None -> Ok(Nil)
+
+    option.Some(amount) -> {
+      let content = attendance_email(amount, attendee.reference, config)
+      gen_smtp.Email(
+        from_email: config.smtp_from_email,
+        from_name: config.smtp_from_name,
+        to: [attendee.email],
+        subject: "Midsummer Night's Tea Party 2022",
+        content: content,
+      )
+      |> email.send(config)
+      |> result.replace_error(EmailSendingFailed)
+    }
+  }
 }
 
 pub fn send_payment_confirmation_email(

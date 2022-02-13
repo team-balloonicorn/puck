@@ -1,5 +1,5 @@
 import puck/payment
-import puck/attendee.{Attendee}
+import puck/attendee
 import puck/sheets
 import puck/config.{Config}
 import puck/web/templates
@@ -71,28 +71,26 @@ fn attendance_form(state: State) {
 
 fn register_attendance(request: Request(BitString), state: State) {
   try params = form_urlencoded_body(request)
-  try Attendee(reference: ref, email: email, ..) as attendee =
+  try attendee =
     attendee.from_query(params)
     |> result.replace_error(InvalidParameters)
-
-  let amount = attendee.contribtion_amount(attendee)
 
   // Record the new attendee in the database
   assert Ok(_) = sheets.append_attendee(attendee, state.config)
 
   // Send a confirmation email to the attendee
-  assert Ok(_) =
-    amount
-    |> option.map(attendee.send_attendance_email(email, _, ref, state.config))
-    |> option.unwrap(Ok(Nil))
+  process.start(fn() {
+    assert Ok(_) = attendee.send_attendance_email(attendee, state.config)
+  })
 
+  let amount = attendee.contribtion_amount(attendee)
   let html =
     state.templates.submitted(templates.Submitted(
       help_email: state.config.help_email,
       account_name: state.config.account_name,
       account_number: state.config.account_number,
       sort_code: state.config.sort_code,
-      reference: ref,
+      reference: attendee.reference,
       amount: amount,
     ))
 
