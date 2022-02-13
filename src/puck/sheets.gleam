@@ -108,6 +108,21 @@ fn append_row(
 }
 
 pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error) {
+  let contribution = case attendee.contribution {
+    attendee.RolloverTicket -> "Rollover ticket"
+    attendee.Contribute120 -> "120"
+    attendee.Contribute95 -> "95"
+    attendee.Contribute80 -> "80"
+    attendee.Contribute50 -> "50"
+  }
+  // Sum the total payments for this attendee's reference
+  let total_paid_formula =
+    "=sumif(payments!D:D,indirect(\"A\"&row()),payments!C:C)/100"
+  // Check if the attendee has either a rollover ticket or has paid more than
+  // they committed to contribute
+  let fully_paid_formula =
+    "=OR(indirect(\"H\"&row())=\"Rollover ticket\", indirect(\"K\"&row())>=indirect(\"H\"&row()))"
+
   let row = [
     j.string(attendee.reference),
     j.string(timestamp()),
@@ -116,15 +131,11 @@ pub fn append_attendee(attendee: Attendee, config: Config) -> Result(Nil, Error)
     j.string(attendee.pal),
     j.bool(attendee.attended),
     j.bool(attendee.pal_attended),
-    j.string(case attendee.contribution {
-      attendee.RolloverTicket -> "Rollover ticket"
-      attendee.Contribute120 -> "120"
-      attendee.Contribute95 -> "95"
-      attendee.Contribute80 -> "80"
-      attendee.Contribute50 -> "50"
-    }),
+    j.string(contribution),
     j.string(attendee.diet),
     j.string(attendee.accessibility),
+    j.string(total_paid_formula),
+    j.string(fully_paid_formula),
   ]
   append_row("attendees", row, config)
 }
