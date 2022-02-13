@@ -83,7 +83,6 @@ fn register_attendance(request: Request(BitString), state: State) {
     assert Ok(_) = attendee.send_attendance_email(attendee, state.config)
   })
 
-  let amount = attendee.contribtion_amount(attendee)
   let html =
     state.templates.submitted(templates.Submitted(
       help_email: state.config.help_email,
@@ -91,7 +90,7 @@ fn register_attendance(request: Request(BitString), state: State) {
       account_number: state.config.account_number,
       sort_code: state.config.sort_code,
       reference: attendee.reference,
-      amount: amount,
+      amount: attendee.contribtion_amount(attendee),
     ))
 
   response.new(201)
