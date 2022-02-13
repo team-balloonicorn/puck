@@ -124,7 +124,7 @@ fn escape(input: String) -> String {
   }
 }
 
-pub type ConfirmationError {
+pub type NotificationError {
   EmailSendingFailed
 }
 
@@ -143,11 +143,62 @@ The Midsummer crew",
   ])
 }
 
+pub fn attendance_email(
+  amount: Int,
+  reference: String,
+  config: Config,
+) -> String {
+  string.concat([
+    "Hello!
+
+Here are the bank details for your ticket contribution:
+
+- Name: ",
+    config.account_name,
+    "
+- Account no: ",
+    config.account_number,
+    "
+- Sort code: ",
+    config.sort_code,
+    "
+- Reference: ",
+    reference,
+    "
+- Amount: £",
+    int.to_string(amount),
+    "
+
+If you have any questions reply to this email. :)
+
+Thanks,
+The Midsummer crew",
+  ])
+}
+
+pub fn send_attendance_email(
+  email_address: String,
+  amount: Int,
+  referece: String,
+  config: Config,
+) -> Result(Nil, NotificationError) {
+  let content = attendance_email(amount, referece, config)
+  gen_smtp.Email(
+    from_email: config.smtp_from_email,
+    from_name: config.smtp_from_name,
+    to: [email_address],
+    subject: "Midsummer Night's Tea Party 2022",
+    content: content,
+  )
+  |> email.send(config)
+  |> result.replace_error(EmailSendingFailed)
+}
+
 pub fn send_payment_confirmation_email(
   pence: Int,
   email_address: String,
   config: Config,
-) -> Result(Nil, ConfirmationError) {
+) -> Result(Nil, NotificationError) {
   let content = payment_confirmation_email(pence)
 
   gen_smtp.Email(
