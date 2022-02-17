@@ -85,19 +85,19 @@ pub fn generate_reference() -> String {
   // Generate random string
   crypto.strong_random_bytes(50)
   |> base.url_encode64(False)
+  |> string.lowercase
   // Remove ambiguous characters
   |> string.replace("o", "")
   |> string.replace("O", "")
   |> string.replace("0", "")
-  |> string.replace("l", "")
   |> string.replace("1", "")
-  |> string.replace("I", "")
   |> string.replace("i", "")
+  |> string.replace("l", "")
   |> string.replace("_", "")
   |> string.replace("-", "")
   // Slice it down to a desired size
   |> bit_string.from_string
-  |> bit_string.slice(0, 10)
+  |> bit_string.slice(0, 12)
   // Convert it back to a string. This should never fail.
   |> result.then(bit_string.to_string)
   |> result.map(string.append("m-", _))

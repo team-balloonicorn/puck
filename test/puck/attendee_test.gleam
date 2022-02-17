@@ -47,7 +47,7 @@ pub fn from_query_test() {
 
   reference
   |> string.length
-  |> should.equal(12)
+  |> should.equal(14)
 
   reference
   |> string.starts_with("m-")

@@ -144,6 +144,7 @@ pub fn all_references(
 
   references
   |> list.flatten
+  |> list.map(string.lowercase)
   |> list.index_map(fn(i, ref) { #(ref, i + 2) })
   |> map.from_list
   |> Ok
@@ -200,6 +201,7 @@ pub fn get_attendee_email(
   reference: String,
   config: Config,
 ) -> Result(Option(String), Error) {
+  let reference = string.lowercase(reference)
   try access_token = get_access_token(config)
   try references = all_references(access_token, config)
 
