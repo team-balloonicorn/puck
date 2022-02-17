@@ -79,7 +79,7 @@ fn register_attendance(request: Request(BitString), state: State) {
   assert Ok(_) = sheets.append_attendee(attendee, state.config)
 
   // Send a confirmation email to the attendee
-  process.start(fn() {
+  process.start_unlinked(fn() {
     assert Ok(_) = attendee.send_attendance_email(attendee, state.config)
   })
 
@@ -142,7 +142,7 @@ fn payments(request: Request(BitString), config: Config) {
 
   // In the background send check if the payment if for an attendee and send
   // them a confirmation email if so
-  process.start(fn() {
+  process.start_unlinked(fn() {
     assert Ok(attendee) = sheets.get_attendee_email(payment.reference, config)
     option.map(
       attendee,

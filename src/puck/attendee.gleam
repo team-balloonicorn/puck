@@ -135,7 +135,7 @@ pub fn payment_confirmation_email(pence: Int) -> String {
 We received your payment of £",
     int.to_string(pence / 100),
     ".",
-    int.to_string(pence % 100),
+    string.pad_left(int.to_string(pence % 100), to: 2, with: "0"),
     ".
 
 Thanks,
@@ -184,6 +184,7 @@ pub fn send_attendance_email(
     option.None -> Ok(Nil)
 
     option.Some(amount) -> {
+      io.println(string.append("Sending attendance email for ", attendee.name))
       let content = attendance_email(amount, attendee.reference, config)
       gen_smtp.Email(
         from_email: config.smtp_from_email,
@@ -203,6 +204,7 @@ pub fn send_payment_confirmation_email(
   email_address: String,
   config: Config,
 ) -> Result(Nil, NotificationError) {
+  io.println(string.append("Sending payment email for ", email_address))
   let content = payment_confirmation_email(pence)
 
   gen_smtp.Email(

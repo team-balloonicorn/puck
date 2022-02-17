@@ -61,11 +61,11 @@ pub fn from_query_test() {
 }
 
 pub fn payment_confirmation_email_test() {
-  attendee.payment_confirmation_email(1234)
+  attendee.payment_confirmation_email(1204)
   |> should.equal(
     "Hello!
 
-We received your payment of £12.34.
+We received your payment of £12.04.
 
 Thanks,
 The Midsummer crew",
