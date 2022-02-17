@@ -4,13 +4,15 @@ import puck/sheets
 import puck/attendee
 import puck/config.{Config}
 import gleam/io
+import gleam/int
 import gleam/erlang
 import gleam/http/elli
 import gleam/gen_smtp
 
 const usage = "USAGE:
   puck server
-  puck attendee-email <reference>
+  puck get-attendee-email <reference>
+  puck send-payment-confirmation-email <email> <paid_in_pence>
 "
 
 pub fn main() {
@@ -18,7 +20,9 @@ pub fn main() {
 
   case erlang.start_arguments() {
     ["server"] -> server(config)
-    ["attendee-email", reference] -> get_attendee_email(reference, config)
+    ["get-attendee-email", reference] -> get_attendee_email(reference, config)
+    ["send-payment-confirmation-email", email, amount] ->
+      send_payment_confirmation_email(email, amount, config)
     _ -> unknown()
   }
 }
@@ -65,5 +69,15 @@ fn send_error_email(error: String, config: Config) {
 fn get_attendee_email(reference: String, config: Config) -> Nil {
   assert Ok(attendee) = sheets.get_attendee_email(reference, config)
   io.debug(attendee)
+  Nil
+}
+
+fn send_payment_confirmation_email(
+  email: String,
+  amount: String,
+  config: Config,
+) -> Nil {
+  assert Ok(amount) = int.parse(amount)
+  assert Ok(_) = attendee.send_payment_confirmation_email(amount, email, config)
   Nil
 }
