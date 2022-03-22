@@ -13,14 +13,11 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/http/service.{Service}
 import gleam/bit_builder.{BitBuilder}
-import gleam/erlang/file
 import gleam/otp/process
 import gleam/bit_string
 import gleam/result
-import gleam/string
 import gleam/json
 import gleam/uri
-import gleam/io
 
 pub type State {
   State(templates: Templates, config: Config)

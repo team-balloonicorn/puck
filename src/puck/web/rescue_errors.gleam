@@ -2,7 +2,6 @@ import gleam/http/response
 import gleam/http/service.{Service}
 import gleam/bit_builder.{BitBuilder}
 import gleam/erlang
-import gleam/io
 
 pub fn middleware(service: Service(a, BitBuilder)) -> Service(a, BitBuilder) {
   fn(request) {

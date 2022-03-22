@@ -1,4 +1,4 @@
-FROM ghcr.io/gleam-lang/gleam:v0.19.0-erlang-alpine
+FROM ghcr.io/gleam-lang/gleam:v0.20.1-erlang-alpine
 
 # Create a group and user to run as
 RUN addgroup -S puckgroup && adduser -S puckuser -G puckgroup
@@ -9,8 +9,7 @@ WORKDIR /app/
 COPY . ./
 
 # Compile the Gleam application
-RUN gleam build && \
-  cp build/packages/ranch/ebin/ranch.app build/dev/erlang/ranch/ebin/ranch.app
+RUN gleam build
 
 # Run the application
 CMD ["gleam", "run", "server"]

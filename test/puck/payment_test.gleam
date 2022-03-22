@@ -1,5 +1,4 @@
 import gleeunit/should
-import gleam/bit_string
 import puck/payment.{Payment}
 
 pub fn from_json_transfer_test() {

@@ -9,7 +9,6 @@ import gleam/http/response.{Response}
 import gleam/int
 import gleam/map.{Map}
 import gleam/string
-import gleam/bit_string
 import gleam/hackney
 import gleam/result
 import gleam/dynamic

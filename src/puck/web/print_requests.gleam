@@ -5,7 +5,6 @@ import gleam/http/service.{Service}
 import gleam/int
 import gleam/io
 import gleam/string
-import gleam/string_builder
 
 fn format_log_line(
   request: Request(a),
