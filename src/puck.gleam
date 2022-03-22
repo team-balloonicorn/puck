@@ -11,6 +11,7 @@ import gleam/gen_smtp
 
 const usage = "USAGE:
   puck server
+  puck email-everyone
   puck get-attendee-email <reference>
   puck send-payment-confirmation-email <email> <paid_in_pence>
 "
@@ -20,6 +21,7 @@ pub fn main() {
 
   case erlang.start_arguments() {
     ["server"] -> server(config)
+    ["email-everyone"] -> email_everyone(config)
     ["get-attendee-email", reference] -> get_attendee_email(reference, config)
     ["send-payment-confirmation-email", email, amount] ->
       send_payment_confirmation_email(email, amount, config)
@@ -79,5 +81,31 @@ fn send_payment_confirmation_email(
 ) -> Nil {
   assert Ok(amount) = int.parse(amount)
   assert Ok(_) = attendee.send_payment_confirmation_email(amount, email, config)
+  Nil
+}
+
+/// Comment out the code to send an email to everyone
+fn email_everyone(_config: Config) -> Nil {
+  // let subject = ""
+  // let content = ""
+  //
+  // assert Ok(token) = sheets.get_access_token(config)
+  // assert Ok(emails) = sheets.all_attendee_emails(token, config)
+  //
+  // emails
+  // |> set.to_list
+  // |> list.each(fn(to) {
+  //   io.println(to)
+  //   assert Ok(_) =
+  //     gen_smtp.Email(
+  //       content: content,
+  //       to: [to],
+  //       from_email: config.smtp_from_email,
+  //       from_name: config.smtp_from_name,
+  //       subject: subject,
+  //     )
+  //     |> email.send(config)
+  //   Nil
+  // })
   Nil
 }

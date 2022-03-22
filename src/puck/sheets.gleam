@@ -8,6 +8,7 @@ import gleam/http/request
 import gleam/http/response.{Response}
 import gleam/int
 import gleam/map.{Map}
+import gleam/set.{Set}
 import gleam/string
 import gleam/hackney
 import gleam/result
@@ -113,12 +114,44 @@ pub fn all_references(
   access_token: String,
   config: Config,
 ) -> Result(Map(String, Int), Error) {
+  try references = get_column("attendees", "A", access_token, config)
+
+  references
+  |> list.map(string.lowercase)
+  |> list.index_map(fn(i, ref) { #(ref, i + 2) })
+  |> map.from_list
+  |> Ok
+}
+
+pub fn all_attendee_emails(
+  access_token: String,
+  config: Config,
+) -> Result(Set(String), Error) {
+  try emails = get_column("attendees", "D", access_token, config)
+
+  emails
+  |> list.map(string.lowercase)
+  |> set.from_list
+  |> Ok
+}
+
+fn get_column(
+  sheet: String,
+  column: String,
+  access_token: String,
+  config: Config,
+) -> Result(List(String), Error) {
   let path =
     string.concat([
       "/v4/spreadsheets/",
       config.spreadsheet_id,
-      "/values/attendees",
-      "!A2:A1002?majorDimension=COLUMNS&access_token=",
+      "/values/",
+      sheet,
+      "!",
+      column,
+      "3:",
+      column,
+      "1002?majorDimension=COLUMNS&access_token=",
       access_token,
     ])
 
@@ -143,9 +176,6 @@ pub fn all_references(
 
   references
   |> list.flatten
-  |> list.map(string.lowercase)
-  |> list.index_map(fn(i, ref) { #(ref, i + 2) })
-  |> map.from_list
   |> Ok
 }
 
