@@ -13,6 +13,7 @@ const usage = "USAGE:
   puck server
   puck email-everyone
   puck get-attendee-email <reference>
+  puck send-attendance-email <email> <amount> <reference>
   puck send-payment-confirmation-email <email> <paid_in_pence>
 "
 
@@ -23,6 +24,8 @@ pub fn main() {
     ["server"] -> server(config)
     ["email-everyone"] -> email_everyone(config)
     ["get-attendee-email", reference] -> get_attendee_email(reference, config)
+    ["send-attendance-email", email, amount, reference] ->
+      send_attendance_email(email, amount, reference, config)
     ["send-payment-confirmation-email", email, amount] ->
       send_payment_confirmation_email(email, amount, config)
     _ -> unknown()
@@ -71,6 +74,18 @@ fn send_error_email(error: String, config: Config) {
 fn get_attendee_email(reference: String, config: Config) -> Nil {
   assert Ok(attendee) = sheets.get_attendee_email(reference, config)
   io.debug(attendee)
+  Nil
+}
+
+fn send_attendance_email(
+  email: String,
+  amount: String,
+  reference: String,
+  config: Config,
+) -> Nil {
+  assert Ok(amount) = int.parse(amount)
+  assert Ok(_) =
+    attendee.send_attendance_email(amount, reference, email, config)
   Nil
 }
 
