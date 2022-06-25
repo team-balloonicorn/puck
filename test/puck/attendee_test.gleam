@@ -11,7 +11,6 @@ pub fn from_query_test() {
     pal_attended: pal_attended,
     diet: diet,
     accessibility: accessibility,
-    contribution: contribution,
     reference: reference,
   )) =
     attendee.from_query([
@@ -52,9 +51,6 @@ pub fn from_query_test() {
   reference
   |> string.starts_with("m-")
   |> should.be_true
-
-  contribution
-  |> should.equal(attendee.Contribute120)
 
   accessibility
   |> should.equal("")

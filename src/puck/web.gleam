@@ -78,7 +78,11 @@ fn register_attendance(request: Request(BitString), state: State) {
   // Send a confirmation email to the attendee
   process.start_unlinked(fn() {
     assert Ok(_) =
-      attendee.send_attendance_email_if_contributing(attendee, state.config)
+      attendee.send_attendance_email(
+        attendee.reference,
+        attendee.email,
+        state.config,
+      )
   })
 
   let html =
@@ -88,7 +92,6 @@ fn register_attendance(request: Request(BitString), state: State) {
       account_number: state.config.account_number,
       sort_code: state.config.sort_code,
       reference: attendee.reference,
-      amount: attendee.contribtion_amount(attendee),
     ))
 
   response.new(201)

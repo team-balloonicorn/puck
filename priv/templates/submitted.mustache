@@ -4,8 +4,6 @@
   <div class="flamingo">🦩</div>
   <h1>Thank you!</h1>
 
-
-  {{^rollover}}
   <p>
     The next step is to send us your contribution via 1 or more bank transfers
     with these details:
@@ -28,11 +26,17 @@
       <td>Reference:</td>
       <td class="monospace">{{reference}}</td>
     </tr>
-    <tr>
-      <td>Amount:</td>
-      <td class="monospace">£{{amount}}</td>
-    </tr>
   </table>
+
+  <p>
+    We don't make a profit from these events, so please contribute
+    what you can. To cover site fees we need one of:
+  </p>
+  <ul>
+    <li>70 people paying £50
+    <li>50 people paying £70
+    <li>35 people paying £100
+  </ul>
 
   <p>
     These details have also been emailed to you.
@@ -42,14 +46,6 @@
     After your payment have been received and and after your place has been
     confirmed we'll send you an email confirming your place.
   </p>
-  {{/rollover}}
-
-  {{#rollover}}
-  <p>
-    You've said you've got a rollover ticket, so there's nothing for you to do
-    now. We'll email you later when your place has been confirmed.
-  </p>
-  {{/rollover}}
 
   <p>
     If you have any questions or problems please email us at

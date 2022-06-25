@@ -24,8 +24,8 @@ pub fn main() {
     ["server"] -> server(config)
     ["email-everyone"] -> email_everyone(config)
     ["get-attendee-email", reference] -> get_attendee_email(reference, config)
-    ["send-attendance-email", email, amount, reference] ->
-      send_attendance_email(email, amount, reference, config)
+    ["send-attendance-email", email, reference] ->
+      send_attendance_email(email, reference, config)
     ["send-payment-confirmation-email", email, amount] ->
       send_payment_confirmation_email(email, amount, config)
     _ -> unknown()
@@ -79,13 +79,10 @@ fn get_attendee_email(reference: String, config: Config) -> Nil {
 
 fn send_attendance_email(
   email: String,
-  amount: String,
   reference: String,
   config: Config,
 ) -> Nil {
-  assert Ok(amount) = int.parse(amount)
-  assert Ok(_) =
-    attendee.send_attendance_email(amount, reference, email, config)
+  assert Ok(_) = attendee.send_attendance_email(reference, email, config)
   Nil
 }
 

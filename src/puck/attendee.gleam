@@ -8,7 +8,6 @@ import gleam/string
 import gleam/bit_string
 import gleam/base
 import gleam/result
-import gleam/option.{Option}
 import gleam/gen_smtp
 import puck/config.{Config}
 import puck/email
@@ -22,7 +21,6 @@ pub type Attendee {
     pal_attended: Bool,
     diet: String,
     accessibility: String,
-    contribution: ContributionTier,
     reference: String,
   )
 }
@@ -46,16 +44,6 @@ pub fn contribution_from_string(input: String) -> Result(ContributionTier, Nil) 
   }
 }
 
-pub fn contribtion_amount(attendee: Attendee) -> Option(Int) {
-  case attendee.contribution {
-    RolloverTicket -> option.None
-    Contribute120 -> option.Some(120)
-    Contribute95 -> option.Some(95)
-    Contribute80 -> option.Some(80)
-    Contribute50 -> option.Some(50)
-  }
-}
-
 pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
   try name = list.key_find(query, "name")
   try email = list.key_find(query, "email")
@@ -64,9 +52,6 @@ pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
   try pal_attended = radio_button(query, "pal-attended")
   try diet = list.key_find(query, "dietary-requirements")
   try accessibility = list.key_find(query, "accessibility-requirements")
-  try contribution =
-    list.key_find(query, "contribution")
-    |> result.then(contribution_from_string)
 
   Ok(Attendee(
     name: escape(name),
@@ -76,7 +61,6 @@ pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
     pal_attended: pal_attended,
     diet: escape(diet),
     accessibility: escape(accessibility),
-    contribution: contribution,
     reference: generate_reference(),
   ))
 }
@@ -143,11 +127,7 @@ The Midsummer crew",
   ])
 }
 
-pub fn attendance_email(
-  amount: Int,
-  reference: String,
-  config: Config,
-) -> String {
+pub fn attendance_email(reference: String, config: Config) -> String {
   string.concat([
     "Hello!
 
@@ -165,37 +145,30 @@ Here are the bank details for your ticket contribution:
 - Reference: ",
     reference,
     "
-- Amount: £",
-    int.to_string(amount),
-    "
+
+We don't make a profit from these events, so please contribute
+what you can. To cover site fees we need one of:
+- 70 people paying £50
+- 50 people paying £70
+- 35 people paying £100
+
+There is a Signal group chat you may join for the event here:
+https://signal.group/#CjQKIAfn-Cz1WSdl8I79A3G4i9y0ksyBwadUZbObO_2SN8f3EhD2hWHm3IoZSyBxo5bAhaCL
 
 If you have any questions reply to this email. :)
 
-Thanks,
+Love and mischief,
 The Midsummer crew",
   ])
 }
 
-pub fn send_attendance_email_if_contributing(
-  attendee: Attendee,
-  config: Config,
-) -> Result(Nil, NotificationError) {
-  case contribtion_amount(attendee) {
-    option.None -> Ok(Nil)
-
-    option.Some(amount) ->
-      send_attendance_email(amount, attendee.reference, attendee.email, config)
-  }
-}
-
 pub fn send_attendance_email(
-  amount: Int,
   reference: String,
   email: String,
   config: Config,
 ) -> Result(Nil, NotificationError) {
   io.println(string.append("Sending attendance email for ", email))
-  let content = attendance_email(amount, reference, config)
+  let content = attendance_email(reference, config)
   gen_smtp.Email(
     from_email: config.smtp_from_email,
     from_name: config.smtp_from_name,

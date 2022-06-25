@@ -1,4 +1,3 @@
-import gleam/option.{None, Option, Some}
 import puck/config.{Config}
 import gleam/string
 import gleam/bbmustache as bbm
@@ -19,7 +18,6 @@ pub type Submitted {
     account_number: String,
     sort_code: String,
     reference: String,
-    amount: Option(Int),
   )
 }
 
@@ -46,14 +44,6 @@ fn submitted_template(
     #("account_number", bbm.string(data.account_number)),
     #("sort_code", bbm.string(data.sort_code)),
     #("reference", bbm.string(data.reference)),
-    #("amount", bbm.int(option.unwrap(data.amount, 0))),
-    #(
-      "rollover",
-      bbm.string(case data.amount {
-        None -> "yes"
-        Some(_) -> ""
-      }),
-    ),
   ])
 }
 
