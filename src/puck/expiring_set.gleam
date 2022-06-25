@@ -30,6 +30,7 @@ pub fn start() -> Result(Sender(Message), actor.StartError) {
   ))
 }
 
+/// Returns true if the value is new, false otherwise.
 pub fn register_new(sender: Sender(Message), value: String) -> Bool {
   process.call(sender, Add(value, _), 500)
 }

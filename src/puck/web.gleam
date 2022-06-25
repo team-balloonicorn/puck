@@ -1,6 +1,7 @@
-import puck/payment
+import puck/payment.{Payment}
 import puck/attendee
 import puck/sheets
+import puck/expiring_set
 import puck/config.{Config}
 import puck/web/templates
 import puck/web/print_requests
@@ -16,8 +17,10 @@ import gleam/bit_builder.{BitBuilder}
 import gleam/otp/process
 import gleam/bit_string
 import gleam/result
+import gleam/string
 import gleam/json
 import gleam/uri
+import gleam/io
 
 pub type State {
   State(templates: Templates, config: Config)
@@ -139,8 +142,24 @@ fn payments(request: Request(BitString), config: Config) {
     payment.from_json(json)
     |> result.map_error(UnexpectedJson(json, _))
 
+  let tx_key = string.append(payment.created_at, payment.reference)
+  assert Ok(_) = case expiring_set.register_new(config.transaction_set, tx_key) {
+    True -> record_new_payment(payment, config)
+    False -> {
+      io.println(string.append("Discarding duplicate transaction ", tx_key))
+      Ok(Nil)
+    }
+  }
+
+  Ok(response.new(200))
+}
+
+fn record_new_payment(
+  payment: Payment,
+  config: Config,
+) -> Result(Nil, sheets.Error) {
   // Record the payment in Google sheets
-  assert Ok(_) = sheets.append_payment(payment, config)
+  try _ = sheets.append_payment(payment, config)
 
   // In the background send check if the payment if for an attendee and send
   // them a confirmation email if so
@@ -153,7 +172,7 @@ fn payments(request: Request(BitString), config: Config) {
     Nil
   })
 
-  Ok(response.new(200))
+  Ok(Nil)
 }
 
 fn unwrap_both(result: Result(a, a)) -> a {
