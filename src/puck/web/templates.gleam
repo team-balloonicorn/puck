@@ -47,11 +47,14 @@ fn submitted_template(
   ])
 }
 
+external fn priv_directory() -> String =
+  "puck_ffi" "priv_directory"
+
 fn load_template(
   name: String,
   config: Config,
 ) -> fn(List(#(String, bbm.Argument))) -> String {
-  let path = string.concat(["priv/templates/", name, ".mustache"])
+  let path = string.concat([priv_directory(), "/templates/", name, ".mustache"])
 
   case config.reload_templates {
     True -> fn(arguments) {

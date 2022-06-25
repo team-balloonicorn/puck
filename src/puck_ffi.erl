@@ -1,6 +1,9 @@
 -module(puck_ffi).
 
--export([timestamp/0]).
+-export([priv_directory/0, timestamp/0]).
+
+priv_directory() ->
+    list_to_binary(code:priv_dir(puck)).
 
 timestamp() ->
     Now = erlang:system_time(second),
