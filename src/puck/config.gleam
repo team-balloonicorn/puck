@@ -1,5 +1,4 @@
 import gleam/erlang/os
-import gleam/int
 
 pub type Config {
   Config(
@@ -17,12 +16,11 @@ pub type Config {
     /// Whether to recompile templates on each request
     reload_templates: Bool,
     /// Email config
-    smtp_host: String,
-    smtp_username: String,
-    smtp_password: String,
-    smtp_port: Int,
-    smtp_from_email: String,
-    smtp_from_name: String,
+    zeptomail_api_key: String,
+    email_from_address: String,
+    email_from_name: String,
+    email_replyto_address: String,
+    email_replyto_name: String,
     // Account details
     account_name: String,
     account_number: String,
@@ -38,13 +36,11 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(refresh_token) = os.get_env("REFRESH_TOKEN")
   assert Ok(payment_secret) = os.get_env("PAYMENT_SECRET")
   assert Ok(attend_secret) = os.get_env("ATTEND_SECRET")
-  assert Ok(smtp_host) = os.get_env("SMTP_HOST")
-  assert Ok(smtp_username) = os.get_env("SMTP_USERNAME")
-  assert Ok(smtp_password) = os.get_env("SMTP_PASSWORD")
-  assert Ok(smtp_port) = os.get_env("SMTP_PORT")
-  assert Ok(smtp_port) = int.parse(smtp_port)
-  assert Ok(smtp_from_email) = os.get_env("SMTP_FROM_EMAIL")
-  assert Ok(smtp_from_name) = os.get_env("SMTP_FROM_NAME")
+  assert Ok(zeptomail_api_key) = os.get_env("ZEPTOMAIL_API_KEY")
+  assert Ok(email_from_address) = os.get_env("EMAIL_FROM_ADDRESS")
+  assert Ok(email_from_name) = os.get_env("EMAIL_FROM_NAME")
+  assert Ok(email_replyto_address) = os.get_env("EMAIL_REPLYTO_ADDRESS")
+  assert Ok(email_replyto_name) = os.get_env("EMAIL_REPLYTO_NAME")
   assert Ok(account_name) = os.get_env("ACCOUNT_NAME")
   assert Ok(account_number) = os.get_env("ACCOUNT_NUMBER")
   assert Ok(sort_code) = os.get_env("SORT_CODE")
@@ -60,12 +56,11 @@ pub fn load_from_env_or_crash() -> Config {
     attend_secret: attend_secret,
     payment_secret: payment_secret,
     reload_templates: reload_templates,
-    smtp_host: smtp_host,
-    smtp_username: smtp_username,
-    smtp_password: smtp_password,
-    smtp_port: smtp_port,
-    smtp_from_email: smtp_from_email,
-    smtp_from_name: smtp_from_name,
+    zeptomail_api_key: zeptomail_api_key,
+    email_from_address: email_from_address,
+    email_from_name: email_from_name,
+    email_replyto_address: email_replyto_address,
+    email_replyto_name: email_replyto_name,
     account_name: account_name,
     account_number: account_number,
     sort_code: sort_code,

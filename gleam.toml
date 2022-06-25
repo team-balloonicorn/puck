@@ -20,6 +20,7 @@ gleam_bbmustache = "~> 2.0"
 gleam_otp = "~> 0.3"
 gen_smtp = "~> 1.1"
 gleam_crypto = "~> 0.3"
+zeptomail = "~> 0.1"
 
 [dev-dependencies]
 gleeunit = "~> 0.6"

@@ -77,12 +77,12 @@ fn register_attendance(request: Request(BitString), state: State) {
 
   // Send a confirmation email to the attendee
   process.start_unlinked(fn() {
-    assert Ok(_) =
-      attendee.send_attendance_email(
-        attendee.reference,
-        attendee.email,
-        state.config,
-      )
+    attendee.send_attendance_email(
+      attendee.reference,
+      attendee.name,
+      attendee.email,
+      state.config,
+    )
   })
 
   let html =
@@ -134,6 +134,7 @@ fn payments(request: Request(BitString), config: Config) {
   try json =
     bit_string.to_string(request.body)
     |> result.replace_error(InvalidUtf8)
+
   try payment =
     payment.from_json(json)
     |> result.map_error(UnexpectedJson(json, _))
@@ -149,6 +150,7 @@ fn payments(request: Request(BitString), config: Config) {
       attendee,
       attendee.send_payment_confirmation_email(payment.amount, _, config),
     )
+    Nil
   })
 
   Ok(response.new(200))

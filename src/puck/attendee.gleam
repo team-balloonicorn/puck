@@ -8,7 +8,6 @@ import gleam/string
 import gleam/bit_string
 import gleam/base
 import gleam/result
-import gleam/gen_smtp
 import puck/config.{Config}
 import puck/email
 
@@ -108,10 +107,6 @@ fn escape(input: String) -> String {
   }
 }
 
-pub type NotificationError {
-  EmailSendingFailed
-}
-
 pub fn payment_confirmation_email(pence: Int) -> String {
   string.concat([
     "Hello!
@@ -146,8 +141,7 @@ Here are the bank details for your ticket contribution:
     reference,
     "
 
-We don't make a profit from these events, so please contribute
-what you can. To cover site fees we need one of:
+We don't make a profit from these events, so please contribute what you can. To cover site fees we need one of:
 - 70 people paying £50
 - 50 people paying £70
 - 35 people paying £100
@@ -164,37 +158,34 @@ The Midsummer crew",
 
 pub fn send_attendance_email(
   reference: String,
+  name: String,
   email: String,
   config: Config,
-) -> Result(Nil, NotificationError) {
+) -> Nil {
   io.println(string.append("Sending attendance email for ", email))
   let content = attendance_email(reference, config)
-  gen_smtp.Email(
-    from_email: config.smtp_from_email,
-    from_name: config.smtp_from_name,
-    to: [email],
-    subject: "Midsummer Night's Tea Party 2022",
+  email.Email(
+    to_name: name,
+    to_address: email,
+    subject: "Midsummer Night's Tea Party 2022 August",
     content: content,
   )
   |> email.send(config)
-  |> result.replace_error(EmailSendingFailed)
 }
 
 pub fn send_payment_confirmation_email(
   pence: Int,
-  email_address: String,
+  email: String,
   config: Config,
-) -> Result(Nil, NotificationError) {
-  io.println(string.append("Sending payment email for ", email_address))
+) -> Nil {
+  io.println(string.append("Sending payment email for ", email))
   let content = payment_confirmation_email(pence)
 
-  gen_smtp.Email(
-    from_email: config.smtp_from_email,
-    from_name: config.smtp_from_name,
-    to: [email_address],
+  email.Email(
+    to_name: "Midsummerer",
+    to_address: email,
     subject: "Midsummer Night's Tea Party payment received",
     content: content,
   )
   |> email.send(config)
-  |> result.replace_error(EmailSendingFailed)
 }

@@ -7,7 +7,6 @@ import gleam/io
 import gleam/int
 import gleam/erlang
 import gleam/http/elli
-import gleam/gen_smtp
 
 const usage = "USAGE:
   puck server
@@ -58,15 +57,13 @@ external fn install_log_handler(fn(String) -> Nil) -> Nil =
   "puck_log_handler" "install"
 
 fn send_error_email(error: String, config: Config) {
-  assert Ok(_) =
-    gen_smtp.Email(
-      from_email: config.smtp_from_email,
-      from_name: config.smtp_from_name,
-      to: ["louispilfold@gmail.com"],
-      subject: "Puck error occurred!",
-      content: error,
-    )
-    |> email.send(config)
+  email.Email(
+    to_name: config.email_replyto_name,
+    to_address: config.email_replyto_address,
+    subject: "Website error occurred!",
+    content: error,
+  )
+  |> email.send(config)
 
   Nil
 }
@@ -82,8 +79,7 @@ fn send_attendance_email(
   reference: String,
   config: Config,
 ) -> Nil {
-  assert Ok(_) = attendee.send_attendance_email(reference, email, config)
-  Nil
+  attendee.send_attendance_email(reference, email, email, config)
 }
 
 fn send_payment_confirmation_email(
@@ -92,8 +88,7 @@ fn send_payment_confirmation_email(
   config: Config,
 ) -> Nil {
   assert Ok(amount) = int.parse(amount)
-  assert Ok(_) = attendee.send_payment_confirmation_email(amount, email, config)
-  Nil
+  attendee.send_payment_confirmation_email(amount, email, config)
 }
 
 /// Comment out the code to send an email to everyone

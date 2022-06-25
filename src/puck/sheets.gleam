@@ -118,7 +118,7 @@ pub fn all_references(
 
   references
   |> list.map(string.lowercase)
-  |> list.index_map(fn(i, ref) { #(ref, i + 2) })
+  |> list.index_map(fn(i, ref) { #(ref, i + 1) })
   |> map.from_list
   |> Ok
 }
@@ -149,7 +149,7 @@ fn get_column(
       sheet,
       "!",
       column,
-      "3:",
+      "1:",
       column,
       "1002?majorDimension=COLUMNS&access_token=",
       access_token,

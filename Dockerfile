@@ -1,4 +1,4 @@
-FROM ghcr.io/gleam-lang/gleam:v0.20.1-erlang-alpine
+FROM ghcr.io/gleam-lang/gleam:v0.22.0-erlang-alpine
 
 # Create a group and user to run as
 RUN addgroup -S puckgroup && adduser -S puckuser -G puckgroup
