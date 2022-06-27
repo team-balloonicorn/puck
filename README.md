@@ -38,9 +38,8 @@ spreadsheets, for security.
 - `SORT_CODE`: Bank account sort code.
 
 ### Email config
-- `SMTP_HOST`: Relay hostname.
-- `SMTP_USERNAME`: Relay auth username.
-- `SMTP_PASSWORD`: Relay auth password.
-- `SMTP_PORT`: Relay port.
-- `SMTP_FROM_EMAIL`: Email to use in the "from" field for sent emails.
-- `SMTP_FROM_NAME`: Name to use in the "from" field for sent emails.
+- `ZEPTOMAIL_API_KEY`: ZeptoMail API key.
+- `EMAIL_FROM_NAME`: Name for the email sender identity.
+- `EMAIL_FROM_ADDRESS`: Address for the email sender identity.
+- `EMAIL_REPLYTO_NAME`: Name for the email reply-to identity.
+- `EMAIL_REPLYTO_ADDRESS`: Address for the email reply-to identity.
