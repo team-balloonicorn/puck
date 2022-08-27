@@ -4,10 +4,8 @@ import gleam/list
 import gleam/string
 import gleam/result
 import gleam/crypto
-import gleam/string
 import gleam/bit_string
 import gleam/base
-import gleam/result
 import puck/config.{Config}
 import puck/email
 

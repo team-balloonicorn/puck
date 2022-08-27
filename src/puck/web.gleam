@@ -3,7 +3,6 @@ import puck/attendee
 import puck/sheets
 import puck/expiring_set
 import puck/config.{Config}
-import puck/web/templates
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
@@ -143,7 +142,9 @@ fn payments(request: Request(BitString), config: Config) {
     |> result.map_error(UnexpectedJson(json, _))
 
   let tx_key = string.append(payment.created_at, payment.reference)
-  assert Ok(_) = case expiring_set.register_new(config.transaction_set, tx_key) {
+  assert Ok(_) = case
+    expiring_set.register_new(config.transaction_set, tx_key)
+  {
     True -> record_new_payment(payment, config)
     False -> {
       io.println(string.append("Discarding duplicate transaction ", tx_key))
