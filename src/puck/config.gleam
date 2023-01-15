@@ -5,6 +5,7 @@ import puck/expiring_set
 pub type Config {
   Config(
     environment: String,
+    database_path: String,
     help_email: String,
     // Google sheets
     client_id: String,
@@ -36,6 +37,7 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(set) = expiring_set.start()
 
   assert Ok(environment) = os.get_env("ENVIRONMENT")
+  assert Ok(database_path) = os.get_env("DATABASE_PATH")
   assert Ok(spreadsheet_id) = os.get_env("SPREADSHEET_ID")
   assert Ok(client_id) = os.get_env("CLIENT_ID")
   assert Ok(client_secret) = os.get_env("CLIENT_SECRET")
@@ -55,6 +57,7 @@ pub fn load_from_env_or_crash() -> Config {
 
   Config(
     environment: environment,
+    database_path: database_path,
     spreadsheet_id: spreadsheet_id,
     client_id: client_id,
     client_secret: client_secret,

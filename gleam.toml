@@ -12,6 +12,7 @@ gleam_otp = "~> 0.3"
 gleam_crypto = "~> 0.3"
 zeptomail = "~> 0.1"
 mist = "~> 0.9"
+sqlight = "~> 0.5"
 
 [dev-dependencies]
 gleeunit = "~> 0.6"

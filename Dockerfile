@@ -4,7 +4,8 @@ FROM ghcr.io/gleam-lang/gleam:v0.26.0-rc1-erlang-alpine
 COPY . /build/
 
 # Compile the application
-RUN cd /build \
+RUN apk add --no-cache sqlite \
+  && cd /build \
   && gleam export erlang-shipment \
   && mv build/erlang-shipment /app \
   && rm -r /build \

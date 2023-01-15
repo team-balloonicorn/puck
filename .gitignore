@@ -1,5 +1,6 @@
 *.beam
 *.ez
+*.sqlite3
 build
 erl_crash.dump
 secrets.env
