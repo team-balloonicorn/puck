@@ -27,7 +27,24 @@ pub fn get_or_insert_by_email(
   Ok(user)
 }
 
-pub fn decoder(data: Dynamic) {
+pub fn increment_interaction_count(
+  connection: sqlight.Connection,
+  user_id: Int,
+) -> Result(Nil, Error) {
+  let sql =
+    "
+    update users
+    set interactions = interactions + 1
+    where id = ?
+    "
+  use _ <- then(
+    sqlight.query(sql, connection, [sqlight.int(user_id)], Ok)
+    |> result.map_error(error.SqlightError),
+  )
+  Ok(Nil)
+}
+
+fn decoder(data: Dynamic) {
   data
   |> dynamic.decode3(
     User,
