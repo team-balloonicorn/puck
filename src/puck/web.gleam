@@ -13,7 +13,7 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/http/service.{Service}
 import gleam/bit_builder.{BitBuilder}
-import gleam/otp/process
+import gleam/erlang/process
 import gleam/bit_string
 import gleam/result
 import gleam/string
@@ -78,14 +78,17 @@ fn register_attendance(request: Request(BitString), state: State) {
   assert Ok(_) = sheets.append_attendee(attendee, state.config)
 
   // Send a confirmation email to the attendee
-  process.start_unlinked(fn() {
-    attendee.send_attendance_email(
-      attendee.reference,
-      attendee.name,
-      attendee.email,
-      state.config,
-    )
-  })
+  process.start(
+    fn() {
+      attendee.send_attendance_email(
+        attendee.reference,
+        attendee.name,
+        attendee.email,
+        state.config,
+      )
+    },
+    linked: False,
+  )
 
   let html =
     state.templates.submitted(templates.Submitted(
@@ -164,14 +167,17 @@ fn record_new_payment(
 
   // In the background send check if the payment if for an attendee and send
   // them a confirmation email if so
-  process.start_unlinked(fn() {
-    assert Ok(attendee) = sheets.get_attendee_email(payment.reference, config)
-    option.map(
-      attendee,
-      attendee.send_payment_confirmation_email(payment.amount, _, config),
-    )
-    Nil
-  })
+  process.start(
+    fn() {
+      assert Ok(attendee) = sheets.get_attendee_email(payment.reference, config)
+      option.map(
+        attendee,
+        attendee.send_payment_confirmation_email(payment.amount, _, config),
+      )
+      Nil
+    },
+    linked: False,
+  )
 
   Ok(Nil)
 }

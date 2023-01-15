@@ -1,5 +1,5 @@
 import gleam/erlang/os
-import gleam/otp/process.{Sender}
+import gleam/erlang/process.{Subject}
 import puck/expiring_set
 
 pub type Config {
@@ -28,7 +28,7 @@ pub type Config {
     account_number: String,
     sort_code: String,
     // Record of recently seen transactions
-    transaction_set: Sender(expiring_set.Message),
+    transaction_set: Subject(expiring_set.Message),
   )
 }
 

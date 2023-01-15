@@ -8,21 +8,20 @@
 //// excess memory usage.
 
 import gleam/otp/actor
-import gleam/otp/process.{Sender}
+import gleam/erlang/process.{Subject}
 import gleam/set.{Set}
-import gleam/option
 import gleam/io
 
 pub opaque type State {
-  State(set: Set(String), sender: Sender(Message))
+  State(set: Set(String), subject: Subject(Message))
 }
 
 pub opaque type Message {
-  Add(value: String, reply: Sender(Bool))
+  Add(value: String, reply: Subject(Bool))
   ResetState
 }
 
-pub fn start() -> Result(Sender(Message), actor.StartError) {
+pub fn start() -> Result(Subject(Message), actor.StartError) {
   actor.start_spec(actor.Spec(
     init: actor_init,
     init_timeout: 500,
@@ -31,14 +30,17 @@ pub fn start() -> Result(Sender(Message), actor.StartError) {
 }
 
 /// Returns true if the value is new, false otherwise.
-pub fn register_new(sender: Sender(Message), value: String) -> Bool {
-  process.call(sender, Add(value, _), 500)
+pub fn register_new(subject: Subject(Message), value: String) -> Bool {
+  process.call(subject, Add(value, _), 500)
 }
 
 fn actor_init() -> actor.InitResult(State, Message) {
-  let #(sender, receiver) = process.new_channel()
-  let state = State(sender: sender, set: set.new())
-  actor.Ready(state, option.Some(receiver))
+  let subject = process.new_subject()
+  let state = State(subject: subject, set: set.new())
+  let selector =
+    process.new_selector()
+    |> process.selecting(subject, fn(x) { x })
+  actor.Ready(state, selector)
 }
 
 fn actor_loop(message: Message, state: State) -> actor.Next(State) {
@@ -47,7 +49,7 @@ fn actor_loop(message: Message, state: State) -> actor.Next(State) {
       io.println("Resetting expiring set")
       let state = State(..state, set: set.new())
       let one_day = 1000 * 60 * 60 * 24
-      process.send_after(state.sender, one_day, ResetState)
+      process.send_after(state.subject, one_day, ResetState)
       actor.Continue(state)
     }
 

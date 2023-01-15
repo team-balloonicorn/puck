@@ -6,7 +6,8 @@ import puck/config.{Config}
 import gleam/io
 import gleam/int
 import gleam/erlang
-import gleam/http/elli
+import gleam/erlang/process
+import mist
 
 const usage = "USAGE:
   puck server
@@ -43,11 +44,12 @@ fn server(config: Config) {
   assert Ok(_) = sheets.start_refresher(config)
 
   // Start the web server process
-  assert Ok(_) = elli.start(web.service(config), on_port: 3000)
-  io.println("Started listening on localhost:3000 ✨")
+  assert Ok(_) =
+    mist.run_service(3000, web.service(config), max_body_limit: 4_000_000)
+  io.println("Started listening on http://localhost:3000 ✨")
 
   // Put the main process to sleep while the web server does its thing
-  erlang.sleep_forever()
+  process.sleep_forever()
 }
 
 external fn halt(Int) -> Nil =

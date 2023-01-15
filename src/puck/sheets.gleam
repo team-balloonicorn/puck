@@ -16,7 +16,7 @@ import gleam/dynamic
 import gleam/option.{Option}
 import gleam/json.{Json} as j
 import gleam/otp/actor
-import gleam/otp/process
+import gleam/erlang/process
 
 pub type Error {
   HttpError(hackney.Error)
@@ -285,7 +285,7 @@ pub fn append_payment(payment: Payment, config: Config) -> Result(Nil, Error) {
 }
 
 type RefresherState {
-  RefresherState(config: Config, sender: process.Sender(Nil))
+  RefresherState(config: Config, subject: process.Subject(Nil))
 }
 
 pub fn start_refresher(config: Config) -> Result(Nil, Nil) {
@@ -299,10 +299,13 @@ pub fn start_refresher(config: Config) -> Result(Nil, Nil) {
 }
 
 fn refresher_init(config: Config) -> actor.InitResult(RefresherState, Nil) {
-  let #(sender, receiver) = process.new_channel()
-  let state = RefresherState(sender: sender, config: config)
-  process.send_after(state.sender, 1000, Nil)
-  actor.Ready(state, option.Some(receiver))
+  let subject = process.new_subject()
+  let state = RefresherState(subject: subject, config: config)
+  let selector =
+    process.new_selector()
+    |> process.selecting(subject, fn(x) { x })
+  process.send_after(state.subject, 1000, Nil)
+  actor.Ready(state, selector)
 }
 
 fn refresher_loop(
@@ -321,7 +324,7 @@ fn refresher_loop(
       1000 * 60 * 10
     }
   }
-  process.send_after(state.sender, sleep_period, Nil)
+  process.send_after(state.subject, sleep_period, Nil)
   actor.Continue(state)
 }
 
