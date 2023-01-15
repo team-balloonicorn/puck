@@ -1,4 +1,3 @@
-import puck/config.{Config}
 import sqlight
 
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
