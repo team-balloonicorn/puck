@@ -1,14 +1,15 @@
 import sqlight
 import puck/error.{Error}
+import puck/database
 import gleam/dynamic.{Dynamic}
-import gleam/result.{then}
+import gleam/result
 
 pub type User {
   User(id: Int, email: String, interactions: Int)
 }
 
 pub fn get_or_insert_by_email(
-  connection: sqlight.Connection,
+  conn: sqlight.Connection,
   email: String,
 ) -> Result(User, Error) {
   let sql =
@@ -19,16 +20,11 @@ pub fn get_or_insert_by_email(
       update set email = email
     returning *
     "
-  use users <- then(
-    sqlight.query(sql, connection, [sqlight.text(email)], decoder)
-    |> result.map_error(error.SqlightError),
-  )
-  assert [user] = users
-  Ok(user)
+  database.one(sql, conn, [sqlight.text(email)], decoder)
 }
 
 pub fn increment_interaction_count(
-  connection: sqlight.Connection,
+  conn: sqlight.Connection,
   user_id: Int,
 ) -> Result(Nil, Error) {
   let sql =
@@ -37,11 +33,8 @@ pub fn increment_interaction_count(
     set interactions = interactions + 1
     where id = ?
     "
-  use _ <- then(
-    sqlight.query(sql, connection, [sqlight.int(user_id)], Ok)
-    |> result.map_error(error.SqlightError),
-  )
-  Ok(Nil)
+  database.query(sql, conn, [sqlight.int(user_id)], Ok)
+  |> result.map(fn(_) { Nil })
 }
 
 fn decoder(data: Dynamic) {

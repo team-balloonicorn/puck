@@ -1,4 +1,10 @@
 import sqlight
+import puck/error.{Error}
+import gleam/dynamic
+import gleam/result
+
+// TODO: test payments
+// TODO: test applications
 
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
   use db <- sqlight.with_connection(path)
@@ -7,6 +13,29 @@ pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
   assert Ok(_) = sqlight.exec("pragma foreign_keys = on;", db)
 
   f(db)
+}
+
+pub fn query(
+  sql: String,
+  connection: sqlight.Connection,
+  arguments: List(sqlight.Value),
+  decoder: dynamic.Decoder(t),
+) -> Result(List(t), Error) {
+  sqlight.query(sql, connection, arguments, decoder)
+  |> result.map_error(error.SqlightError)
+}
+
+pub fn one(
+  sql: String,
+  connection: sqlight.Connection,
+  arguments: List(sqlight.Value),
+  decoder: dynamic.Decoder(t),
+) -> Result(t, Error) {
+  query(sql, connection, arguments, decoder)
+  |> result.map(fn(rows) {
+    assert [row] = rows
+    row
+  })
 }
 
 pub fn migrate(db: sqlight.Connection) -> Nil {
