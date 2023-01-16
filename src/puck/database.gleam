@@ -66,7 +66,7 @@ create table if not exists applications (
 ) strict;
 
 create table if not exists payments (
-  id integer primary key autoincrement not null,
+  id text primary key not null,
 
   created_at text not null
     constraint valid_date check (created_at like '____-__-__ __:__:__'),

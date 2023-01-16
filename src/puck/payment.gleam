@@ -3,6 +3,7 @@ import gleam/dynamic.{field, int, string}
 
 pub type Payment {
   Payment(
+    id: String,
     created_at: String,
     counterparty: String,
     amount: Int,
@@ -12,8 +13,9 @@ pub type Payment {
 
 pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
   let decoder =
-    dynamic.decode4(
+    dynamic.decode5(
       Payment,
+      field("data", field("id", string)),
       field("data", field("created", string)),
       field(
         "data",

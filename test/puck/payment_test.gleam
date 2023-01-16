@@ -55,6 +55,7 @@ pub fn from_json_transfer_test() {
 }"
   |> payment.from_json
   |> should.equal(Ok(Payment(
+    id: "tx_0000AG2o6vNOP3W9owpal8",
     created_at: "2022-02-01T20:47:19.022Z",
     amount: 100,
     counterparty: "Louis Pilfold",
@@ -97,6 +98,7 @@ pub fn from_json_purchase_test() {
 }"
   |> payment.from_json
   |> should.equal(Ok(Payment(
+    id: "tx_00008zjky19HyFLAzlUk7t",
     created_at: "2015-09-04T14:28:40Z",
     amount: -350,
     counterparty: "The De Beauvoir Deli Co.",
