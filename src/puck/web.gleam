@@ -6,6 +6,7 @@ import puck/config.{Config}
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
+import puck/database
 import puck/web/templates.{Templates}
 import gleam/option
 import gleam/http
@@ -22,19 +23,28 @@ import gleam/uri
 import gleam/io
 
 pub type State {
-  State(templates: Templates, config: Config)
+  State(templates: Templates, db: database.Connection, config: Config)
 }
 
 pub fn service(config: Config) -> Service(BitString, BitBuilder) {
-  let state = State(config: config, templates: templates.load(config))
+  handle_request(_, config)
+}
 
-  router(_, state)
-  |> service.map_response_body(bit_builder.from_string)
-  |> print_requests.middleware
-  |> static.middleware
-  |> service.prepend_response_header("made-with", "Gleam")
-  |> service.prepend_response_header("x-robots-tag", "noindex")
-  |> rescue_errors.middleware
+pub fn handle_request(
+  request: Request(BitString),
+  config: Config,
+) -> Response(BitBuilder) {
+  use <- rescue_errors.middleware
+  use <- static.serve_assets(request)
+  use <- print_requests.middleware(request)
+
+  use db <- database.with_connection(config.database_path)
+  let state = State(config: config, db: db, templates: templates.load(config))
+
+  router(request, state)
+  |> response.prepend_header("x-robots-tag", "noindex")
+  |> response.prepend_header("made-with", "Gleam")
+  |> response.map(bit_builder.from_string)
 }
 
 fn router(request: Request(BitString), state: State) -> Response(String) {

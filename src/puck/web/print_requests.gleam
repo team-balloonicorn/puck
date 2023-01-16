@@ -1,7 +1,6 @@
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/http/service.{Service}
 import gleam/int
 import gleam/io
 import gleam/string
@@ -29,14 +28,12 @@ fn format_log_line(
   ])
 }
 
-pub fn middleware(service: Service(a, b)) -> Service(a, b) {
-  fn(request) {
-    let before = now()
-    let response = service(request)
-    let elapsed = convert_time_unit(now() - before, Native, Microsecond)
-    io.println(format_log_line(request, response, elapsed))
-    response
-  }
+pub fn middleware(request: Request(a), next: fn() -> Response(b)) -> Response(b) {
+  let before = now()
+  let response = next()
+  let elapsed = convert_time_unit(now() - before, Native, Microsecond)
+  io.println(format_log_line(request, response, elapsed))
+  response
 }
 
 type TimeUnit {
