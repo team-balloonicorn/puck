@@ -56,6 +56,6 @@ pub fn insert_application_test() {
     user.get_or_insert_application(db, user.id)
 
   assert 14 = string.length(reference)
-  assert "m-" <> _ = reference
+  assert True = string.starts_with(reference, "m-")
   assert True = uid == user.id
 }
