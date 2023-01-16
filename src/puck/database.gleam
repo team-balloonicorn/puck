@@ -55,7 +55,7 @@ create table if not exists users (
 create table if not exists applications (
   id integer primary key autoincrement not null,
 
-  user_id integer not null,
+  user_id integer not null unique,
 
   payment_reference text not null unique
     constraint valid_payment_reference check (

@@ -1,5 +1,6 @@
 import tests
-import puck/user.{User}
+import gleam/string
+import puck/user.{Application, User}
 import puck/error
 
 pub fn get_or_insert_by_email_new_users_test() {
@@ -45,4 +46,16 @@ pub fn increment_interaction_count_test() {
 
   assert Ok(User(interactions: 3, ..)) =
     user.get_or_insert_by_email(db, "louis@example.com")
+}
+
+pub fn insert_application_test() {
+  use db <- tests.with_connection
+  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+
+  assert Ok(Application(id: 1, payment_reference: reference, user_id: uid)) =
+    user.get_or_insert_application(db, user.id)
+
+  assert 14 = string.length(reference)
+  assert "m-" <> _ = reference
+  assert True = uid == user.id
 }
