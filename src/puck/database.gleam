@@ -69,7 +69,9 @@ create table if not exists payments (
   id text primary key not null,
 
   created_at text not null
-    constraint valid_date check (created_at like '____-__-__ __:__:__'),
+    constraint valid_date check (datetime(created_at) not null),
+
+  counterparty text not null,
 
   amount integer not null
     constraint positive_amount check (amount > 0),
