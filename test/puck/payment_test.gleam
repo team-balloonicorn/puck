@@ -1,3 +1,4 @@
+import tests
 import gleeunit/should
 import puck/payment.{Payment}
 
@@ -104,4 +105,87 @@ pub fn from_json_purchase_test() {
     counterparty: "The De Beauvoir Deli Co.",
     reference: "Ozone Coffee Roasters",
   )))
+}
+
+pub fn insert_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+
+  let payment1 =
+    Payment(
+      id: "tx_00008zjky19HyFLAzlUk7t",
+      created_at: "2015-09-04T14:28:40Z",
+      amount: 350,
+      counterparty: "The De Beauvoir Deli Co.",
+      reference: "Ozone Coffee Roasters",
+    )
+  let payment2 =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 100,
+      counterparty: "Louis Pilfold",
+      reference: "test1234",
+    )
+
+  assert Ok(Nil) = payment.insert(conn, payment1)
+  assert Ok(Nil) = payment.insert(conn, payment2)
+  assert Ok([p1, p2]) = payment.list_all(conn)
+  assert True = p1 == payment1
+  assert True = p2 == payment2
+}
+
+pub fn inserting_is_idempotent_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+
+  let payment1 =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 100,
+      counterparty: "Louis Pilfold",
+      reference: "test1234",
+    )
+
+  assert Ok(Nil) = payment.insert(conn, payment1)
+  assert Ok(Nil) = payment.insert(conn, payment1)
+  assert Ok(Nil) = payment.insert(conn, payment1)
+
+  assert Ok([p1]) = payment.list_all(conn)
+  assert True = p1 == payment1
+}
+
+pub fn insert_rejects_invalid_dates_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+
+  let payment1 =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "not a date",
+      amount: 100,
+      counterparty: "Louis Pilfold",
+      reference: "test1234",
+    )
+
+  assert Error(_) = payment.insert(conn, payment1)
+  assert Ok([]) = payment.list_all(conn)
+}
+
+pub fn insert_rejects_negative_amounts_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+
+  let payment1 =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: -1,
+      counterparty: "Louis Pilfold",
+      reference: "test1234",
+    )
+
+  assert Error(_) = payment.insert(conn, payment1)
+  assert Ok([]) = payment.list_all(conn)
 }

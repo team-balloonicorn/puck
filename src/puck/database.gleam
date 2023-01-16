@@ -3,8 +3,8 @@ import puck/error.{Error}
 import gleam/dynamic
 import gleam/result
 
-// TODO: test payments
-// TODO: test applications
+pub type Connection =
+  sqlight.Connection
 
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
   use db <- sqlight.with_connection(path)

@@ -1,5 +1,9 @@
+import sqlight
 import gleam/json
-import gleam/dynamic.{field, int, string}
+import gleam/result
+import gleam/dynamic.{Dynamic, element, field, int, string}
+import puck/error.{Error}
+import puck/database
 
 pub type Payment {
   Payment(
@@ -32,4 +36,59 @@ pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
     )
 
   json.decode(from: json, using: decoder)
+}
+
+fn decoder(data: Dynamic) -> Result(Payment, List(dynamic.DecodeError)) {
+  data
+  |> dynamic.decode5(
+    Payment,
+    element(0, string),
+    element(1, string),
+    element(2, string),
+    element(3, int),
+    element(4, string),
+  )
+}
+
+pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error) {
+  let sql =
+    "
+    insert into payments (
+      id,
+      created_at,
+      counterparty,
+      amount,
+      reference
+    ) values (
+      $1, $2, $3, $4, $5
+    )
+    on conflict (id) do nothing
+    "
+
+  let arguments = [
+    sqlight.text(payment.id),
+    sqlight.text(payment.created_at),
+    sqlight.text(payment.counterparty),
+    sqlight.int(payment.amount),
+    sqlight.text(payment.reference),
+  ]
+
+  database.query(sql, conn, arguments, Ok)
+  |> result.map(fn(_) { Nil })
+}
+
+pub fn list_all(conn: database.Connection) -> Result(List(Payment), Error) {
+  let sql =
+    "
+    select
+      id,
+      created_at,
+      counterparty,
+      amount,
+      reference
+    from payments
+    limit 1000
+    "
+
+  database.query(sql, conn, [], decoder)
 }
