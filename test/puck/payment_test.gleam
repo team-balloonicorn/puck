@@ -173,7 +173,7 @@ pub fn insert_rejects_invalid_dates_test() {
   assert Ok([]) = payment.list_all(conn)
 }
 
-pub fn insert_rejects_negative_amounts_test() {
+pub fn insert_discards_negative_amounts_test() {
   use conn <- tests.with_connection
   assert Ok([]) = payment.list_all(conn)
 
@@ -186,6 +186,6 @@ pub fn insert_rejects_negative_amounts_test() {
       reference: "test1234",
     )
 
-  assert Error(_) = payment.insert(conn, payment1)
+  assert Ok(Nil) = payment.insert(conn, payment1)
   assert Ok([]) = payment.list_all(conn)
 }

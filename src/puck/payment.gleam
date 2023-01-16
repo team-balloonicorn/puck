@@ -51,6 +51,8 @@ fn decoder(data: Dynamic) -> Result(Payment, List(dynamic.DecodeError)) {
 }
 
 pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error) {
+  use <- require(payment.amount > 0, or_return: Ok(Nil))
+
   let sql =
     "
     insert into payments (
@@ -91,4 +93,11 @@ pub fn list_all(conn: database.Connection) -> Result(List(Payment), Error) {
     "
 
   database.query(sql, conn, [], decoder)
+}
+
+fn require(predicate: Bool, or_return alternative: a, run f: fn() -> a) -> a {
+  case predicate {
+    True -> f()
+    False -> alternative
+  }
 }
