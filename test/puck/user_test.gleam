@@ -36,14 +36,17 @@ pub fn get_or_insert_by_email_already_inserted_test() {
     user.get_or_insert_by_email(db, "louis@example.com")
 }
 
-pub fn increment_interaction_count_test() {
+pub fn get_by_id_incrementing_interactiont_test() {
   use db <- tests.with_connection
   assert Ok(User(id: 1, interactions: 0, ..)) =
     user.get_or_insert_by_email(db, "louis@example.com")
 
-  assert Ok(Nil) = user.increment_interaction_count(db, 1)
-  assert Ok(Nil) = user.increment_interaction_count(db, 1)
-  assert Ok(Nil) = user.increment_interaction_count(db, 1)
+  assert Ok(Some(User(id: 1, interactions: 1, ..))) =
+    user.get_and_increment_interaction(db, 1)
+  assert Ok(Some(User(id: 1, interactions: 2, ..))) =
+    user.get_and_increment_interaction(db, 1)
+  assert Ok(Some(User(id: 1, interactions: 3, ..))) =
+    user.get_and_increment_interaction(db, 1)
 
   assert Ok(User(interactions: 3, ..)) =
     user.get_or_insert_by_email(db, "louis@example.com")

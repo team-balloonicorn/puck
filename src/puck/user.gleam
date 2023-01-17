@@ -3,7 +3,6 @@ import puck/error.{Error}
 import puck/attendee
 import puck/database
 import gleam/dynamic.{Dynamic}
-import gleam/result
 import gleam/option.{Option}
 
 pub type User {
@@ -30,20 +29,6 @@ pub fn get_or_insert_by_email(
       id, email, interactions
     "
   database.one(sql, conn, [sqlight.text(email)], decoder)
-}
-
-pub fn increment_interaction_count(
-  conn: database.Connection,
-  user_id: Int,
-) -> Result(Nil, Error) {
-  let sql =
-    "
-    update users
-    set interactions = interactions + 1
-    where id = ?
-    "
-  database.query(sql, conn, [sqlight.int(user_id)], Ok)
-  |> result.map(fn(_) { Nil })
 }
 
 pub fn get_or_insert_application(
@@ -84,6 +69,23 @@ pub fn get_user_by_payment_reference(
       payment_reference = $1
     "
   let arguments = [sqlight.text(reference)]
+  database.maybe_one(sql, conn, arguments, decoder)
+}
+
+pub fn get_and_increment_interaction(
+  conn: database.Connection,
+  user_id: Int,
+) -> Result(Option(User), Error) {
+  let sql =
+    "
+    update users set 
+      interactions = interactions + 1
+    where
+      id = $1
+    returning
+      id, email, interactions
+    "
+  let arguments = [sqlight.int(user_id)]
   database.maybe_one(sql, conn, arguments, decoder)
 }
 
