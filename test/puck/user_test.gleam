@@ -1,8 +1,9 @@
 import tests
 import gleam/string
-import puck/user.{Application, User}
 import gleam/option.{None, Some}
+import puck/user.{Application, User}
 import puck/error
+import bcrypter
 
 pub fn get_or_insert_by_email_new_users_test() {
   use db <- tests.with_connection
@@ -91,4 +92,23 @@ pub fn get_user_by_payment_reference_case_insensitive_test() {
 pub fn get_user_by_payment_reference_not_found_test() {
   use db <- tests.with_connection
   assert Ok(None) = user.get_user_by_payment_reference(db, "m-12345678901234")
+}
+
+pub fn login_token_hash_test() {
+  use db <- tests.with_connection
+  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  let id = user.id
+
+  // Create a token and fetch it
+  assert Ok(Some(token)) = user.create_login_token(db, id)
+  assert Ok(Some(#(_, Some(hash)))) = user.get_with_login_token_hash(db, id)
+
+  // Verify it
+  assert True = bcrypter.compare(token, hash)
+  assert False = bcrypter.compare("other", hash)
+
+  // Delete it
+  assert Ok(True) = user.delete_login_token_hash(db, id)
+  // It is gone!
+  assert Ok(Some(#(_, None))) = user.get_with_login_token_hash(db, id)
 }

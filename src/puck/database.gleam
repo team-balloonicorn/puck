@@ -65,7 +65,9 @@ create table if not exists users (
     constraint valid_email check (email like '%@%'),
 
   interactions integer not null default 0
-    constraint positive_interactions check (interactions >= 0)
+    constraint positive_interactions check (interactions >= 0),
+
+  login_token_hash text unique
 ) strict;
 
 create table if not exists applications (
