@@ -1,7 +1,7 @@
 import bcrypter
 import gleam/string
 
-pub fn hash_and_compare_test() {
+pub fn hash_and_verify_test() {
   let hash = bcrypter.hash("password")
 
   // The hash has certain properties
@@ -9,8 +9,8 @@ pub fn hash_and_compare_test() {
   assert 60 = string.length(hash)
 
   // The hash can be verified
-  assert True = bcrypter.compare("password", hash)
-  assert False = bcrypter.compare("Password", hash)
-  assert False = bcrypter.compare("password ", hash)
-  assert False = bcrypter.compare("passwor", hash)
+  assert True = bcrypter.verify("password", hash)
+  assert False = bcrypter.verify("Password", hash)
+  assert False = bcrypter.verify("password ", hash)
+  assert False = bcrypter.verify("passwor", hash)
 }

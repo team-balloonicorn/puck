@@ -15,6 +15,9 @@ flyctl deploy     # Deploy
 - `RELOAD_TEMPLATES`: Templates are reloaded on each rendering if this it set,
   to avoid having to restart the server when making HTML changes in development.
 
+### Users and authentication
+- `SIGNING_SECRET`: Secret used to sign cookies.
+
 ### Registration
 - `ATTEND_SECRET`: Secret route for sign up.
 

@@ -101,14 +101,16 @@ pub fn login_token_hash_test() {
 
   // Create a token and fetch it
   assert Ok(Some(token)) = user.create_login_token(db, id)
-  assert Ok(Some(#(_, Some(hash)))) = user.get_with_login_token_hash(db, id)
+  assert Ok(Some(hash)) = user.get_login_token_hash(db, id)
 
   // Verify it
-  assert True = bcrypter.compare(token, hash)
-  assert False = bcrypter.compare("other", hash)
+  assert True = bcrypter.verify(token, hash)
+  assert False = bcrypter.verify("other", hash)
 
   // Delete it
   assert Ok(True) = user.delete_login_token_hash(db, id)
   // It is gone!
-  assert Ok(Some(#(_, None))) = user.get_with_login_token_hash(db, id)
+  assert Ok(None) = user.get_login_token_hash(db, id)
+  // The user isn't though
+  assert Ok(Some(User(id: 1, ..))) = user.get_and_increment_interaction(db, id)
 }

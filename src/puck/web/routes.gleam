@@ -2,6 +2,7 @@ import puck/payment.{Payment}
 import puck/attendee
 import puck/sheets
 import puck/web
+import puck/user
 import puck/expiring_set
 import puck/config.{Config}
 import puck/web/print_requests
@@ -16,7 +17,9 @@ import gleam/http/response.{Response}
 import gleam/bit_builder.{BitBuilder}
 import gleam/erlang/process
 import gleam/string
+import gleam/int
 import gleam/io
+import bcrypter
 
 pub type State {
   State(templates: Templates, db: database.Connection, config: Config)
@@ -51,8 +54,24 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
     [key] if key == attend -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
+    ["login", user_id, token] -> login(user_id, token, state)
     ["api", "payment", key] if key == pay -> payments(request, state.config)
     _ -> web.not_found()
+  }
+}
+
+// TODO: test
+fn login(user_id: String, token: String, state: State) {
+  use user_id <- web.ok(int.parse(user_id))
+  use hash <- web.ok_or_404(user.get_login_token_hash(state.db, user_id))
+  use hash <- web.some(hash)
+  case bcrypter.verify(token, hash) {
+    True -> {
+      assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
+      web.redirect("/admin")
+      |> web.set_signed_user_id_cookie(user_id, state.config.signing_secret)
+    }
+    False -> web.not_found()
   }
 }
 
@@ -73,7 +92,7 @@ fn attendance_form(state: State) {
 
 fn register_attendance(request: Request(BitString), state: State) {
   use params <- web.require_form_urlencoded_body(request)
-  use attendee <- web.require_ok(attendee.from_query(params))
+  use attendee <- web.ok(attendee.from_query(params))
 
   // TODO: record in database
   // Record the new attendee in the database
@@ -123,7 +142,7 @@ fn pal_system(state: State) {
 
 fn payments(request: Request(BitString), config: Config) {
   use body <- web.require_bit_string_body(request)
-  use payment <- web.require_ok(payment.from_json(body))
+  use payment <- web.ok(payment.from_json(body))
 
   let tx_key = string.append(payment.created_at, payment.reference)
   assert Ok(_) = case

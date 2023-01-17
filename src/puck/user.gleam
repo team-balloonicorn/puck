@@ -141,29 +141,23 @@ pub fn delete_login_token_hash(
   |> result.map(option.is_some)
 }
 
-pub fn get_with_login_token_hash(
+pub fn get_login_token_hash(
   conn: database.Connection,
   user_id: Int,
-) -> Result(Option(#(User, Option(String))), Error) {
+) -> Result(Option(String), Error) {
   let sql =
     "
     select
-      id, email, interactions,
       login_token_hash
     from
       users
     where
       id = ?1
     "
-  let decoder = fn(data) {
-    let decode_hash = dynamic.element(3, dynamic.optional(dynamic.string))
-    use hash <- result.then(decode_hash(data))
-    use user <- result.then(decoder(data))
-    Ok(#(user, hash))
-  }
-
   let arguments = [sqlight.int(user_id)]
+  let decoder = dynamic.element(0, dynamic.optional(dynamic.string))
   database.maybe_one(sql, conn, arguments, decoder)
+  |> result.map(option.flatten)
 }
 
 fn decoder(data: Dynamic) {

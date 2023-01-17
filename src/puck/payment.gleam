@@ -62,7 +62,7 @@ pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error)
       amount,
       reference
     ) values (
-      $1, $2, $3, $4, $5
+      ?1, ?2, ?3, ?4, ?5
     )
     on conflict (id) do nothing
     "

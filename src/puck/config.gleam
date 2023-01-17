@@ -7,6 +7,7 @@ pub type Config {
     environment: String,
     database_path: String,
     help_email: String,
+    signing_secret: String,
     // Google sheets
     client_id: String,
     client_secret: String,
@@ -53,6 +54,7 @@ pub fn load_from_env_or_crash() -> Config {
   assert Ok(account_number) = os.get_env("ACCOUNT_NUMBER")
   assert Ok(sort_code) = os.get_env("SORT_CODE")
   assert Ok(help_email) = os.get_env("HELP_EMAIL")
+  assert Ok(signing_secret) = os.get_env("SIGNING_SECRET")
   let reload_templates = os.get_env("RELOAD_TEMPLATES") != Error(Nil)
 
   Config(
@@ -75,5 +77,6 @@ pub fn load_from_env_or_crash() -> Config {
     sort_code: sort_code,
     help_email: help_email,
     transaction_set: set,
+    signing_secret: signing_secret,
   )
 }

@@ -1,12 +1,30 @@
-import puck/web/templates.{Templates}
+import gleam/http.{Http}
+import gleam/http/cookie
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/http/service.{Service}
-import gleam/bit_builder.{BitBuilder}
 import gleam/bit_string
+import gleam/option.{None, Option, Some}
 import gleam/uri
+import gleam/int
+import gleam/crypto
 
-pub fn not_found() {
+pub fn set_signed_user_id_cookie(
+  response: Response(a),
+  user_id: Int,
+  signing_secret: String,
+) -> Response(a) {
+  <<int.to_string(user_id):utf8>>
+  |> crypto.sign_message(<<signing_secret:utf8>>, crypto.Sha256)
+  |> response.set_cookie(response, "uid", _, cookie.defaults(Http))
+}
+
+pub fn redirect(target: String) -> Response(String) {
+  response.new(302)
+  |> response.set_header("Location", target)
+  |> response.set_body("You are being redirected")
+}
+
+pub fn not_found() -> Response(String) {
   response.new(404)
   |> response.set_body("There's nothing here...")
 }
@@ -51,12 +69,42 @@ pub fn require_form_urlencoded_body(
   }
 }
 
-pub fn require_ok(
+pub fn ok(
   result: Result(a, b),
   next: fn(a) -> Response(String),
 ) -> Response(String) {
   case result {
     Ok(value) -> next(value)
     Error(_) -> unprocessable_entity()
+  }
+}
+
+pub fn ok_or_404(
+  result: Result(a, b),
+  next: fn(a) -> Response(String),
+) -> Response(String) {
+  case result {
+    Ok(value) -> next(value)
+    Error(_) -> not_found()
+  }
+}
+
+pub fn some(
+  result: Option(a),
+  next: fn(a) -> Response(String),
+) -> Response(String) {
+  case result {
+    Some(value) -> next(value)
+    None -> not_found()
+  }
+}
+
+pub fn true_or_404(
+  result: Bool,
+  next: fn() -> Response(String),
+) -> Response(String) {
+  case result {
+    True -> next()
+    False -> not_found()
   }
 }

@@ -7,7 +7,7 @@ pub fn hash(password: String) -> String {
   hash_with_salt(password, salt)
 }
 
-pub fn compare(password: String, hash: String) -> Bool {
+pub fn verify(password: String, hash: String) -> Bool {
   let salt = string.slice(hash, at_index: 0, length: 29)
   let hashed = hash_with_salt(password, salt)
   crypto.secure_compare(<<hash:utf8>>, <<hashed:utf8>>)
