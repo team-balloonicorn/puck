@@ -1,29 +1,25 @@
-import puck/payment.{Payment}
-import puck/attendee
-import puck/sheets
-import puck/web
-import puck/user
-import puck/expiring_set
-import puck/config.{Config}
-import puck/web/print_requests
-import puck/web/rescue_errors
-import puck/web/static
-import puck/database
-import puck/web/templates.{Templates}
-import gleam/option
+import bcrypter
+import gleam/bit_builder.{BitBuilder}
+import gleam/erlang/process
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/bit_builder.{BitBuilder}
-import gleam/erlang/process
-import gleam/string
 import gleam/int
 import gleam/io
-import bcrypter
-
-pub type State {
-  State(templates: Templates, db: database.Connection, config: Config)
-}
+import gleam/option
+import gleam/string
+import puck/attendee
+import puck/config.{Config}
+import puck/database
+import puck/expiring_set
+import puck/payment.{Payment}
+import puck/sheets
+import puck/user
+import puck/web.{State}
+import puck/web/print_requests
+import puck/web/rescue_errors
+import puck/web/static
+import puck/web/templates
 
 pub fn service(config: Config) {
   handle_request(_, config)
