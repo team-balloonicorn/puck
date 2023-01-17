@@ -2,6 +2,7 @@ import sqlight
 import puck/error.{Error}
 import gleam/dynamic
 import gleam/result
+import gleam/option.{Option}
 
 pub type Connection =
   sqlight.Connection
@@ -38,6 +39,21 @@ pub fn one(
   })
 }
 
+pub fn maybe_one(
+  sql: String,
+  connection: sqlight.Connection,
+  arguments: List(sqlight.Value),
+  decoder: dynamic.Decoder(t),
+) -> Result(Option(t), Error) {
+  query(sql, connection, arguments, decoder)
+  |> result.map(fn(rows) {
+    case rows {
+      [] -> option.None
+      [row] -> option.Some(row)
+    }
+  })
+}
+
 pub fn migrate(db: sqlight.Connection) -> Nil {
   assert Ok(_) =
     sqlight.exec(
@@ -57,7 +73,7 @@ create table if not exists applications (
 
   user_id integer not null unique,
 
-  payment_reference text not null unique
+  payment_reference text not null unique collate nocase
     constraint valid_payment_reference check (
       length(payment_reference) = 14 and payment_reference like 'm-%'
     ),

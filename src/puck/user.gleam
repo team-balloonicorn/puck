@@ -4,6 +4,7 @@ import puck/attendee
 import puck/database
 import gleam/dynamic.{Dynamic}
 import gleam/result
+import gleam/option.{Option}
 
 pub type User {
   User(id: Int, email: String, interactions: Int)
@@ -14,7 +15,7 @@ pub type Application {
 }
 
 pub fn get_or_insert_by_email(
-  conn: sqlight.Connection,
+  conn: database.Connection,
   email: String,
 ) -> Result(User, Error) {
   let sql =
@@ -32,7 +33,7 @@ pub fn get_or_insert_by_email(
 }
 
 pub fn increment_interaction_count(
-  conn: sqlight.Connection,
+  conn: database.Connection,
   user_id: Int,
 ) -> Result(Nil, Error) {
   let sql =
@@ -46,7 +47,7 @@ pub fn increment_interaction_count(
 }
 
 pub fn get_or_insert_application(
-  conn: sqlight.Connection,
+  conn: database.Connection,
   user_id: Int,
 ) -> Result(Application, Error) {
   let sql =
@@ -65,6 +66,25 @@ pub fn get_or_insert_application(
     sqlight.text(attendee.generate_reference()),
   ]
   database.one(sql, conn, arguments, application_decoder)
+}
+
+pub fn get_user_by_payment_reference(
+  conn: database.Connection,
+  reference: String,
+) -> Result(Option(User), Error) {
+  let sql =
+    "
+    select
+      users.id, email, interactions
+    from
+      users
+    join
+      applications on users.id = applications.user_id
+    where
+      payment_reference = $1
+    "
+  let arguments = [sqlight.text(reference)]
+  database.maybe_one(sql, conn, arguments, decoder)
 }
 
 fn decoder(data: Dynamic) {

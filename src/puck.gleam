@@ -1,4 +1,4 @@
-import puck/web
+import puck/web/routes
 import puck/email
 import puck/sheets
 import puck/attendee
@@ -45,7 +45,7 @@ fn server(config: Config) {
 
   // Start the web server process
   assert Ok(_) =
-    mist.run_service(3000, web.service(config), max_body_limit: 4_000_000)
+    mist.run_service(3000, routes.service(config), max_body_limit: 4_000_000)
   io.println("Started listening on http://localhost:3000 ✨")
 
   // Put the main process to sleep while the web server does its thing
