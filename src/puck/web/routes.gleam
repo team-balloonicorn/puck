@@ -1,10 +1,8 @@
-import bcrypter
 import gleam/bit_builder.{BitBuilder}
 import gleam/erlang/process
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/int
 import gleam/io
 import gleam/option
 import gleam/string
@@ -14,12 +12,12 @@ import puck/database
 import puck/expiring_set
 import puck/payment.{Payment}
 import puck/sheets
-import puck/user
 import puck/web.{State}
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
+import puck/web/auth
 
 pub fn service(config: Config) {
   handle_request(_, config)
@@ -32,9 +30,16 @@ pub fn handle_request(
   use <- rescue_errors.middleware
   use <- static.serve_assets(request)
   use <- print_requests.middleware(request)
-
   use db <- database.with_connection(config.database_path)
-  let state = State(config: config, db: db, templates: templates.load(config))
+  use user <- auth.get_user_from_session(request, db, config.signing_secret)
+
+  let state =
+    State(
+      config: config,
+      db: db,
+      templates: templates.load(config),
+      current_user: user,
+    )
 
   router(request, state)
   |> response.prepend_header("x-robots-tag", "noindex")
@@ -50,24 +55,10 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
     [key] if key == attend -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
-    ["login", user_id, token] -> login(user_id, token, state)
+    ["login"] -> auth.login(state)
+    ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
     ["api", "payment", key] if key == pay -> payments(request, state.config)
     _ -> web.not_found()
-  }
-}
-
-// TODO: test
-fn login(user_id: String, token: String, state: State) {
-  use user_id <- web.ok(int.parse(user_id))
-  use hash <- web.ok_or_404(user.get_login_token_hash(state.db, user_id))
-  use hash <- web.some(hash)
-  case bcrypter.verify(token, hash) {
-    True -> {
-      assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
-      web.redirect("/admin")
-      |> web.set_signed_user_id_cookie(user_id, state.config.signing_secret)
-    }
-    False -> web.not_found()
   }
 }
 

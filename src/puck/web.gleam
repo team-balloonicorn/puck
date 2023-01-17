@@ -1,84 +1,24 @@
-import puck/user.{User}
-import puck/config.{Config}
-import puck/database
-import puck/web/templates.{Templates}
-import gleam/http.{Https}
-import gleam/http/cookie
+import gleam/bit_string
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/bit_string
 import gleam/option.{None, Option, Some}
-import gleam/result
-import gleam/list
 import gleam/uri
-import gleam/int
-import gleam/crypto
-
-const auth_cookie = "uid"
+import puck/config.{Config}
+import puck/database
+import puck/user.{User}
+import puck/web/templates.{Templates}
 
 const login_path = "/login"
 
+const please_try_again = " Please try again and contact the organisers if the problem continues."
+
 pub type State {
-  State(templates: Templates, db: database.Connection, config: Config)
-}
-
-pub fn set_signed_user_id_cookie(
-  response: Response(a),
-  user_id: Int,
-  signing_secret: String,
-) -> Response(a) {
-  <<int.to_string(user_id):utf8>>
-  |> crypto.sign_message(<<signing_secret:utf8>>, crypto.Sha256)
-  |> response.set_cookie(response, auth_cookie, _, cookie.defaults(Https))
-}
-
-pub fn authenticate(
-  request: Request(a),
-  state: State,
-  next: fn(User) -> Response(String),
-) -> Response(String) {
-  case get_user_from_cookie(request, state.db, state.config.signing_secret) {
-    Ok(user) -> next(user)
-
-    // If the cookie is invalid then it has either been tampered with or the
-    // signing secret has changed. In either case set the cookie to expire
-    // immediately.
-    // If there was no cookie then there's no harm in saying to delete it.
-    Error(Nil) ->
-      redirect(login_path)
-      |> expire_cookie(auth_cookie)
-  }
-}
-
-fn get_user_from_cookie(
-  request: Request(a),
-  db: database.Connection,
-  signing_secret: String,
-) -> Result(User, Nil) {
-  request.get_cookies(request)
-  |> list.key_find(auth_cookie)
-  |> result.then(verify_signed_cookie(_, signing_secret))
-  |> result.then(int.parse)
-  |> result.then(fn(user_id) {
-    user.get_and_increment_interaction(db, user_id)
-    |> result.nil_error
-  })
-  |> result.then(option.to_result(_, Nil))
-}
-
-fn verify_signed_cookie(
-  cookie: String,
-  signing_secret: String,
-) -> Result(String, Nil) {
-  crypto.verify_signed_message(cookie, <<signing_secret:utf8>>)
-  |> result.then(bit_string.to_string)
-}
-
-fn expire_cookie(response: Response(a), name: String) -> Response(a) {
-  let attributes =
-    cookie.Attributes(..cookie.defaults(Https), max_age: option.Some(0))
-  response
-  |> response.set_cookie(name, "", attributes)
+  State(
+    templates: Templates,
+    db: database.Connection,
+    config: Config,
+    current_user: Option(User),
+  )
 }
 
 pub fn redirect(target: String) -> Response(String) {
@@ -89,7 +29,7 @@ pub fn redirect(target: String) -> Response(String) {
 
 pub fn not_found() -> Response(String) {
   response.new(404)
-  |> response.set_body("There's nothing here...")
+  |> response.set_body("There's nothing here.")
 }
 
 pub fn method_not_allowed() -> Response(String) {
@@ -99,16 +39,22 @@ pub fn method_not_allowed() -> Response(String) {
 
 pub fn unprocessable_entity() -> Response(String) {
   response.new(422)
-  |> response.set_body(
-    "Unprocessable entity. Please try again and contact the organisers if the problem continues",
-  )
+  |> response.set_body("Unprocessable entity." <> please_try_again)
 }
 
 pub fn bad_request() -> Response(String) {
   response.new(400)
-  |> response.set_body(
-    "Invalid request. Please try again and contact the organisers if the problem continues",
-  )
+  |> response.set_body("Invalid request." <> please_try_again)
+}
+
+pub fn require_user(
+  state: State,
+  next: fn(User) -> Response(String),
+) -> Response(String) {
+  case state.current_user {
+    Some(user) -> next(user)
+    None -> redirect(login_path)
+  }
 }
 
 pub fn require_bit_string_body(
