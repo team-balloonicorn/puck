@@ -3,15 +3,10 @@ import gleam/erlang/process
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/io
-import gleam/option
-import gleam/string
 import puck/attendee
 import puck/config.{Config}
 import puck/database
-import puck/expiring_set
-import puck/payment.{Payment}
-import puck/sheets
+import puck/payment
 import puck/web.{State}
 import puck/web/print_requests
 import puck/web/rescue_errors
@@ -81,11 +76,8 @@ fn register_attendance(request: Request(BitString), state: State) {
   use params <- web.require_form_urlencoded_body(request)
   use attendee <- web.ok(attendee.from_query(params))
 
-  // TODO: record in database
-  // Record the new attendee in the database
-  assert Ok(_) = sheets.append_attendee(attendee, state.config)
-
-  // TODO: check this succeeds
+  // TODO: record new attendee in database
+  // TODO: ensure that email sending succeeds
   // Send a confirmation email to the attendee
   process.start(
     fn() {
@@ -127,43 +119,20 @@ fn pal_system(state: State) {
   |> response.set_body(html)
 }
 
-fn payments(request: Request(BitString), config: Config) {
+fn payments(request: Request(BitString), _config: Config) {
   use body <- web.require_bit_string_body(request)
-  use payment <- web.ok(payment.from_json(body))
+  use _payment <- web.ok(payment.from_json(body))
 
-  let tx_key = string.append(payment.created_at, payment.reference)
-  assert Ok(_) = case
-    expiring_set.register_new(config.transaction_set, tx_key)
-  {
-    True -> record_new_payment(payment, config)
-    False -> {
-      io.println(string.append("Discarding duplicate transaction ", tx_key))
-      Ok(Nil)
-    }
-  }
+  // TODO: record payment
+  // let tx_key = string.append(payment.created_at, payment.reference)
+  // assert Ok(_) = case
+  //   expiring_set.register_new(config.transaction_set, tx_key)
+  // {
+  //   True -> record_new_payment(payment, config)
+  //   False -> {
+  //     io.println(string.append("Discarding duplicate transaction ", tx_key))
+  //     Ok(Nil)
+  //   }
+  // }
   response.new(200)
-}
-
-fn record_new_payment(
-  payment: Payment,
-  config: Config,
-) -> Result(Nil, sheets.Error) {
-  // Record the payment in Google sheets
-  try _ = sheets.append_payment(payment, config)
-
-  // In the background send check if the payment if for an attendee and send
-  // them a confirmation email if so
-  process.start(
-    fn() {
-      assert Ok(attendee) = sheets.get_attendee_email(payment.reference, config)
-      option.map(
-        attendee,
-        attendee.send_payment_confirmation_email(payment.amount, _, config),
-      )
-      Nil
-    },
-    linked: False,
-  )
-
-  Ok(Nil)
 }

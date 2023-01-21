@@ -1,6 +1,5 @@
 import puck/web/routes
 import puck/email
-import puck/sheets
 import puck/attendee
 import puck/config.{Config}
 import gleam/io
@@ -23,7 +22,6 @@ pub fn main() {
   case erlang.start_arguments() {
     ["server"] -> server(config)
     ["email-everyone"] -> email_everyone(config)
-    ["get-attendee-email", reference] -> get_attendee_email(reference, config)
     ["send-attendance-email", email, reference] ->
       send_attendance_email(email, reference, config)
     ["send-payment-confirmation-email", email, amount] ->
@@ -39,9 +37,6 @@ fn unknown() {
 
 fn server(config: Config) {
   install_log_handler(send_error_email(_, config))
-
-  // Refreshing the Google Sheets access token in the background
-  assert Ok(_) = sheets.start_refresher(config)
 
   // Start the web server process
   assert Ok(_) =
@@ -67,12 +62,6 @@ fn send_error_email(error: String, config: Config) {
   )
   |> email.send(config)
 
-  Nil
-}
-
-fn get_attendee_email(reference: String, config: Config) -> Nil {
-  assert Ok(attendee) = sheets.get_attendee_email(reference, config)
-  io.debug(attendee)
   Nil
 }
 
