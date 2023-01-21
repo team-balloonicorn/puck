@@ -13,7 +13,6 @@ import gleam/result
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/database
-import puck/config.{Config}
 import puck/email.{Email}
 import puck/user.{User}
 import puck/web.{State}

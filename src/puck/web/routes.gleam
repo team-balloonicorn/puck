@@ -14,12 +14,14 @@ import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
 import puck/web/auth
+import utility
 
 fn router(request: Request(BitString), state: State) -> Response(String) {
   let pay = state.config.payment_secret
   let attend = state.config.attend_secret
 
   case request.path_segments(request) {
+    [] -> home(state)
     [key] if key == attend -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
@@ -38,6 +40,7 @@ pub fn handle_request(
   request: Request(BitString),
   config: Config,
 ) -> Response(BitBuilder) {
+  let request = utility.method_override(request)
   use <- rescue_errors.middleware
   use <- static.serve_assets(request)
   use <- print_requests.middleware(request)
@@ -57,6 +60,13 @@ pub fn handle_request(
   |> response.prepend_header("x-robots-tag", "noindex")
   |> response.prepend_header("made-with", "Gleam")
   |> response.map(bit_builder.from_string)
+}
+
+fn home(state: State) -> Response(String) {
+  use user <- web.require_user(state)
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body("Hello " <> user.email)
 }
 
 fn attendance(request: Request(BitString), state: State) {
