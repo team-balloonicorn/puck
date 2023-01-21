@@ -72,10 +72,7 @@ fn email_sent_page() -> String {
 fn login_page(show_error: Bool) -> String {
   let error = case show_error {
     True ->
-      html.p_text(
-        [],
-        "I'm sorry, I couldn't find anyone with with email address.",
-      )
+      html.p_text([], "Sorry, I couldn't find anyone with with email address.")
     False -> html.div([], [])
   }
 
