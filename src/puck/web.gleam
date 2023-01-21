@@ -7,6 +7,9 @@ import puck/config.{Config}
 import puck/database
 import puck/user.{User}
 import puck/web/templates.{Templates}
+import nakai
+import nakai/html
+import nakai/html/attrs.{Attr}
 
 const login_path = "/login"
 
@@ -116,4 +119,60 @@ pub fn true_or_404(
     True -> next()
     False -> not_found()
   }
+}
+
+pub fn html_page(html: List(html.Node(a))) -> String {
+  html.div(
+    [],
+    [
+      html.head([
+        html.meta([attrs.charset("utf-8")]),
+        html.meta([Attr("viewport", "width=device-width, initial-scale=1")]),
+        html.title_text([], "Midsummer Night's Tea Party"),
+        html.link([
+          attrs.rel("preconnect"),
+          attrs.href("https://fonts.googleapis.com"),
+        ]),
+        html.link([
+          attrs.rel("preconnect"),
+          attrs.href("https://fonts.gstatic.com"),
+          attrs.crossorigin(),
+        ]),
+        html.link([
+          attrs.rel("icon"),
+          attrs.type_("image/x-icon"),
+          attrs.href("/assets/favicon.png"),
+        ]),
+        html.link([
+          attrs.rel("shortcut icon"),
+          attrs.type_("image/x-icon"),
+          attrs.href("/assets/favicon.png"),
+        ]),
+        html.link([attrs.rel("stylesheet"), attrs.href("/assets/index.css")]),
+        html.link([
+          attrs.rel("stylesheet"),
+          attrs.href(
+            "https://fonts.googleapis.com/css2?family=Average&family=Quintessential&display=swap",
+          ),
+        ]),
+      ]),
+      ..html
+    ],
+  )
+  |> nakai.render
+}
+
+pub fn form_group(label: String, input: html.Node(a)) -> html.Node(a) {
+  html.div([attrs.class("form-group")], [html.label_text([], label), input])
+}
+
+pub fn email_input(attrs: List(Attr(a))) -> html.Node(a) {
+  html.input([attrs.type_("email"), attrs.name("email"), ..attrs])
+}
+
+pub fn submit_input_group(text: String) -> html.Node(a) {
+  html.div(
+    [attrs.class("form-group center")],
+    [html.button_text([attrs.type_("submit")], text)],
+  )
 }

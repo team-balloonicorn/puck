@@ -13,9 +13,7 @@ import gleam/option.{None, Option, Some}
 import puck/database
 import puck/user.{User}
 import puck/web.{State}
-import nakai
 import nakai/html
-import nakai/head
 import nakai/html/attrs
 
 const auth_cookie = "uid"
@@ -34,53 +32,29 @@ pub fn login(state: State) -> Response(String) {
 }
 
 fn login_page() -> String {
-  html.div(
-    [],
-    [
-      head.title("Midsummer Night's Tea Party"),
-      // <link rel='shortcut icon' href='/assets/favicon.png' type='image/x-icon'>
-      // <link rel='icon' href='/assets/favicon.png' type='image/x-icon'>
-      // <link rel="preconnect" href="https://fonts.googleapis.com">
-      // <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      head.charset("utf-8"),
-      head.stylesheet("/assets/index.css"),
-      head.stylesheet(
-        "https://fonts.googleapis.com/css2?family=Average&family=Quintessential&display=swap",
-      ),
-      head.meta("viewport", "width=device-width, initial-scale=1"),
-      html.main(
-        [attrs.Attr("role", "main"), attrs.class("content login")],
-        [
-          html.form(
-            [],
-            [
-              html.div_text([attrs.class("flamingo")], "🦩"),
-              html.div(
-                [attrs.class("form-group")],
-                [
-                  html.label_text([], "Welcome, friend. What's your email?"),
-                  html.input([
-                    attrs.type_("email"),
-                    attrs.name("email"),
-                    attrs.Attr("required", "true"),
-                  ]),
-                ],
-              ),
-              html.div(
-                [attrs.class("form-group center")],
-                [html.button_text([attrs.type_("submit")], "Login")],
-              ),
-              html.p_text(
-                [],
-                "P.S. We use one essential cookie to record if you are logged in.",
-              ),
-            ],
-          ),
-        ],
-      ),
-    ],
-  )
-  |> nakai.render
+  [
+    html.main(
+      [attrs.Attr("role", "main"), attrs.class("content login")],
+      [
+        html.form(
+          [],
+          [
+            html.div_text([attrs.class("flamingo")], "🦩"),
+            web.form_group(
+              "Welcome, friend. What's your email?",
+              web.email_input([attrs.Attr("required", "true")]),
+            ),
+            web.submit_input_group("Login"),
+            html.p_text(
+              [],
+              "P.S. We use one essential cookie to record if you are logged in.",
+            ),
+          ],
+        ),
+      ],
+    ),
+  ]
+  |> web.html_page
 }
 
 // TODO: test
