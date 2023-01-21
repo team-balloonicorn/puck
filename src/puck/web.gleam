@@ -6,6 +6,7 @@ import gleam/uri
 import puck/config.{Config}
 import puck/database
 import puck/user.{User}
+import puck/email.{Email}
 import puck/web/templates.{Templates}
 import nakai
 import nakai/html
@@ -21,6 +22,7 @@ pub type State {
     db: database.Connection,
     config: Config,
     current_user: Option(User),
+    send_email: fn(Email) -> Nil,
   )
 }
 
@@ -165,4 +167,8 @@ pub fn submit_input_group(text: String) -> html.Node(a) {
     [attrs.class("form-group center")],
     [html.button_text([attrs.type_("submit")], text)],
   )
+}
+
+pub fn flamingo() -> html.Node(a) {
+  html.div_text([attrs.class("flamingo")], "🦩")
 }

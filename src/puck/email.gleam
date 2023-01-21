@@ -31,5 +31,5 @@ pub fn send(email: Email, config: Config) -> Nil {
   assert Ok(_) =
     response
     |> zeptomail.decode_email_response
-  io.println("Email sent")
+  io.println("Email sent to " <> email.to_name)
 }

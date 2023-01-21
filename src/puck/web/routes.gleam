@@ -7,12 +7,28 @@ import puck/attendee
 import puck/config.{Config}
 import puck/database
 import puck/payment
+import puck/email
 import puck/web.{State}
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
 import puck/web/auth
+
+fn router(request: Request(BitString), state: State) -> Response(String) {
+  let pay = state.config.payment_secret
+  let attend = state.config.attend_secret
+
+  case request.path_segments(request) {
+    [key] if key == attend -> attendance(request, state)
+    ["licence"] -> licence(state)
+    ["the-pal-system"] -> pal_system(state)
+    ["login"] -> auth.login(request, state)
+    ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
+    ["api", "payment", key] if key == pay -> payments(request, state.config)
+    _ -> web.not_found()
+  }
+}
 
 pub fn service(config: Config) {
   handle_request(_, config)
@@ -34,27 +50,13 @@ pub fn handle_request(
       db: db,
       templates: templates.load(config),
       current_user: user,
+      send_email: email.send(_, config),
     )
 
   router(request, state)
   |> response.prepend_header("x-robots-tag", "noindex")
   |> response.prepend_header("made-with", "Gleam")
   |> response.map(bit_builder.from_string)
-}
-
-fn router(request: Request(BitString), state: State) -> Response(String) {
-  let pay = state.config.payment_secret
-  let attend = state.config.attend_secret
-
-  case request.path_segments(request) {
-    [key] if key == attend -> attendance(request, state)
-    ["licence"] -> licence(state)
-    ["the-pal-system"] -> pal_system(state)
-    ["login"] -> auth.login(request, state)
-    ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
-    ["api", "payment", key] if key == pay -> payments(request, state.config)
-    _ -> web.not_found()
-  }
 }
 
 fn attendance(request: Request(BitString), state: State) {

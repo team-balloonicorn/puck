@@ -13,8 +13,11 @@ import gleam/result
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/database
+import puck/config.{Config}
+import puck/email.{Email}
 import puck/user.{User}
 import puck/web.{State}
+import puck/error.{Error}
 import utility
 
 const auth_cookie = "uid"
@@ -45,13 +48,11 @@ fn attempt_login(request: Request(BitString), state: State) -> Response(String) 
   use email <- web.ok(list.key_find(params, "email"))
   use user <- web.ok(user.get_by_email(state.db, email))
 
-  // TODO: send email
-  // case user {
-  //   Some(_) -> Ok(Nil)
-  //   None -> Ok(Nil)
-  // }
   let html = case user {
-    Some(_) -> email_sent_page()
+    Some(user) -> {
+      state.send_email(login_email(user, state.db))
+      email_sent_page()
+    }
     None -> login_page(True)
   }
 
@@ -60,10 +61,30 @@ fn attempt_login(request: Request(BitString), state: State) -> Response(String) 
   |> response.set_body(html)
 }
 
+fn login_email(user: User, db: database.Connection) -> Email {
+  assert Ok(Some(token)) = user.create_login_token(db, user.id)
+  let id = int.to_string(user.id)
+  let content =
+    "Hello! 
+
+Here's a link to log in: https://puck.gleam.run/login/" <> id <> "/" <> token <> "
+
+Love,
+The Midsummer crew
+"
+
+  Email(
+    to_address: user.email,
+    to_name: user.email,
+    subject: "Midsummer Night's Tea Party Login",
+    content: content,
+  )
+}
+
 fn email_sent_page() -> String {
   [
-    html.div_text([attrs.class("flamingo")], "🦩"),
-    html.p_text([], "Hi! We've sent you an email with a link to log in."),
+    web.flamingo(),
+    html.p_text([], "Thank you. We've sent you an email with a link to log in."),
   ]
   |> layout
   |> web.html_page
@@ -81,15 +102,15 @@ fn login_page(show_error: Bool) -> String {
       [Attr("method", "POST")],
       [
         error,
-        html.div_text([attrs.class("flamingo")], "🦩"),
+        web.flamingo(),
         web.form_group(
           "Welcome, friend. What's your email?",
-          web.email_input([attrs.Attr("required", "true")]),
+          web.email_input([Attr("required", "true")]),
         ),
         web.submit_input_group("Login"),
         html.p_text(
           [],
-          "P.S. We use one essential cookie to record if you are logged in.",
+          "P.S. We use one essential 🍪 to record if you are logged in.",
         ),
       ],
     ),
@@ -115,7 +136,7 @@ pub fn login_via_token(user_id: String, token: String, state: State) {
   case bcrypter.verify(token, hash) {
     True -> {
       assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
-      web.redirect("/admin")
+      web.redirect("/")
       |> set_signed_user_id_cookie(user_id, state.config.signing_secret)
     }
     False -> web.not_found()
