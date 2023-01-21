@@ -1,5 +1,6 @@
 import bcrypter
 import gleam/bit_builder.{BitBuilder}
+import gleam/bit_string
 import gleam/crypto
 import gleam/http.{Https}
 import gleam/http/cookie
@@ -7,54 +8,106 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/int
 import gleam/list
-import gleam/result
-import gleam/bit_string
 import gleam/option.{None, Option, Some}
+import gleam/result
+import nakai/html
+import nakai/html/attrs.{Attr}
 import puck/database
 import puck/user.{User}
 import puck/web.{State}
-import nakai/html
-import nakai/html/attrs
+import utility
 
 const auth_cookie = "uid"
 
-pub fn login(state: State) -> Response(String) {
-  case state.current_user {
-    // TODO: A home page to redirect to
-    Some(_) -> web.redirect("/")
-    None -> {
-      let html = login_page()
-      response.new(200)
-      |> response.prepend_header("content-type", "text/html")
-      |> response.set_body(html)
-    }
+// TODO: test
+pub fn login(request: Request(BitString), state: State) -> Response(String) {
+  // TODO: A home page to redirect to
+  use <- utility.guard(
+    when: state.current_user != None,
+    return: web.redirect("/"),
+  )
+
+  case request.method {
+    http.Get -> get_login()
+    http.Post -> attempt_login(request, state)
+    _ -> web.method_not_allowed()
   }
 }
 
-fn login_page() -> String {
+fn get_login() -> Response(String) {
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(login_page(False))
+}
+
+fn attempt_login(request: Request(BitString), state: State) -> Response(String) {
+  use params <- web.require_form_urlencoded_body(request)
+  use email <- web.ok(list.key_find(params, "email"))
+  use user <- web.ok(user.get_by_email(state.db, email))
+
+  // TODO: send email
+  // case user {
+  //   Some(_) -> Ok(Nil)
+  //   None -> Ok(Nil)
+  // }
+  let html = case user {
+    Some(_) -> email_sent_page()
+    None -> login_page(True)
+  }
+
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
+}
+
+fn email_sent_page() -> String {
   [
-    html.main(
-      [attrs.Attr("role", "main"), attrs.class("content login")],
+    html.div_text([attrs.class("flamingo")], "🦩"),
+    html.p_text([], "Hi! We've sent you an email with a link to log in."),
+  ]
+  |> layout
+  |> web.html_page
+}
+
+fn login_page(show_error: Bool) -> String {
+  let error = case show_error {
+    True ->
+      html.p_text(
+        [],
+        "I'm sorry, I couldn't find anyone with with email address.",
+      )
+    False -> html.div([], [])
+  }
+
+  [
+    html.form(
+      [Attr("method", "POST")],
       [
-        html.form(
+        error,
+        html.div_text([attrs.class("flamingo")], "🦩"),
+        web.form_group(
+          "Welcome, friend. What's your email?",
+          web.email_input([attrs.Attr("required", "true")]),
+        ),
+        web.submit_input_group("Login"),
+        html.p_text(
           [],
-          [
-            html.div_text([attrs.class("flamingo")], "🦩"),
-            web.form_group(
-              "Welcome, friend. What's your email?",
-              web.email_input([attrs.Attr("required", "true")]),
-            ),
-            web.submit_input_group("Login"),
-            html.p_text(
-              [],
-              "P.S. We use one essential cookie to record if you are logged in.",
-            ),
-          ],
+          "P.S. We use one essential cookie to record if you are logged in.",
         ),
       ],
     ),
   ]
+  |> layout
   |> web.html_page
+}
+
+fn layout(content: List(html.Node(a))) -> List(html.Node(a)) {
+  [
+    html.main(
+      [attrs.Attr("role", "main"), attrs.class("content login")],
+      content,
+    ),
+  ]
 }
 
 // TODO: test

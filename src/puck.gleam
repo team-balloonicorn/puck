@@ -1,6 +1,7 @@
 import puck/web/routes
 import puck/email
 import puck/attendee
+import puck/database
 import puck/config.{Config}
 import gleam/io
 import gleam/int
@@ -37,6 +38,7 @@ fn unknown() {
 
 fn server(config: Config) {
   install_log_handler(send_error_email(_, config))
+  database.with_connection(config.database_path, database.migrate)
 
   // Start the web server process
   assert Ok(_) =

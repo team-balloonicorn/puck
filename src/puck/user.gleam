@@ -35,6 +35,22 @@ pub fn get_or_insert_by_email(
   database.one(sql, conn, [sqlight.text(email)], decoder)
 }
 
+pub fn get_by_email(
+  conn: database.Connection,
+  email: String,
+) -> Result(Option(User), Error) {
+  let sql =
+    "
+    select 
+      id, email, interactions
+    from
+      users
+    where
+      email = ?1
+    "
+  database.maybe_one(sql, conn, [sqlight.text(email)], decoder)
+}
+
 pub fn get_or_insert_application(
   conn: database.Connection,
   user_id: Int,

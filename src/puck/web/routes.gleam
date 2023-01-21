@@ -50,7 +50,7 @@ fn router(request: Request(BitString), state: State) -> Response(String) {
     [key] if key == attend -> attendance(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
-    ["login"] -> auth.login(state)
+    ["login"] -> auth.login(request, state)
     ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
     ["api", "payment", key] if key == pay -> payments(request, state.config)
     _ -> web.not_found()

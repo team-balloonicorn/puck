@@ -111,16 +111,6 @@ pub fn some(
   }
 }
 
-pub fn true_or_404(
-  result: Bool,
-  next: fn() -> Response(String),
-) -> Response(String) {
-  case result {
-    True -> next()
-    False -> not_found()
-  }
-}
-
 pub fn html_page(html: List(html.Node(a))) -> String {
   html.div(
     [],

@@ -4,6 +4,7 @@ import gleam/result
 import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
+import utility
 
 pub type Payment {
   Payment(
@@ -51,7 +52,7 @@ fn decoder(data: Dynamic) -> Result(Payment, List(dynamic.DecodeError)) {
 }
 
 pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error) {
-  use <- guard(when: payment.amount <= 0, return: Ok(Nil))
+  use <- utility.guard(when: payment.amount <= 0, return: Ok(Nil))
 
   let sql =
     "
@@ -93,15 +94,4 @@ pub fn list_all(conn: database.Connection) -> Result(List(Payment), Error) {
     "
 
   database.query(sql, conn, [], decoder)
-}
-
-fn guard(
-  when predicate: Bool,
-  return alternative: a,
-  otherwise f: fn() -> a,
-) -> a {
-  case predicate {
-    True -> alternative
-    False -> f()
-  }
 }
