@@ -22,25 +22,6 @@ pub type Attendee {
   )
 }
 
-pub type ContributionTier {
-  Contribute120
-  Contribute95
-  Contribute80
-  Contribute50
-  RolloverTicket
-}
-
-pub fn contribution_from_string(input: String) -> Result(ContributionTier, Nil) {
-  case input {
-    "120" -> Ok(Contribute120)
-    "95" -> Ok(Contribute95)
-    "80" -> Ok(Contribute80)
-    "50" -> Ok(Contribute50)
-    "rollover" -> Ok(RolloverTicket)
-    _ -> Error(Nil)
-  }
-}
-
 pub fn from_query(query: List(#(String, String))) -> Result(Attendee, Nil) {
   try name = list.key_find(query, "name")
   try email = list.key_find(query, "email")

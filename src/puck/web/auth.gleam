@@ -118,13 +118,8 @@ fn login_page(show_error: Bool) -> String {
   |> web.html_page
 }
 
-fn layout(content: List(html.Node(a))) -> List(html.Node(a)) {
-  [
-    html.main(
-      [attrs.Attr("role", "main"), attrs.class("content login")],
-      content,
-    ),
-  ]
+fn layout(content: List(html.Node(a))) -> html.Node(a) {
+  html.main([attrs.Attr("role", "main"), attrs.class("content login")], content)
 }
 
 // TODO: test

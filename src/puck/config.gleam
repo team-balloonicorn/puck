@@ -1,6 +1,4 @@
 import gleam/erlang/os
-import gleam/erlang/process.{Subject}
-import puck/expiring_set
 
 pub type Config {
   Config(
@@ -24,14 +22,10 @@ pub type Config {
     account_name: String,
     account_number: String,
     sort_code: String,
-    // Record of recently seen transactions
-    transaction_set: Subject(expiring_set.Message),
   )
 }
 
 pub fn load_from_env_or_crash() -> Config {
-  assert Ok(set) = expiring_set.start()
-
   assert Ok(environment) = os.get_env("ENVIRONMENT")
   assert Ok(database_path) = os.get_env("DATABASE_PATH")
   assert Ok(payment_secret) = os.get_env("PAYMENT_SECRET")
@@ -63,7 +57,6 @@ pub fn load_from_env_or_crash() -> Config {
     account_number: account_number,
     sort_code: sort_code,
     help_email: help_email,
-    transaction_set: set,
     signing_secret: signing_secret,
   )
 }

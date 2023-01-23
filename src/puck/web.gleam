@@ -113,7 +113,7 @@ pub fn some(
   }
 }
 
-pub fn html_page(html: List(html.Node(a))) -> String {
+pub fn html_page(page_html: html.Node(a)) -> String {
   html.div(
     [],
     [
@@ -148,7 +148,34 @@ pub fn html_page(html: List(html.Node(a))) -> String {
           ),
         ]),
       ]),
-      ..html
+      page_html,
+      html.footer(
+        [attrs.class("site-footer")],
+        [
+          html.div(
+            [],
+            [
+              html.Text("© Louis Pilfold 2022. Made with "),
+              html.a([attrs.href("http://gleam.run/")], [html.Text("Gleam")]),
+              html.Text("."),
+            ],
+          ),
+          html.div(
+            [],
+            [
+              html.Text("Source code "),
+              html.a_text(
+                [
+                  attrs.href("http://github.com/team-balloonicorn/puck"),
+                  attrs.target("_blank"),
+                  attrs.rel("noopener noreferrer"),
+                ],
+                "available",
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   )
   |> nakai.render
