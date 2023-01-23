@@ -3,22 +3,23 @@ import gleam/erlang/process
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
+import gleam/option.{None, Some}
+import nakai/html
+import nakai/html/attrs.{Attr}
 import puck/attendee
 import puck/config.{Config}
 import puck/database
-import puck/payment
 import puck/email
+import puck/payment
 import puck/web.{State}
+import puck/web/auth
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
-import puck/web/auth
-import nakai/html
-import nakai/html/attrs.{Attr}
 import utility
 
-fn router(request: Request(BitString), state: State) -> Response(String) {
+pub fn router(request: Request(BitString), state: State) -> Response(String) {
   let pay = state.config.payment_secret
   let attend = state.config.attend_secret
 
@@ -176,89 +177,116 @@ fn attendance_page(state: State) -> html.Node(a) {
           ),
         ],
       ),
-      // TODO: start sign up process here
-      //   <div class="heart-rule">
-      //     Alright, here we go
-      //   </div>
-
-      //   <form class="attendee-form" method="post" onsubmit="this.disable = true">
-      //     <div class="form-group">
-      //       <label for="name">What's your name?</label>
-      //       <input type="text" name="name" id="name" required>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="email">What's your email?</label>
-      //       <p>
-      //         We will use this to send you an email with additional information closer
-      //         to the date. Your email will be viewable by the organisers and will not
-      //         be shared with anyone else.
-      //       </p>
-      //       <input type="email" name="email" id="email" required>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="attended">Have you attended before?</label>
-      //       <label for="attended-yes">
-      //         <input type="radio" name="attended" id="attended-yes" value="yes" required>
-      //         Yes
-      //       </label>
-      //       <label for="attended-no">
-      //         <input type="radio" name="attended" id="attended-no" value="no" required>
-      //         No
-      //       </label>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="pal">What is the name of your PAL?</label>
-      //       <p>
-      //         You and your PAL are responsible for each other. Ideally either you are
-      //         your PAL will have attended Midsummer Night's Teaparty before, but this
-      //         is not a hard requirement.
-      //         <a href="/the-pal-system" target="_blank">
-      //           Read here for more information on the PAL system here.
-      //         </a>
-      //       </p>
-      //       <input type="text" name="pal" id="pal" required>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="pal-attended">Has your PAL attended before?</label>
-      //       <label for="pal-attended-yes">
-      //         <input type="radio" name="pal-attended" id="pal-attended-yes" value="yes" required>
-      //         Yes
-      //       </label>
-      //       <label for="pal-attended-no">
-      //         <input type="radio" name="pal-attended" id="pal-attended-no" value="no" required>
-      //         No
-      //       </label>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="dietary-requirements">Do you have any dietary requirements?</label>
-      //       <p>
-      //         Just in case we get enough money to run the BBQ this time.
-      //       </p>
-      //       <textarea rows=5 name="dietary-requirements" id="dietary-requirements"
-      //         placeholder="Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy."></textarea>
-      //     </div>
-
-      //     <div class="form-group">
-      //       <label for="accessibility-requirements">Do you have any accessibility requirements?</label>
-      //       <p>
-      //         Please be as detailed about what you need and we will aim to provide it
-      //         for you as best we can.
-      //       </p>
-      //       <textarea rows=5 name="accessibility-requirements" id="accessibility-requirements"></textarea>
-      //     </div>
-
-      //     <div class="form-group center">
-      //       <button type="submit">Submit!</button>
-      //     </div>
-      //   </form>
-      p("TODO: start sign up process here"),
+      html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
+      case state.current_user {
+        Some(_) ->
+          html.div(
+            [attrs.class("center")],
+            [
+              html.a_text(
+                [attrs.class("button"), attrs.href("/attendance")],
+                "Continue to your account",
+              ),
+            ],
+          )
+        None ->
+          html.form(
+            [
+              attrs.class("attendee-form"),
+              Attr("method", "post"),
+              Attr("onsubmit", "this.disable = true"),
+            ],
+            [
+              web.form_group(
+                "What's your email?",
+                web.email_input([attrs.name("email")]),
+              ),
+              web.submit_input_group("Let's go"),
+            ],
+          )
+      },
     ],
   )
+  // TODO: start sign up process here
+  //   <div class="heart-rule">
+  //     Alright, here we go
+  //   </div>
+
+  //   <form class="attendee-form" method="post" onsubmit="this.disable = true">
+  //     <div class="form-group">
+  //       <label for="name">What's your name?</label>
+  //       <input type="text" name="name" id="name" required>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="email">What's your email?</label>
+  //       <p>
+  //         We will use this to send you an email with additional information closer
+  //         to the date. Your email will be viewable by the organisers and will not
+  //         be shared with anyone else.
+  //       </p>
+  //       <input type="email" name="email" id="email" required>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="attended">Have you attended before?</label>
+  //       <label for="attended-yes">
+  //         <input type="radio" name="attended" id="attended-yes" value="yes" required>
+  //         Yes
+  //       </label>
+  //       <label for="attended-no">
+  //         <input type="radio" name="attended" id="attended-no" value="no" required>
+  //         No
+  //       </label>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="pal">What is the name of your PAL?</label>
+  //       <p>
+  //         You and your PAL are responsible for each other. Ideally either you are
+  //         your PAL will have attended Midsummer Night's Teaparty before, but this
+  //         is not a hard requirement.
+  //         <a href="/the-pal-system" target="_blank">
+  //           Read here for more information on the PAL system here.
+  //         </a>
+  //       </p>
+  //       <input type="text" name="pal" id="pal" required>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="pal-attended">Has your PAL attended before?</label>
+  //       <label for="pal-attended-yes">
+  //         <input type="radio" name="pal-attended" id="pal-attended-yes" value="yes" required>
+  //         Yes
+  //       </label>
+  //       <label for="pal-attended-no">
+  //         <input type="radio" name="pal-attended" id="pal-attended-no" value="no" required>
+  //         No
+  //       </label>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="dietary-requirements">Do you have any dietary requirements?</label>
+  //       <p>
+  //         Just in case we get enough money to run the BBQ this time.
+  //       </p>
+  //       <textarea rows=5 name="dietary-requirements" id="dietary-requirements"
+  //         placeholder="Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy."></textarea>
+  //     </div>
+
+  //     <div class="form-group">
+  //       <label for="accessibility-requirements">Do you have any accessibility requirements?</label>
+  //       <p>
+  //         Please be as detailed about what you need and we will aim to provide it
+  //         for you as best we can.
+  //       </p>
+  //       <textarea rows=5 name="accessibility-requirements" id="accessibility-requirements"></textarea>
+  //     </div>
+
+  //     <div class="form-group center">
+  //       <button type="submit">Submit!</button>
+  //     </div>
+  //   </form>
 }
 
 fn p(text: String) -> html.Node(a) {

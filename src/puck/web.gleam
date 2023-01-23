@@ -28,7 +28,7 @@ pub type State {
 
 pub fn redirect(target: String) -> Response(String) {
   response.new(302)
-  |> response.set_header("Location", target)
+  |> response.set_header("location", target)
   |> response.set_body("You are being redirected")
 }
 

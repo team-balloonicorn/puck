@@ -91,6 +91,7 @@ h1 {
   font-family: var(--pretty-font);
 }
 
+.button,
 .form-group button,
 .form-group input,
 .form-group textarea {
@@ -110,6 +111,7 @@ h1 {
   padding-right: var(--space);
 }
 
+.button,
 .form-group button[type="submit"] {
   min-width: auto;
   padding-left: var(--space-xl);
@@ -126,7 +128,7 @@ h1 {
 
 .heart-rule {
   text-align: center;
-  margin: var(--space-xxl) 0;
+  margin: var(--space-xl) 0 var(--space) 0;
 }
 
 .heart-rule:after {
