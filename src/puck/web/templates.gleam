@@ -4,7 +4,6 @@ import gleam/bbmustache as bbm
 
 pub type Templates {
   Templates(
-    home: fn(String) -> String,
     licence: fn() -> String,
     pal_system: fn() -> String,
     submitted: fn(Submitted) -> String,
@@ -22,12 +21,10 @@ pub type Submitted {
 }
 
 pub fn load(config: Config) -> Templates {
-  let home = load_template("home", config)
   let licence = load_template("licence", config)
   let pal_system = load_template("pal_system", config)
   let submitted = load_template("submitted", config)
   Templates(
-    home: fn(email) { home([#("help_email", bbm.string(email))]) },
     licence: fn() { licence([]) },
     pal_system: fn() { pal_system([]) },
     submitted: submitted_template(_, submitted),
