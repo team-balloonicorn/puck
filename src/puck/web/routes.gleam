@@ -5,8 +5,6 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/string
-import gleam/list
-import gleam/uri
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/attendee
@@ -14,7 +12,6 @@ import puck/config.{Config}
 import puck/database
 import puck/email
 import puck/payment
-import puck/error
 import puck/user.{Application, User}
 import puck/web.{State}
 import puck/web/auth
@@ -31,9 +28,9 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     [] -> home(state)
     [key] if key == attend -> attendance(request, state)
-    ["users"] -> users(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
+    ["sign-up"] -> auth.sign_up(request, state)
     ["login"] -> auth.login(request, state)
     ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
     ["api", "payment", key] if key == pay -> payments(request, state.config)
@@ -378,23 +375,6 @@ fn register_attendance(request: Request(BitString), state: State) {
   response.new(201)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
-}
-
-fn users(request: Request(BitString), state: State) {
-  use <- utility.guard(request.method != http.Post, web.method_not_allowed())
-  use params <- web.require_form_urlencoded_body(request)
-  use name <- web.ok(list.key_find(params, "name"))
-  use email <- web.ok(list.key_find(params, "email"))
-  case user.insert(state.db, name: name, email: email) {
-    Ok(user) ->
-      // TODO: Send login link
-      // TODO: Show success page
-      todo
-    Error(error.EmailAlreadyInUse) -> {
-      let query = uri.query_to_string([#("already-registered", email)])
-      web.redirect("/login?" <> query)
-    }
-  }
 }
 
 fn licence(state: State) {

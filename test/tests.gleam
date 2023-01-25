@@ -1,9 +1,11 @@
 import gleam/int
 import gleam/option.{None, Some}
 import gleam/http/request.{Request}
+import gleam/erlang/process.{Subject}
 import puck/config.{Config}
 import puck/database
 import puck/user
+import puck/email.{Email}
 import puck/web.{State}
 import puck/web/templates
 import sqlight
@@ -62,4 +64,11 @@ pub fn request(path: String) -> Request(BitString) {
   request.new()
   |> request.set_path(path)
   |> request.set_body(<<>>)
+}
+
+pub fn track_sent_emails(state: State) -> #(State, Subject(Email)) {
+  let subject = process.new_subject()
+  let send_email = fn(email) { process.send(subject, email) }
+  let state = State(..state, send_email: send_email)
+  #(state, subject)
 }

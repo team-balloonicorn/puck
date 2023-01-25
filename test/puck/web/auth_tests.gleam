@@ -1,5 +1,8 @@
+import gleam/http
 import gleam/http/response
 import gleam/http/request
+import gleam/erlang/process
+import gleam/uri
 import gleam/int
 import gleam/option.{Some}
 import gleam/string
@@ -81,4 +84,37 @@ pub fn login_by_token_ok_test() {
   assert 302 = response.status
   assert Ok("/") = response.get_header(response, "location")
   assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
+}
+
+pub fn sign_up_already_taken_test() {
+  use state <- tests.with_logged_in_state
+  let #(state, emails) = tests.track_sent_emails(state)
+  assert Some(user) = state.current_user
+  let body = uri.query_to_string([#("email", user.email), #("name", "Louis")])
+  let response =
+    tests.request("/sign-up")
+    |> request.set_method(http.Post)
+    |> request.set_body(<<body:utf8>>)
+    |> routes.router(state)
+  assert 302 = response.status
+  assert Ok("/login?already-registered=puck%40example.com") =
+    response.get_header(response, "location")
+  assert Error(Nil) = process.receive(emails, 0)
+}
+
+pub fn sign_up_ok_test() {
+  use state <- tests.with_state
+  let #(state, emails) = tests.track_sent_emails(state)
+  let body =
+    uri.query_to_string([#("email", "louis@example.com"), #("name", "Louis")])
+  let response =
+    tests.request("/sign-up")
+    |> request.set_method(http.Post)
+    |> request.set_body(<<body:utf8>>)
+    |> routes.router(state)
+  assert 200 = response.status
+  assert Ok(email) = process.receive(emails, 0)
+  assert "Louis" = email.to_name
+  assert "louis@example.com" = email.to_address
+  assert "Midsummer Night's Tea Party Login" = email.subject
 }

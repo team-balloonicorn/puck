@@ -10,7 +10,6 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Option, Some}
 import gleam/result
-import gleam/string
 import gleam/uri
 import nakai/html
 import nakai/html/attrs.{Attr}
@@ -31,18 +30,17 @@ pub fn login(request: Request(BitString), state: State) -> Response(String) {
   )
 
   case request.method {
-    http.Get -> get_login(request)
+    http.Get -> login_form_page(request)
     http.Post -> attempt_login(request, state)
     _ -> web.method_not_allowed()
   }
 }
 
-fn get_login(request: Request(BitString)) -> Response(String) {
-  let query = option.unwrap(request.query, "")
+fn login_form_page(request: Request(BitString)) -> Response(String) {
   let mode = login_page_mode_from_query(request)
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(login_page(mode))
+  |> response.set_body(login_page_html(mode))
 }
 
 fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
@@ -65,14 +63,36 @@ fn attempt_login(request: Request(BitString), state: State) -> Response(String) 
   let html = case user {
     Some(user) -> {
       state.send_email(login_email(user, state.db))
-      email_sent_page()
+      login_email_sent_page()
     }
-    None -> login_page(UserNotFound)
+    None -> login_page_html(UserNotFound)
   }
 
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+}
+
+pub fn sign_up(request: Request(BitString), state: State) {
+  use <- utility.guard(request.method != http.Post, web.method_not_allowed())
+
+  use params <- web.require_form_urlencoded_body(request)
+  use name <- web.ok(list.key_find(params, "name"))
+  use email <- web.ok(list.key_find(params, "email"))
+
+  case user.insert(state.db, name: name, email: email) {
+    Ok(user) -> {
+      state.send_email(login_email(user, state.db))
+      response.new(200)
+      |> response.prepend_header("content-type", "text/html")
+      |> response.set_body(login_email_sent_page())
+    }
+
+    Error(error.EmailAlreadyInUse) -> {
+      let query = uri.query_to_string([#("already-registered", email)])
+      web.redirect("/login?" <> query)
+    }
+  }
 }
 
 fn login_email(user: User, db: database.Connection) -> Email {
@@ -89,13 +109,13 @@ The Midsummer crew
 
   Email(
     to_address: user.email,
-    to_name: user.email,
+    to_name: user.name,
     subject: "Midsummer Night's Tea Party Login",
     content: content,
   )
 }
 
-fn email_sent_page() -> String {
+fn login_email_sent_page() -> String {
   [
     web.flamingo(),
     html.p_text([], "Thank you. We've sent you an email with a link to log in."),
@@ -114,7 +134,7 @@ pub const email_already_in_use_message = "That email is already in use, would yo
 
 pub const email_unknown_message = "Sorry, I couldn't find anyone with with email address."
 
-fn login_page(mode: LoginPageMode) -> String {
+fn login_page_html(mode: LoginPageMode) -> String {
   let #(error, email) = case mode {
     EmailAlreadyInUse(email) -> #(
       html.p_text([], email_already_in_use_message),
