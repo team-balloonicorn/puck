@@ -21,7 +21,6 @@ import utility
 
 const auth_cookie = "uid"
 
-// TODO: test
 pub fn login(request: Request(BitString), state: State) -> Response(String) {
   // TODO: A home page to redirect to
   use <- utility.guard(
