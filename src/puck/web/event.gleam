@@ -30,7 +30,6 @@ const all_fields = [
 pub fn attendance(request: Request(BitString), state: State) {
   case request.method {
     http.Get -> attendance_form(state)
-    // TODO: test
     http.Post -> register_attendance(request, state)
     _ -> web.method_not_allowed()
   }
