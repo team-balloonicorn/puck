@@ -172,6 +172,11 @@ pub fn html_page(page_html: html.Node(a)) -> String {
                 ],
                 "available",
               ),
+              html.Text(" under the "),
+              html.a_text(
+                [attrs.href("/licence"), attrs.target("_blank")],
+                "Anti-Capitalist Software Licence v1.4",
+              ),
             ],
           ),
         ],
