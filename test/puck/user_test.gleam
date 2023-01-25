@@ -2,46 +2,51 @@ import bcrypter
 import gleam/map
 import gleam/option.{None, Some}
 import gleam/string
-import puck/error
+import puck/error.{SqlightError}
 import puck/user.{Application, User}
 import tests
 
-pub fn get_or_insert_by_email_new_users_test() {
+pub fn insert_new_users_test() {
   use db <- tests.with_connection
 
-  assert Ok(User(id: 1, email: "jay@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "jay@example.com")
+  assert Ok(User(id: 1, name: "Jay", email: "jay@example.com", interactions: 0)) =
+    user.insert(db, "Jay", "jay@example.com")
 
-  assert Ok(User(id: 2, email: "al@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "al@example.com")
+  assert Ok(User(id: 2, name: "Al", email: "al@example.com", interactions: 0)) =
+    user.insert(db, "Al", "al@example.com")
 
-  assert Ok(User(id: 3, email: "louis@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(User(
+    id: 3,
+    name: "Louis",
+    email: "louis@example.com",
+    interactions: 0,
+  )) = user.insert(db, "Louis", "louis@example.com")
 }
 
-pub fn get_or_insert_by_email_invalid_email_test() {
+pub fn insert_invalid_email_test() {
   use db <- tests.with_connection
-  assert Error(error.SqlightError(_)) =
-    user.get_or_insert_by_email(db, "not an email")
+  assert Error(error.SqlightError(_)) = user.insert(db, "Blah", "not an email")
 }
 
-pub fn get_or_insert_by_email_already_inserted_test() {
+pub fn insert_invalid_name_test() {
+  use db <- tests.with_connection
+  assert Error(error.SqlightError(_)) = user.insert(db, "", "louis@example.com")
+}
+
+pub fn insert_already_inserted_test() {
   use db <- tests.with_connection
 
-  assert Ok(User(id: 1, email: "louis@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(User(1, name: "Louis", email: "louis@example.com", interactions: 0)) =
+    user.insert(db, "Louis", "louis@example.com")
 
-  assert Ok(User(id: 1, email: "louis@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
-
-  assert Ok(User(id: 1, email: "louis@example.com", interactions: 0)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
+  assert Error(error.EmailAlreadyInUse) =
+    user.insert(db, "Louis", "louis@example.com")
 }
 
-pub fn get_by_id_incrementing_interactiont_test() {
+pub fn get_by_id_incrementing_interaction_test() {
   use db <- tests.with_connection
   assert Ok(User(id: 1, interactions: 0, ..)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
+    user.insert(db, "Louis", "louis@example.com")
 
   assert Ok(Some(User(id: 1, interactions: 1, ..))) =
     user.get_and_increment_interaction(db, 1)
@@ -49,14 +54,11 @@ pub fn get_by_id_incrementing_interactiont_test() {
     user.get_and_increment_interaction(db, 1)
   assert Ok(Some(User(id: 1, interactions: 3, ..))) =
     user.get_and_increment_interaction(db, 1)
-
-  assert Ok(User(interactions: 3, ..)) =
-    user.get_or_insert_by_email(db, "louis@example.com")
 }
 
 pub fn insert_application_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
 
   assert Ok(Application(
     id: 1,
@@ -78,7 +80,7 @@ pub fn insert_application_test() {
 
 pub fn insert_application_already_existing_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
 
   assert Ok(Application(id: 1, payment_reference: reference1, user_id: uid1, ..)) =
     user.insert_application(
@@ -105,7 +107,7 @@ pub fn insert_application_already_existing_test() {
 
 pub fn get_application_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
 
   assert Ok(None) = user.get_application(db, user.id)
 
@@ -119,7 +121,7 @@ pub fn get_application_test() {
 
 pub fn get_user_by_payment_reference_found_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
   assert Ok(app) = user.insert_application(db, user.id, map.new())
   assert Ok(Some(user2)) =
     user.get_user_by_payment_reference(db, app.payment_reference)
@@ -128,7 +130,7 @@ pub fn get_user_by_payment_reference_found_test() {
 
 pub fn get_user_by_payment_reference_case_insensitive_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
   assert Ok(app) = user.insert_application(db, user.id, map.new())
   let ref = app.payment_reference
 
@@ -148,7 +150,7 @@ pub fn get_user_by_payment_reference_not_found_test() {
 
 pub fn login_token_hash_test() {
   use db <- tests.with_connection
-  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+  assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
   let id = user.id
 
   // Create a token and fetch it

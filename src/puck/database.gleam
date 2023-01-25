@@ -61,6 +61,9 @@ pub fn migrate(db: sqlight.Connection) -> Nil {
 create table if not exists users (
   id integer primary key autoincrement not null,
 
+  name text not null
+    constraint non_empty_name check (length(name) > 0),
+
   email text not null unique
     constraint valid_email check (email like '%@%'),
 
@@ -81,7 +84,7 @@ create table if not exists applications (
     ),
 
   answers text not null default '{}'
-    constraint valid_json check (json(answers) not null),
+    constraint valid_answers_json check (json(answers) not null),
 
   foreign key (user_id) references users (id)
 ) strict;

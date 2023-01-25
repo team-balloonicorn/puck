@@ -12,7 +12,7 @@ import puck/error.{Error}
 import sqlight
 
 pub type User {
-  User(id: Int, email: String, interactions: Int)
+  User(id: Int, name: String, email: String, interactions: Int)
 }
 
 pub type Application {
@@ -24,22 +24,31 @@ pub type Application {
   )
 }
 
-pub fn get_or_insert_by_email(
+pub fn insert(
   conn: database.Connection,
-  email: String,
+  name name: String,
+  email email: String,
 ) -> Result(User, Error) {
   let sql =
     "
     insert into users
-      (email) 
+      (name, email) 
     values
-      (?)
-    on conflict (email) do 
-      update set email = email
+      (?1, ?2)
     returning
-      id, email, interactions
+      id, name, email, interactions
     "
-  database.one(sql, conn, [sqlight.text(email)], decoder)
+  let arguments = [sqlight.text(name), sqlight.text(email)]
+
+  case database.one(sql, conn, arguments, decoder) {
+    Ok(user) -> Ok(user)
+    Error(error.SqlightError(sqlight.SqlightError(
+      sqlight.ConstraintUnique,
+      "UNIQUE constraint failed: users.email",
+      _,
+    ))) -> Error(error.EmailAlreadyInUse)
+    Error(err) -> Error(err)
+  }
 }
 
 pub fn get_by_email(
@@ -49,7 +58,7 @@ pub fn get_by_email(
   let sql =
     "
     select 
-      id, email, interactions
+      id, name, email, interactions
     from
       users
     where
@@ -115,7 +124,7 @@ pub fn get_user_by_payment_reference(
   let sql =
     "
     select
-      users.id, email, interactions
+      users.id, name, email, interactions
     from
       users
     join
@@ -138,7 +147,7 @@ pub fn get_and_increment_interaction(
     where
       id = ?1
     returning
-      id, email, interactions
+      id, name, email, interactions
     "
   let arguments = [sqlight.int(user_id)]
   database.maybe_one(sql, conn, arguments, decoder)
@@ -213,11 +222,12 @@ pub fn get_login_token_hash(
 
 fn decoder(data: Dynamic) {
   data
-  |> dy.decode3(
+  |> dy.decode4(
     User,
     dy.element(0, dy.int),
     dy.element(1, dy.string),
-    dy.element(2, dy.int),
+    dy.element(2, dy.string),
+    dy.element(3, dy.int),
   )
 }
 
