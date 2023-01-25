@@ -5,6 +5,8 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/string
+import gleam/list
+import gleam/uri
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/attendee
@@ -12,6 +14,7 @@ import puck/config.{Config}
 import puck/database
 import puck/email
 import puck/payment
+import puck/error
 import puck/user.{Application, User}
 import puck/web.{State}
 import puck/web/auth
@@ -28,6 +31,7 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     [] -> home(state)
     [key] if key == attend -> attendance(request, state)
+    ["users"] -> users(request, state)
     ["licence"] -> licence(state)
     ["the-pal-system"] -> pal_system(state)
     ["login"] -> auth.login(request, state)
@@ -303,16 +307,15 @@ fn attendance_html(state: State) -> html.Node(a) {
           html.form(
             [
               attrs.class("attendee-form"),
+              attrs.action("/users"),
               Attr("method", "post"),
               Attr("onsubmit", "this.disable = true"),
             ],
             [
-              // TODO: start sign up process here
-              //   <form class="attendee-form" method="post" onsubmit="this.disable = true">
-              //     <div class="form-group">
-              //       <label for="name">What's your name?</label>
-              //       <input type="text" name="name" id="name" required>
-              //     </div>
+              web.form_group(
+                "What's your name?",
+                web.text_input("name", [Attr("required", "")]),
+              ),
               web.form_group(
                 "What's your email?",
                 div([
@@ -321,7 +324,7 @@ fn attendance_html(state: State) -> html.Node(a) {
                     information closer to the date. Your email will be viewable
                     by the organisers and will not be shared with anyone else.",
                   ),
-                  web.email_input("email", [attrs.name("email")]),
+                  web.email_input("email", []),
                 ]),
               ),
               web.submit_input_group("Let's go"),
@@ -375,6 +378,23 @@ fn register_attendance(request: Request(BitString), state: State) {
   response.new(201)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+}
+
+fn users(request: Request(BitString), state: State) {
+  use <- utility.guard(request.method != http.Post, web.method_not_allowed())
+  use params <- web.require_form_urlencoded_body(request)
+  use name <- web.ok(list.key_find(params, "name"))
+  use email <- web.ok(list.key_find(params, "email"))
+  case user.insert(state.db, name: name, email: email) {
+    Ok(user) ->
+      // TODO: Send login link
+      // TODO: Show success page
+      todo
+    Error(error.EmailAlreadyInUse) -> {
+      let query = uri.query_to_string([#("already-registered", email)])
+      web.redirect("/login?" <> query)
+    }
+  }
 }
 
 fn licence(state: State) {

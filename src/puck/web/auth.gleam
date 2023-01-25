@@ -10,13 +10,15 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Option, Some}
 import gleam/result
+import gleam/string
+import gleam/uri
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/database
 import puck/email.{Email}
+import puck/error.{Error}
 import puck/user.{User}
 import puck/web.{State}
-import puck/error.{Error}
 import utility
 
 const auth_cookie = "uid"
@@ -29,16 +31,30 @@ pub fn login(request: Request(BitString), state: State) -> Response(String) {
   )
 
   case request.method {
-    http.Get -> get_login()
+    http.Get -> get_login(request)
     http.Post -> attempt_login(request, state)
     _ -> web.method_not_allowed()
   }
 }
 
-fn get_login() -> Response(String) {
+fn get_login(request: Request(BitString)) -> Response(String) {
+  let query = option.unwrap(request.query, "")
+  let mode = login_page_mode_from_query(request)
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(login_page(False))
+  |> response.set_body(login_page(mode))
+}
+
+fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
+  let result = {
+    let query = option.unwrap(request.query, "")
+    use query <- result.then(uri.parse_query(query))
+    list.key_find(query, "already-registered")
+  }
+  case result {
+    Ok(email) -> EmailAlreadyInUse(email)
+    Error(_) -> Fresh
+  }
 }
 
 fn attempt_login(request: Request(BitString), state: State) -> Response(String) {
@@ -51,7 +67,7 @@ fn attempt_login(request: Request(BitString), state: State) -> Response(String) 
       state.send_email(login_email(user, state.db))
       email_sent_page()
     }
-    None -> login_page(True)
+    None -> login_page(UserNotFound)
   }
 
   response.new(200)
@@ -88,11 +104,24 @@ fn email_sent_page() -> String {
   |> web.html_page
 }
 
-fn login_page(show_error: Bool) -> String {
-  let error = case show_error {
-    True ->
-      html.p_text([], "Sorry, I couldn't find anyone with with email address.")
-    False -> html.div([], [])
+type LoginPageMode {
+  Fresh
+  UserNotFound
+  EmailAlreadyInUse(String)
+}
+
+pub const email_already_in_use_message = "That email is already in use, would you like to log in?"
+
+pub const email_unknown_message = "Sorry, I couldn't find anyone with with email address."
+
+fn login_page(mode: LoginPageMode) -> String {
+  let #(error, email) = case mode {
+    EmailAlreadyInUse(email) -> #(
+      html.p_text([], email_already_in_use_message),
+      email,
+    )
+    UserNotFound -> #(html.p_text([], email_unknown_message), "")
+    Fresh -> #(html.div([], []), "")
   }
 
   [
@@ -103,7 +132,10 @@ fn login_page(show_error: Bool) -> String {
         web.flamingo(),
         web.form_group(
           "Welcome, friend. What's your email?",
-          web.email_input("email", [Attr("required", "true")]),
+          web.email_input(
+            "email",
+            [Attr("required", "true"), attrs.value(email)],
+          ),
         ),
         web.submit_input_group("Login"),
         html.p_text(
@@ -121,7 +153,6 @@ fn layout(content: List(html.Node(a))) -> html.Node(a) {
   html.main([attrs.Attr("role", "main"), attrs.class("content login")], content)
 }
 
-// TODO: test
 pub fn login_via_token(user_id: String, token: String, state: State) {
   use user_id <- web.ok(int.parse(user_id))
   use hash <- web.ok_or_404(user.get_login_token_hash(state.db, user_id))
@@ -152,6 +183,7 @@ pub fn get_user_from_session(
   signing_secret: String,
   next: fn(Option(User)) -> Response(BitBuilder),
 ) -> Response(BitBuilder) {
+  // TODO: expire the cookie if it is present but there is no user
   case get_user_from_cookie(request, db, signing_secret) {
     Ok(user) -> next(user)
 

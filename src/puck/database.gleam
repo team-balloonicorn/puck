@@ -70,6 +70,9 @@ create table if not exists users (
   interactions integer not null default 0
     constraint positive_interactions check (interactions >= 0),
 
+  is_admin integer not null default 0
+    constraint valid_is_admin check (is_admin in (0, 1)),
+
   login_token_hash text unique
 ) strict;
 

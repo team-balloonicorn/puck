@@ -1,8 +1,11 @@
 import gleam/http/response
-import gleam/option.{Some}
+import gleam/http/request
 import gleam/int
-import puck/web/routes
+import gleam/option.{Some}
+import gleam/string
 import puck/user
+import puck/web/routes
+import puck/web/auth
 import tests
 
 pub fn login_not_logged_in_test() {
@@ -12,6 +15,21 @@ pub fn login_not_logged_in_test() {
     |> routes.router(state)
   assert 200 = response.status
   assert Error(Nil) = response.get_header(response, "location")
+  assert False =
+    string.contains(response.body, auth.email_already_in_use_message)
+}
+
+pub fn login_already_registered_query_param_test() {
+  use state <- tests.with_state
+  let response =
+    tests.request("/login")
+    |> request.set_query([#("already-registered", "louis@example.com")])
+    |> routes.router(state)
+  assert 200 = response.status
+  assert Error(Nil) = response.get_header(response, "location")
+  assert True =
+    string.contains(response.body, auth.email_already_in_use_message)
+  assert True = string.contains(response.body, "value=\"louis@example.com\"")
 }
 
 pub fn login_logged_in_test() {
