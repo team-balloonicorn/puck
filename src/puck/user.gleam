@@ -58,7 +58,7 @@ pub fn get_by_email(
   database.maybe_one(sql, conn, [sqlight.text(email)], decoder)
 }
 
-/// Get the application for a user. If the user already has an application then
+/// Insert the application for a user. If the user already has an application then
 /// the answers are merged into the existing record.
 pub fn insert_application(
   conn: database.Connection,
@@ -88,6 +88,22 @@ pub fn insert_application(
     sqlight.text(json),
   ]
   database.one(sql, conn, arguments, application_decoder)
+}
+
+/// Get the application for a user.
+pub fn get_application(
+  conn: database.Connection,
+  user_id: Int,
+) -> Result(Option(Application), Error) {
+  let sql =
+    "
+    select from applications 
+      (user_id, payment_reference, answers)
+    where
+      user_id = ?1
+    "
+  let arguments = [sqlight.int(user_id)]
+  database.maybe_one(sql, conn, arguments, application_decoder)
 }
 
 pub fn get_user_by_payment_reference(

@@ -103,6 +103,20 @@ pub fn insert_application_already_existing_test() {
   assert [#("a", "changed"), #("c", "d"), #("e", "f")] = map.to_list(answers)
 }
 
+pub fn get_application_test() {
+  use db <- tests.with_connection
+  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+
+  assert Ok(None) = user.get_application(db, user.id)
+
+  assert Ok(application1) =
+    user.insert_application(db, user.id, map.from_list([#("a", "b")]))
+
+  assert Ok(Some(application2)) = user.get_application(db, user.id)
+
+  assert True = application1 == application2
+}
+
 pub fn get_user_by_payment_reference_found_test() {
   use db <- tests.with_connection
   assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
