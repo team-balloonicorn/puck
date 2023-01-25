@@ -1,9 +1,10 @@
-import tests
-import gleam/string
-import gleam/option.{None, Some}
-import puck/user.{Application, User}
-import puck/error
 import bcrypter
+import gleam/map
+import gleam/option.{None, Some}
+import gleam/string
+import puck/error
+import puck/user.{Application, User}
+import tests
 
 pub fn get_or_insert_by_email_new_users_test() {
   use db <- tests.with_connection
@@ -57,18 +58,55 @@ pub fn insert_application_test() {
   use db <- tests.with_connection
   assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
 
-  assert Ok(Application(id: 1, payment_reference: reference, user_id: uid)) =
-    user.get_or_insert_application(db, user.id)
+  assert Ok(Application(
+    id: 1,
+    payment_reference: reference,
+    user_id: uid,
+    answers: answers,
+  )) =
+    user.insert_application(
+      db,
+      user.id,
+      map.from_list([#("a", "b"), #("c", "d")]),
+    )
 
   assert 14 = string.length(reference)
   assert True = string.starts_with(reference, "m-")
   assert True = uid == user.id
+  assert [#("a", "b"), #("c", "d")] = map.to_list(answers)
+}
+
+pub fn insert_application_already_existing_test() {
+  use db <- tests.with_connection
+  assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
+
+  assert Ok(Application(id: 1, payment_reference: reference1, user_id: uid1, ..)) =
+    user.insert_application(
+      db,
+      user.id,
+      map.from_list([#("a", "b"), #("c", "d")]),
+    )
+  assert Ok(Application(
+    id: 1,
+    payment_reference: reference2,
+    user_id: uid2,
+    answers: answers,
+  )) =
+    user.insert_application(
+      db,
+      user.id,
+      map.from_list([#("a", "changed"), #("c", "d"), #("e", "f")]),
+    )
+
+  assert True = reference1 == reference2
+  assert True = uid1 == uid2
+  assert [#("a", "changed"), #("c", "d"), #("e", "f")] = map.to_list(answers)
 }
 
 pub fn get_user_by_payment_reference_found_test() {
   use db <- tests.with_connection
   assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
-  assert Ok(app) = user.get_or_insert_application(db, user.id)
+  assert Ok(app) = user.insert_application(db, user.id, map.new())
   assert Ok(Some(user2)) =
     user.get_user_by_payment_reference(db, app.payment_reference)
   assert True = user.id == user2.id
@@ -77,7 +115,7 @@ pub fn get_user_by_payment_reference_found_test() {
 pub fn get_user_by_payment_reference_case_insensitive_test() {
   use db <- tests.with_connection
   assert Ok(user) = user.get_or_insert_by_email(db, "louis@example.com")
-  assert Ok(app) = user.get_or_insert_application(db, user.id)
+  assert Ok(app) = user.insert_application(db, user.id, map.new())
   let ref = app.payment_reference
 
   assert Ok(Some(user2)) =

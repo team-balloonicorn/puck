@@ -181,10 +181,10 @@ fn attendance_page(state: State) -> html.Node(a) {
       case state.current_user {
         Some(_) ->
           html.div(
-            [attrs.class("center")],
+            [attrs.class("center form-group")],
             [
               html.a_text(
-                [attrs.class("button"), attrs.href("/attendance")],
+                [attrs.class("button"), attrs.href("/")],
                 "Continue to your account",
               ),
             ],

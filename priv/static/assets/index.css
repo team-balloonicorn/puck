@@ -104,6 +104,7 @@ h1 {
   font-size: 1.05rem;
   background: var(--color-white);
   color: var(--color-black);
+  text-decoration: none;
 }
 
 .form-group input[type="radio"] {

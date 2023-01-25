@@ -80,6 +80,9 @@ create table if not exists applications (
       length(payment_reference) = 14 and payment_reference like 'm-%'
     ),
 
+  answers text not null default '{}'
+    constraint valid_json check (json(answers) not null),
+
   foreign key (user_id) references users (id)
 ) strict;
 

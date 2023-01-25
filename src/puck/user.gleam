@@ -1,20 +1,27 @@
-import sqlight
-import puck/error.{Error}
-import puck/attendee
-import puck/database
-import gleam/dynamic.{Dynamic}
+import bcrypter
+import gleam/base
+import gleam/crypto
+import gleam/dynamic.{Dynamic} as dy
+import gleam/map.{Map}
 import gleam/option.{Option}
 import gleam/result
-import gleam/crypto
-import gleam/base
-import bcrypter
+import gleam/json
+import puck/attendee
+import puck/database
+import puck/error.{Error}
+import sqlight
 
 pub type User {
   User(id: Int, email: String, interactions: Int)
 }
 
 pub type Application {
-  Application(id: Int, payment_reference: String, user_id: Int)
+  Application(
+    id: Int,
+    payment_reference: String,
+    user_id: Int,
+    answers: Map(String, String),
+  )
 }
 
 pub fn get_or_insert_by_email(
@@ -51,24 +58,34 @@ pub fn get_by_email(
   database.maybe_one(sql, conn, [sqlight.text(email)], decoder)
 }
 
-pub fn get_or_insert_application(
+/// Get the application for a user. If the user already has an application then
+/// the answers are merged into the existing record.
+pub fn insert_application(
   conn: database.Connection,
-  user_id: Int,
+  user_id user_id: Int,
+  answers answers: Map(String, String),
 ) -> Result(Application, Error) {
   let sql =
     "
     insert into applications 
-      (user_id, payment_reference) 
+      (user_id, payment_reference, answers)
     values
-      (?1, ?2)
+      (?1, ?2, ?3)
     on conflict (user_id) do
-      update set user_id = user_id
+      update set answers = json_patch(answers, excluded.answers)
     returning
-      id, payment_reference, user_id
+      id, payment_reference, user_id, answers
     "
+  let json =
+    json.to_string(json.object(
+      answers
+      |> map.map_values(fn(_, v) { json.string(v) })
+      |> map.to_list,
+    ))
   let arguments = [
     sqlight.int(user_id),
     sqlight.text(attendee.generate_reference()),
+    sqlight.text(json),
   ]
   database.one(sql, conn, arguments, application_decoder)
 }
@@ -171,27 +188,41 @@ pub fn get_login_token_hash(
       id = ?1
     "
   let arguments = [sqlight.int(user_id)]
-  let decoder = dynamic.element(0, dynamic.optional(dynamic.string))
+  let decoder = dy.element(0, dy.optional(dy.string))
   database.maybe_one(sql, conn, arguments, decoder)
   |> result.map(option.flatten)
 }
 
 fn decoder(data: Dynamic) {
   data
-  |> dynamic.decode3(
+  |> dy.decode3(
     User,
-    dynamic.element(0, dynamic.int),
-    dynamic.element(1, dynamic.string),
-    dynamic.element(2, dynamic.int),
+    dy.element(0, dy.int),
+    dy.element(1, dy.string),
+    dy.element(2, dy.int),
   )
 }
 
 fn application_decoder(data: Dynamic) {
   data
-  |> dynamic.decode3(
+  |> dy.decode4(
     Application,
-    dynamic.element(0, dynamic.int),
-    dynamic.element(1, dynamic.string),
-    dynamic.element(2, dynamic.int),
+    dy.element(0, dy.int),
+    dy.element(1, dy.string),
+    dy.element(2, dy.int),
+    dy.element(3, json_object(dy.string)),
   )
+}
+
+fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Map(String, t)) {
+  fn(data: Dynamic) {
+    use string <- result.then(dy.string(data))
+    json.decode(string, using: dy.map(dy.string, inner))
+    |> result.map_error(fn(error) {
+      case error {
+        json.UnexpectedFormat(errors) -> errors
+        _ -> [dy.DecodeError(expected: "Json", found: "String", path: [])]
+      }
+    })
+  }
 }
