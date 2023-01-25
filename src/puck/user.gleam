@@ -97,8 +97,10 @@ pub fn get_application(
 ) -> Result(Option(Application), Error) {
   let sql =
     "
-    select from applications 
-      (user_id, payment_reference, answers)
+    select
+      id, payment_reference, user_id, answers
+    from
+      applications 
     where
       user_id = ?1
     "

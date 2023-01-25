@@ -103,7 +103,7 @@ fn login_page(show_error: Bool) -> String {
         web.flamingo(),
         web.form_group(
           "Welcome, friend. What's your email?",
-          web.email_input([Attr("required", "true")]),
+          web.email_input("email", [Attr("required", "true")]),
         ),
         web.submit_input_group("Login"),
         html.p_text(

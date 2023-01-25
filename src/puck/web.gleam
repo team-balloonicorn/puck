@@ -185,8 +185,12 @@ pub fn form_group(label: String, input: html.Node(a)) -> html.Node(a) {
   html.div([attrs.class("form-group")], [html.label_text([], label), input])
 }
 
-pub fn email_input(attrs: List(Attr(a))) -> html.Node(a) {
-  html.input([attrs.type_("email"), attrs.name("email"), ..attrs])
+pub fn email_input(name: String, attrs: List(Attr(a))) -> html.Node(a) {
+  html.input([attrs.type_("email"), attrs.name(name), ..attrs])
+}
+
+pub fn text_input(name: String, attrs: List(Attr(a))) -> html.Node(a) {
+  html.input([attrs.type_("text"), attrs.name(name), ..attrs])
 }
 
 pub fn submit_input_group(text: String) -> html.Node(a) {

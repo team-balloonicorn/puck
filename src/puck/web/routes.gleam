@@ -4,6 +4,7 @@ import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
+import gleam/string
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/attendee
@@ -11,6 +12,7 @@ import puck/config.{Config}
 import puck/database
 import puck/email
 import puck/payment
+import puck/user.{Application, User}
 import puck/web.{State}
 import puck/web/auth
 import puck/web/print_requests
@@ -67,9 +69,117 @@ pub fn handle_request(
 
 fn home(state: State) -> Response(String) {
   use user <- web.require_user(state)
+  assert Ok(application) = user.get_application(state.db, user.id)
+
+  case application {
+    Some(application) -> dashboard(user, application, state)
+    None -> application_form(state)
+  }
+}
+
+fn dashboard(
+  user: User,
+  application: Application,
+  _state: State,
+) -> Response(String) {
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body("Hello " <> user.email)
+  |> response.set_body(
+    "Hello " <> user.email <> "<br>" <> string.inspect(application),
+  )
+}
+
+fn application_form(state: State) -> Response(String) {
+  let textarea = fn(name, placeholder) {
+    html.textarea_text(
+      [attrs.name(name), Attr("rows", "5"), Attr("placeholder", placeholder)],
+      "",
+    )
+  }
+
+  let radio_button = fn(name, value, label_text) {
+    label([
+      html.input([
+        attrs.type_("radio"),
+        attrs.name(name),
+        attrs.value(value),
+        Attr("required", ""),
+      ]),
+      html.Text(label_text),
+    ])
+  }
+
+  let html =
+    html.main(
+      [Attr("role", "main"), attrs.class("content")],
+      [
+        web.flamingo(),
+        html.h1_text([], "Midsummer Night's Tea Party 2023"),
+        html.form(
+          [
+            attrs.class("attendee-form"),
+            attrs.action("/" <> state.config.attend_secret),
+            Attr("method", "post"),
+            Attr("onsubmit", "this.disable = true"),
+          ],
+          [
+            web.form_group(
+              "Have you attended before?",
+              div([
+                radio_button("attended", "yes", "Yes"),
+                radio_button("attended", "no", "No"),
+              ]),
+            ),
+            web.form_group(
+              "What's the name of your PAL(s)?",
+              div([
+                p(
+                  "You and your PALs are responsible for each other. At least
+                  one of your PALs should have attended Midsummer Night's
+                  Teaparty before.",
+                ),
+                html.a_text(
+                  [attrs.href("/the-pal-system"), Attr("target", "_blank")],
+                  "Read here for more information on the PAL system here.",
+                ),
+                web.text_input("pal-name", [Attr("required", "true")]),
+              ]),
+            ),
+            web.form_group(
+              "Has your PAL attended before?",
+              div([
+                radio_button("pal-attended", "yes", "Yes"),
+                radio_button("pal-attended", "no", "No"),
+              ]),
+            ),
+            web.form_group(
+              "Do you have any dietary requirements?",
+              div([
+                textarea(
+                  "dietary-requirements",
+                  "Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy.",
+                ),
+              ]),
+            ),
+            web.form_group(
+              "Do you have any accessibility requirements?",
+              div([
+                p(
+                  "Please be as detailed about what you need and we will aim to
+                  provide it for you as best we can.",
+                ),
+                textarea("accessibility-requirements", ""),
+              ]),
+            ),
+            web.submit_input_group("Sign up!"),
+          ],
+        ),
+      ],
+    )
+    |> web.html_page
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
 }
 
 fn attendance(request: Request(BitString), state: State) {
@@ -81,13 +191,13 @@ fn attendance(request: Request(BitString), state: State) {
 }
 
 fn attendance_form(state: State) {
-  let html = web.html_page(attendance_page(state))
+  let html = web.html_page(attendance_html(state))
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
 }
 
-fn attendance_page(state: State) -> html.Node(a) {
+fn attendance_html(state: State) -> html.Node(a) {
   html.main(
     [Attr("role", "main"), attrs.class("content")],
     [
@@ -197,9 +307,22 @@ fn attendance_page(state: State) -> html.Node(a) {
               Attr("onsubmit", "this.disable = true"),
             ],
             [
+              // TODO: start sign up process here
+              //   <form class="attendee-form" method="post" onsubmit="this.disable = true">
+              //     <div class="form-group">
+              //       <label for="name">What's your name?</label>
+              //       <input type="text" name="name" id="name" required>
+              //     </div>
               web.form_group(
                 "What's your email?",
-                web.email_input([attrs.name("email")]),
+                div([
+                  p(
+                    "We will use this to send you an email with additional
+                    information closer to the date. Your email will be viewable
+                    by the organisers and will not be shared with anyone else.",
+                  ),
+                  web.email_input("email", [attrs.name("email")]),
+                ]),
               ),
               web.submit_input_group("Let's go"),
             ],
@@ -207,90 +330,18 @@ fn attendance_page(state: State) -> html.Node(a) {
       },
     ],
   )
-  // TODO: start sign up process here
-  //   <div class="heart-rule">
-  //     Alright, here we go
-  //   </div>
+}
 
-  //   <form class="attendee-form" method="post" onsubmit="this.disable = true">
-  //     <div class="form-group">
-  //       <label for="name">What's your name?</label>
-  //       <input type="text" name="name" id="name" required>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="email">What's your email?</label>
-  //       <p>
-  //         We will use this to send you an email with additional information closer
-  //         to the date. Your email will be viewable by the organisers and will not
-  //         be shared with anyone else.
-  //       </p>
-  //       <input type="email" name="email" id="email" required>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="attended">Have you attended before?</label>
-  //       <label for="attended-yes">
-  //         <input type="radio" name="attended" id="attended-yes" value="yes" required>
-  //         Yes
-  //       </label>
-  //       <label for="attended-no">
-  //         <input type="radio" name="attended" id="attended-no" value="no" required>
-  //         No
-  //       </label>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="pal">What is the name of your PAL?</label>
-  //       <p>
-  //         You and your PAL are responsible for each other. Ideally either you are
-  //         your PAL will have attended Midsummer Night's Teaparty before, but this
-  //         is not a hard requirement.
-  //         <a href="/the-pal-system" target="_blank">
-  //           Read here for more information on the PAL system here.
-  //         </a>
-  //       </p>
-  //       <input type="text" name="pal" id="pal" required>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="pal-attended">Has your PAL attended before?</label>
-  //       <label for="pal-attended-yes">
-  //         <input type="radio" name="pal-attended" id="pal-attended-yes" value="yes" required>
-  //         Yes
-  //       </label>
-  //       <label for="pal-attended-no">
-  //         <input type="radio" name="pal-attended" id="pal-attended-no" value="no" required>
-  //         No
-  //       </label>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="dietary-requirements">Do you have any dietary requirements?</label>
-  //       <p>
-  //         Just in case we get enough money to run the BBQ this time.
-  //       </p>
-  //       <textarea rows=5 name="dietary-requirements" id="dietary-requirements"
-  //         placeholder="Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy."></textarea>
-  //     </div>
-
-  //     <div class="form-group">
-  //       <label for="accessibility-requirements">Do you have any accessibility requirements?</label>
-  //       <p>
-  //         Please be as detailed about what you need and we will aim to provide it
-  //         for you as best we can.
-  //       </p>
-  //       <textarea rows=5 name="accessibility-requirements" id="accessibility-requirements"></textarea>
-  //     </div>
-
-  //     <div class="form-group center">
-  //       <button type="submit">Submit!</button>
-  //     </div>
-  //   </form>
+fn label(children) -> html.Node(a) {
+  html.label([], children)
 }
 
 fn p(text: String) -> html.Node(a) {
   html.p_text([], text)
+}
+
+fn div(children) -> html.Node(a) {
+  html.div([], children)
 }
 
 fn register_attendance(request: Request(BitString), state: State) {
