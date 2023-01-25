@@ -92,7 +92,7 @@ pub fn sign_up_already_taken_test() {
   assert Some(user) = state.current_user
   let body = uri.query_to_string([#("email", user.email), #("name", "Louis")])
   let response =
-    tests.request("/sign-up")
+    tests.request("/sign-up/" <> state.config.attend_secret)
     |> request.set_method(http.Post)
     |> request.set_body(<<body:utf8>>)
     |> routes.router(state)
@@ -108,7 +108,7 @@ pub fn sign_up_ok_test() {
   let body =
     uri.query_to_string([#("email", "louis@example.com"), #("name", "Louis")])
   let response =
-    tests.request("/sign-up")
+    tests.request("/sign-up/" <> state.config.attend_secret)
     |> request.set_method(http.Post)
     |> request.set_body(<<body:utf8>>)
     |> routes.router(state)

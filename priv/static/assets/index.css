@@ -85,7 +85,7 @@ h1 {
   margin: var(--space) 0;
 }
 
-.form-group label:first-of-type {
+.form-group > label:first-of-type {
   display: block;
   font-size: 1.45rem;
   font-family: var(--pretty-font);
@@ -109,7 +109,7 @@ h1 {
 
 .form-group input[type="radio"] {
   min-width: auto;
-  padding-right: var(--space);
+  margin-right: var(--space-s);
 }
 
 .button,
