@@ -10,8 +10,6 @@ import puck/web.{State}
 import puck/email.{Email}
 import utility
 
-// TODO: send payment notification email
-// TODO: test
 pub fn payment_webhook(request: Request(BitString), state: State) {
   use <- utility.guard(request.method != Post, return: web.method_not_allowed())
 
