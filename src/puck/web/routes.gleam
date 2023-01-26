@@ -6,11 +6,11 @@ import gleam/string
 import puck/config.{Config}
 import puck/database
 import puck/email
-import puck/payment
 import puck/user.{Application, User}
 import puck/web.{State}
 import puck/web/auth
 import puck/web/event
+import puck/web/money
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
@@ -29,7 +29,8 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
     ["sign-up", key] if key == attend -> auth.sign_up(request, state)
     ["login"] -> auth.login(request, state)
     ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
-    ["api", "payment", key] if key == pay -> payments(request, state.config)
+    ["api", "payment", key] if key == pay ->
+      money.payment_webhook(request, state)
     _ -> web.not_found()
   }
 }
@@ -98,22 +99,4 @@ fn pal_system(state: State) {
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
-}
-
-fn payments(request: Request(BitString), _config: Config) {
-  use body <- web.require_bit_string_body(request)
-  use _payment <- web.ok(payment.from_json(body))
-
-  // TODO: record payment
-  // let tx_key = string.append(payment.created_at, payment.reference)
-  // assert Ok(_) = case
-  //   expiring_set.register_new(config.transaction_set, tx_key)
-  // {
-  //   True -> record_new_payment(payment, config)
-  //   False -> {
-  //     io.println(string.append("Discarding duplicate transaction ", tx_key))
-  //     Ok(Nil)
-  //   }
-  // }
-  response.new(200)
 }
