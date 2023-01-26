@@ -37,7 +37,10 @@ fn unknown() {
 }
 
 fn server(config: Config) {
-  install_log_handler(send_error_email(_, config))
+  case config.environment {
+    "development" -> Nil
+    _ -> install_log_handler(send_error_email(_, config))
+  }
   database.with_connection(config.database_path, database.migrate)
 
   // Start the web server process
