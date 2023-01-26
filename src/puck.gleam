@@ -1,10 +1,8 @@
 import puck/web/routes
 import puck/email
-import puck/attendee
 import puck/database
 import puck/config.{Config}
 import gleam/io
-import gleam/int
 import gleam/erlang
 import gleam/erlang/process
 import mist
@@ -23,10 +21,6 @@ pub fn main() {
   case erlang.start_arguments() {
     ["server"] -> server(config)
     ["email-everyone"] -> email_everyone(config)
-    ["send-attendance-email", email, reference] ->
-      send_attendance_email(email, reference, config)
-    ["send-payment-confirmation-email", email, amount] ->
-      send_payment_confirmation_email(email, amount, config)
     _ -> unknown()
   }
 }
@@ -68,23 +62,6 @@ fn send_error_email(error: String, config: Config) {
   |> email.send(config)
 
   Nil
-}
-
-fn send_attendance_email(
-  email: String,
-  reference: String,
-  config: Config,
-) -> Nil {
-  attendee.send_attendance_email(reference, email, email, config)
-}
-
-fn send_payment_confirmation_email(
-  email: String,
-  amount: String,
-  config: Config,
-) -> Nil {
-  assert Ok(amount) = int.parse(amount)
-  attendee.send_payment_confirmation_email(amount, email, config)
 }
 
 /// Comment out the code to send an email to everyone

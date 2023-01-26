@@ -6,10 +6,11 @@ import gleam/map.{Map}
 import gleam/option.{Option}
 import gleam/result
 import gleam/json
-import puck/attendee
 import puck/database
 import puck/error.{Error}
 import sqlight
+import gleam/string
+import gleam/bit_string
 
 pub type User {
   User(id: Int, name: String, email: String, interactions: Int)
@@ -93,7 +94,7 @@ pub fn insert_application(
     ))
   let arguments = [
     sqlight.int(user_id),
-    sqlight.text(attendee.generate_reference()),
+    sqlight.text(generate_reference()),
     sqlight.text(json),
   ]
   database.one(sql, conn, arguments, application_decoder)
@@ -253,4 +254,28 @@ fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Map(String, t)) {
       }
     })
   }
+}
+
+fn generate_reference() -> String {
+  // Generate random string
+  crypto.strong_random_bytes(50)
+  |> base.url_encode64(False)
+  |> string.lowercase
+  // Remove ambiguous characters
+  |> string.replace("o", "")
+  |> string.replace("O", "")
+  |> string.replace("0", "")
+  |> string.replace("1", "")
+  |> string.replace("i", "")
+  |> string.replace("l", "")
+  |> string.replace("_", "")
+  |> string.replace("-", "")
+  // Slice it down to a desired size
+  |> bit_string.from_string
+  |> bit_string.slice(0, 12)
+  // Convert it back to a string. This should never fail.
+  |> result.then(bit_string.to_string)
+  |> result.map(string.append("m-", _))
+  // Try again it if fails. It never should.
+  |> result.lazy_unwrap(fn() { generate_reference() })
 }
