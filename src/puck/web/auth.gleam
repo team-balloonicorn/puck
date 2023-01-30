@@ -140,7 +140,7 @@ fn login_page_html(mode: LoginPageMode) -> String {
       email,
     )
     UserNotFound -> #(html.p_text([], email_unknown_message), "")
-    Fresh -> #(html.div([], []), "")
+    Fresh -> #(html.Nothing, "")
   }
 
   [

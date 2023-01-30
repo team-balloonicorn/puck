@@ -209,6 +209,10 @@ pub fn flamingo() -> html.Node(a) {
   html.div_text([attrs.class("flamingo")], "🦩")
 }
 
-pub fn dt_dl(key: String, value: String) -> List(html.Node(a)) {
-  [html.dt_text([], key), html.dd_text([], value)]
+pub fn dt_dl(key: String, value: String) -> html.Node(a) {
+  html.Fragment([html.dt_text([], key), html.dd_text([], value)])
+}
+
+pub fn p(text: String) -> html.Node(a) {
+  html.p_text([], text)
 }

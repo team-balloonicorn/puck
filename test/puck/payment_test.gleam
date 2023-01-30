@@ -189,3 +189,21 @@ pub fn insert_discards_negative_amounts_test() {
   assert Ok(Nil) = payment.insert(conn, payment1)
   assert Ok([]) = payment.list_all(conn)
 }
+
+pub fn for_reference_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+  let date = "2022-02-01T20:47:19.022Z"
+
+  let p1 = Payment("tx1", date, "Lou", 1, "ref1")
+  let p2 = Payment("tx2", date, "Lou", 2, "ref2")
+  let p3 = Payment("tx3", date, "Lou", 2, "ref1")
+
+  assert Ok(Nil) = payment.insert(conn, p1)
+  assert Ok(Nil) = payment.insert(conn, p2)
+  assert Ok(Nil) = payment.insert(conn, p3)
+
+  assert Ok([p4, p5]) = payment.for_reference(conn, "ref1")
+  assert True = p4 == p1
+  assert True = p5 == p3
+}

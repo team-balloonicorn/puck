@@ -42,7 +42,7 @@ pub fn register_attendance_ok_test() {
   let secret = state.config.attend_secret
   let body =
     uri.query_to_string([
-      #("attended", "yes"),
+      #("attended", "Yes"),
       #("pod-members", "Lauren, Bell"),
       #("pod-attended", "Lauren"),
       #("dietary-requirements", "Vegan"),
@@ -61,7 +61,7 @@ pub fn register_attendance_ok_test() {
   assert True = application.user_id == user.id
   assert [
     #("accessibility-requirements", "I walk with a stick"),
-    #("attended", "yes"),
+    #("attended", "Yes"),
     #("dietary-requirements", "Vegan"),
     #("pod-attended", "Lauren"),
     #("pod-members", "Lauren, Bell"),

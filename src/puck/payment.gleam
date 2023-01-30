@@ -95,3 +95,22 @@ pub fn list_all(conn: database.Connection) -> Result(List(Payment), Error) {
 
   database.query(sql, conn, [], decoder)
 }
+
+pub fn for_reference(
+  conn: database.Connection,
+  reference: String,
+) -> Result(List(Payment), Error) {
+  let sql =
+    "
+    select
+      id,
+      created_at,
+      counterparty,
+      amount,
+      reference
+    from payments
+    where reference = ?1
+    "
+
+  database.query(sql, conn, [sqlight.text(reference)], decoder)
+}

@@ -8,7 +8,7 @@ import gleam/map
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/user.{Application}
-import puck/web.{State}
+import puck/web.{State, p}
 
 const field_attended = "attended"
 
@@ -133,8 +133,8 @@ fn field_html(question: Question) -> html.Node(a) {
       }
 
       div([
-        radio_button(question.key, "yes", "Yes"),
-        radio_button(question.key, "no", "No"),
+        radio_button(question.key, "Yes", "Yes"),
+        radio_button(question.key, "No", "No"),
       ])
     }
   }
@@ -321,10 +321,6 @@ fn label(children) -> html.Node(a) {
   html.label([], children)
 }
 
-fn p(text: String) -> html.Node(a) {
-  html.p_text([], text)
-}
-
 fn div(children) -> html.Node(a) {
   html.div([], children)
 }
@@ -333,7 +329,7 @@ pub fn application_answers_list_html(
   application: Application,
 ) -> List(html.Node(a)) {
   questions
-  |> list.flat_map(fn(question) {
+  |> list.map(fn(question) {
     let answer =
       result.unwrap(map.get(application.answers, question.key), "n/a")
     web.dt_dl(question.text, answer)

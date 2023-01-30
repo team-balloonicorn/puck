@@ -29,7 +29,7 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
   response.new(200)
 }
 
-fn pence_to_pounds(pence: Int) -> String {
+pub fn pence_to_pounds(pence: Int) -> String {
   let pounds = int.to_string(pence / 100)
   let pence = string.pad_left(int.to_string(pence % 100), to: 2, with: "0")
   "£" <> pounds <> "." <> pence

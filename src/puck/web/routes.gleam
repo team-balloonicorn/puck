@@ -5,12 +5,13 @@ import gleam/option.{None, Some}
 import gleam/list
 import puck/config.{Config}
 import puck/database
+import puck/payment.{Payment}
 import puck/email
 import puck/user.{Application, User}
-import puck/web.{State}
+import puck/web.{State, p}
+import puck/web/money
 import puck/web/auth
 import puck/web/event
-import puck/web/money
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
@@ -79,26 +80,66 @@ fn home(state: State) -> Response(String) {
 fn dashboard(
   user: User,
   application: Application,
-  _state: State,
+  state: State,
 ) -> Response(String) {
+  assert Ok(payments) =
+    payment.for_reference(state.db, application.payment_reference)
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(dashboard_html(user, application))
+  |> response.set_body(dashboard_html(user, application, payments, state.config))
 }
 
-fn dashboard_html(user: User, application: Application) -> String {
-  let info_list =
-    list.flatten([
-      web.dt_dl("What's your name?", user.name),
-      web.dt_dl("What's your email?", user.email),
-      event.application_answers_list_html(application),
+fn dashboard_html(
+  user: User,
+  application: Application,
+  payments: List(Payment),
+  config: Config,
+) -> String {
+  let total =
+    list.fold(payments, 0, fn(total, payment) { total + payment.amount })
+
+  let table_row = fn(label, value) {
+    html.tr([], [html.td_text([], label), html.td_text([], value)])
+  }
+
+  let funding_section =
+    html.Fragment([
+      html.h2_text([], "Paying the bills"),
+      // TODO: show how much is left to raise
+      // TODO: show how much they have contributed
+      // TODO: add contribtion amount recommendations
+      p(
+        "We need £XXXX to cover our costs. We have raised £XXXX. You have
+        contributed £XXXX.",
+      ),
+      p(
+        "We don't make any money off this event and the core team typically pay
+        over £500 each. Please contribute what you can. We recommend £XXXX.",
+      ),
+      html.table(
+        [],
+        [
+          table_row("Account name", config.account_name),
+          table_row("Account number", config.account_number),
+          table_row("Sort code", config.sort_code),
+        ],
+      ),
     ])
+
+  let info_list = [
+    web.dt_dl("What's your name?", user.name),
+    web.dt_dl("What's your email?", user.email),
+    web.dt_dl("How much have you contributed?", money.pence_to_pounds(total)),
+    html.Fragment(event.application_answers_list_html(application)),
+  ]
 
   html.main(
     [Attr("role", "main"), attrs.class("content")],
     [
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party"),
+      funding_section,
+      html.h2_text([], "Your details"),
       html.dl([], info_list),
     ],
   )
