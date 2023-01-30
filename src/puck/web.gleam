@@ -208,3 +208,7 @@ pub fn submit_input_group(text: String) -> html.Node(a) {
 pub fn flamingo() -> html.Node(a) {
   html.div_text([attrs.class("flamingo")], "🦩")
 }
+
+pub fn dt_dl(key: String, value: String) -> List(html.Node(a)) {
+  [html.dt_text([], key), html.dd_text([], value)]
+}

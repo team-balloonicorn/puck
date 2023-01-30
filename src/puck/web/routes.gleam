@@ -2,7 +2,7 @@ import gleam/bit_builder.{BitBuilder}
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
-import gleam/string
+import gleam/list
 import puck/config.{Config}
 import puck/database
 import puck/email
@@ -15,6 +15,8 @@ import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
+import nakai/html
+import nakai/html/attrs.{Attr}
 import utility
 
 pub fn router(request: Request(BitString), state: State) -> Response(String) {
@@ -81,9 +83,26 @@ fn dashboard(
 ) -> Response(String) {
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(
-    "Hello " <> user.email <> "<br>" <> string.inspect(application),
+  |> response.set_body(dashboard_html(user, application))
+}
+
+fn dashboard_html(user: User, application: Application) -> String {
+  let info_list =
+    list.flatten([
+      web.dt_dl("What's your name?", user.name),
+      web.dt_dl("What's your email?", user.email),
+      event.application_answers_list_html(application),
+    ])
+
+  html.main(
+    [Attr("role", "main"), attrs.class("content")],
+    [
+      web.flamingo(),
+      html.h1_text([], "Midsummer Night's Tea Party"),
+      html.dl([], info_list),
+    ],
   )
+  |> web.html_page
 }
 
 fn licence(state: State) {

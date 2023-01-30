@@ -2,11 +2,12 @@ import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
+import gleam/result
 import gleam/list
 import gleam/map
 import nakai/html
 import nakai/html/attrs.{Attr}
-import puck/user
+import puck/user.{Application}
 import puck/web.{State}
 
 const field_attended = "attended"
@@ -19,13 +20,64 @@ const field_dietary_requirements = "dietary-requirements"
 
 const field_accessibility_requirements = "accessibility-requirements"
 
-const all_fields = [
-  field_attended,
-  field_pod_members,
-  field_pod_attended,
-  field_dietary_requirements,
-  field_accessibility_requirements,
+type FieldKind {
+  Text(placeholder: String)
+  Textarea(placeholder: String)
+  Bool
+}
+
+type Question {
+  Question(text: String, key: String, blurb: List(String), kind: FieldKind)
+}
+
+const questions = [
+  Question(
+    text: "Have you attended before?",
+    key: field_attended,
+    blurb: [],
+    kind: Bool,
+  ),
+  Question(
+    text: "Who is in your pod?",
+    key: field_pod_members,
+    blurb: [
+      "You and the people in your pods are responsible for each other. If
+      someone in your pod is unwell, having a bad time, or otherwise needs help
+      the rest of your pod will look after them.",
+      "At least one of your pod should have attended Midsummer Night's Teaparty
+      before.",
+    ],
+    kind: Text("Oberon, Titania, Nick Bottom"),
+  ),
+  Question(
+    text: "Who in your pod has attended before?",
+    key: field_pod_attended,
+    blurb: [],
+    kind: Text("Titania"),
+  ),
+  Question(
+    text: "Do you have any dietary requirements?",
+    key: field_dietary_requirements,
+    blurb: [],
+    kind: Textarea(
+      "Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy.",
+    ),
+  ),
+  Question(
+    text: "Do you have any accessibility requirements?",
+    key: field_accessibility_requirements,
+    blurb: [
+      "Please be as detailed about what you need and we will aim to provide it
+      for you as best we can.",
+    ],
+    kind: Textarea("I need help setting up my tent due to a back injury."),
+  ),
 ]
+
+fn all_fields() -> List(String) {
+  questions
+  |> list.map(fn(x) { x.key })
+}
 
 pub fn attendance(request: Request(BitString), state: State) {
   case request.method {
@@ -44,31 +96,62 @@ fn register_attendance(request: Request(BitString), state: State) {
       Error(_) -> map
     }
   }
-  let answers = list.fold(all_fields, map.new(), get_answer)
+  let answers = list.fold(all_fields(), map.new(), get_answer)
   assert Ok(_) = user.insert_application(state.db, user.id, answers)
   web.redirect("/")
 }
 
+fn field_html(question: Question) -> html.Node(a) {
+  let field = case question.kind {
+    Text(placeholder) ->
+      web.text_input(
+        question.key,
+        [Attr("required", ""), Attr("placeholder", placeholder)],
+      )
+
+    Textarea(placeholder) ->
+      html.textarea_text(
+        [
+          attrs.name(question.key),
+          Attr("rows", "5"),
+          Attr("placeholder", placeholder),
+        ],
+        "",
+      )
+
+    Bool -> {
+      let radio_button = fn(name, value, label_text) {
+        label([
+          html.input([
+            attrs.type_("radio"),
+            attrs.name(name),
+            attrs.value(value),
+            Attr("required", ""),
+          ]),
+          html.Text(label_text),
+        ])
+      }
+
+      div([
+        radio_button(question.key, "yes", "Yes"),
+        radio_button(question.key, "no", "No"),
+      ])
+    }
+  }
+
+  let elements = case question.blurb {
+    [] -> field
+    blurb ->
+      blurb
+      |> list.map(fn(x) { html.p_text([], x) })
+      |> list.append([field])
+      |> html.div([], _)
+  }
+
+  web.form_group(question.text, elements)
+}
+
 pub fn application_form(state: State) -> Response(String) {
-  let textarea = fn(name, placeholder) {
-    html.textarea_text(
-      [attrs.name(name), Attr("rows", "5"), Attr("placeholder", placeholder)],
-      "",
-    )
-  }
-
-  let radio_button = fn(name, value, label_text) {
-    label([
-      html.input([
-        attrs.type_("radio"),
-        attrs.name(name),
-        attrs.value(value),
-        Attr("required", ""),
-      ]),
-      html.Text(label_text),
-    ])
-  }
-
   let html =
     html.main(
       [Attr("role", "main"), attrs.class("content")],
@@ -83,58 +166,7 @@ pub fn application_form(state: State) -> Response(String) {
             Attr("onsubmit", "this.disable = true"),
           ],
           [
-            web.form_group(
-              "Have you attended before?",
-              div([
-                radio_button(field_attended, "yes", "Yes"),
-                radio_button(field_attended, "no", "No"),
-              ]),
-            ),
-            web.form_group(
-              "Who is in your pod?",
-              div([
-                p(
-                  "You and the people in your pods are responsible for each other. 
-                  If someone in your pod is unwell, having a bad time, or
-                  otherwise needs help the rest of your pod will look after
-                  them.",
-                ),
-                p(
-                  "At least one of your PALs should have attended Midsummer
-                  Night's Teaparty before.",
-                ),
-                web.text_input(field_pod_members, [Attr("required", "true")]),
-              ]),
-            ),
-            web.form_group(
-              "Have any of your PALs attended before?",
-              div([
-                radio_button(field_pod_attended, "yes", "Yes"),
-                radio_button(field_pod_attended, "no", "No"),
-              ]),
-            ),
-            web.form_group(
-              "Do you have any dietary requirements?",
-              div([
-                textarea(
-                  field_dietary_requirements,
-                  "Vegeterian, vegan, dairy free. Allergic to nuts, intolerant to dairy.",
-                ),
-              ]),
-            ),
-            web.form_group(
-              "Do you have any accessibility requirements?",
-              div([
-                p(
-                  "Please be as detailed about what you need and we will aim to
-                  provide it for you as best we can.",
-                ),
-                textarea(
-                  field_accessibility_requirements,
-                  "I need help setting up my tent as...",
-                ),
-              ]),
-            ),
+            html.div([], list.map(questions, field_html)),
             web.submit_input_group("Sign up!"),
           ],
         ),
@@ -295,4 +327,15 @@ fn p(text: String) -> html.Node(a) {
 
 fn div(children) -> html.Node(a) {
   html.div([], children)
+}
+
+pub fn application_answers_list_html(
+  application: Application,
+) -> List(html.Node(a)) {
+  questions
+  |> list.flat_map(fn(question) {
+    let answer =
+      result.unwrap(map.get(application.answers, question.key), "n/a")
+    web.dt_dl(question.text, answer)
+  })
 }

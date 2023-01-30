@@ -167,3 +167,7 @@ dt {
 .login .form-group {
   margin: var(--space) 0;
 }
+
+dt {
+  margin: var(--space-s);
+}

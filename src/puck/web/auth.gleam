@@ -23,7 +23,6 @@ import utility
 const auth_cookie = "uid"
 
 pub fn login(request: Request(BitString), state: State) -> Response(String) {
-  // TODO: A home page to redirect to
   use <- utility.guard(
     when: state.current_user != None,
     return: web.redirect("/"),
@@ -203,7 +202,6 @@ pub fn get_user_from_session(
   signing_secret: String,
   next: fn(Option(User)) -> Response(BitBuilder),
 ) -> Response(BitBuilder) {
-  // TODO: expire the cookie if it is present but there is no user
   case get_user_from_cookie(request, db, signing_secret) {
     Ok(user) -> next(user)
 
