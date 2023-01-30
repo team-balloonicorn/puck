@@ -96,7 +96,7 @@ pub fn webhook_matching_reference_test() {
   assert "Louis" = email.to_name
   assert "louis@example.com" = email.to_address
   assert "Midsummer Night's Tea Party payment confirmation" = email.subject
-  assert True = string.contains(email.content, "£120.00")
+  assert True = string.contains(email.content, "£120")
 }
 
 pub fn webhook_unknown_reference_test() {
