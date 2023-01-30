@@ -192,7 +192,7 @@ fn attendance_html(state: State) -> html.Node(a) {
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party 2023"),
       html.h2_text([], "When is it?"),
-      p("4pm Thursday the 8th June to 10am Monday the 12th June"),
+      p("5pm Thursday the 8th June to 11am Monday the 12th June"),
       html.h2_text([], "Where is it"),
       p("The same site as usual, 20 minutes drive from King's Lynn in Norfolk."),
       html.h2_text([], "How much does it cost?"),
