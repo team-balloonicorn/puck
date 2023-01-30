@@ -84,19 +84,33 @@ fn dashboard(
 ) -> Response(String) {
   assert Ok(payments) =
     payment.for_reference(state.db, application.payment_reference)
+  assert Ok(total) = payment.total(state.db)
+
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(dashboard_html(user, application, payments, state.config))
+  |> response.set_body(dashboard_html(
+    user,
+    application,
+    payments,
+    total,
+    state.config,
+  ))
 }
 
 fn dashboard_html(
   user: User,
   application: Application,
   payments: List(Payment),
+  total_contributions: Int,
   config: Config,
 ) -> String {
-  let total =
-    list.fold(payments, 0, fn(total, payment) { total + payment.amount })
+  let user_contributed =
+    payments
+    |> list.fold(0, fn(total, payment) { total + payment.amount })
+    |> money.pence_to_pounds
+  let total_costs = 500_000
+  let remaining = money.pence_to_pounds(total_costs - total_contributions)
+  let total_costs = money.pence_to_pounds(500_000)
 
   let table_row = fn(label, value) {
     html.tr([], [html.td_text([], label), html.td_text([], value)])
@@ -105,12 +119,11 @@ fn dashboard_html(
   let funding_section =
     html.Fragment([
       html.h2_text([], "Paying the bills"),
-      // TODO: show how much is left to raise
-      // TODO: show how much they have contributed
+      // TODO: link to costs breakdown page
       // TODO: add contribtion amount recommendations
       p(
-        "We need £XXXX to cover our costs. We have raised £XXXX. You have
-        contributed £XXXX.",
+        "We need " <> remaining <> " more to reach " <> total_costs <> " and
+        break even. You have contributed £XXXX.",
       ),
       p(
         "We don't make any money off this event and the core team typically pay
@@ -119,17 +132,19 @@ fn dashboard_html(
       html.table(
         [],
         [
-          table_row("Account name", config.account_name),
+          table_row("Account holder", config.account_name),
           table_row("Account number", config.account_number),
           table_row("Sort code", config.sort_code),
+          table_row("Unique reference", application.payment_reference),
         ],
       ),
     ])
 
+  // TODO: permit people to edit these
   let info_list = [
     web.dt_dl("What's your name?", user.name),
     web.dt_dl("What's your email?", user.email),
-    web.dt_dl("How much have you contributed?", money.pence_to_pounds(total)),
+    web.dt_dl("How much have you contributed?", user_contributed),
     html.Fragment(event.application_answers_list_html(application)),
   ]
 

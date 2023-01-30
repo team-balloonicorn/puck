@@ -214,6 +214,8 @@ pub fn total_test() {
   use db <- tests.with_connection
   let date = "2022-02-01T20:47:19.022Z"
 
+  assert Ok(0) = payment.total(db)
+
   assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
   assert Ok(a1) = user.insert_application(db, u1.id, map.new())
   assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")

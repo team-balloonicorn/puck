@@ -120,7 +120,7 @@ pub fn total(conn: database.Connection) -> Result(Int, Error) {
   let sql =
     "
     select
-      sum(amount)
+      coalesce(sum(amount), 0) as total
     from
       payments
     inner join applications on
