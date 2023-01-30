@@ -1,6 +1,8 @@
 import tests
 import gleeunit/should
 import puck/payment.{Payment}
+import puck/user
+import gleam/map
 
 pub fn from_json_transfer_test() {
   "{
@@ -206,4 +208,25 @@ pub fn for_reference_test() {
   assert Ok([p4, p5]) = payment.for_reference(conn, "ref1")
   assert True = p4 == p1
   assert True = p5 == p3
+}
+
+pub fn total_test() {
+  use db <- tests.with_connection
+  let date = "2022-02-01T20:47:19.022Z"
+
+  assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
+  assert Ok(a1) = user.insert_application(db, u1.id, map.new())
+  assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
+  assert Ok(a2) = user.insert_application(db, u2.id, map.new())
+
+  assert Ok(Nil) =
+    payment.insert(db, Payment("tx1", date, "Lou", 1, a1.payment_reference))
+  assert Ok(Nil) =
+    payment.insert(db, Payment("tx2", date, "Jay", 2, a2.payment_reference))
+  assert Ok(Nil) =
+    payment.insert(db, Payment("tx3", date, "Jay", 3, a2.payment_reference))
+  assert Ok(Nil) =
+    payment.insert(db, Payment("tx3", date, "Other", 4, "Unknown"))
+
+  assert Ok(6) = payment.total(db)
 }

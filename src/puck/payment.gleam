@@ -114,3 +114,18 @@ pub fn for_reference(
 
   database.query(sql, conn, [sqlight.text(reference)], decoder)
 }
+
+/// Get the total amount of payments which have been linked to an attendee.
+pub fn total(conn: database.Connection) -> Result(Int, Error) {
+  let sql =
+    "
+    select
+      sum(amount)
+    from
+      payments
+    inner join applications on
+      payments.reference = applications.payment_reference
+    "
+
+  database.one(sql, conn, [], dynamic.element(0, dynamic.int))
+}
