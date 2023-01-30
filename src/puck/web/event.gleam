@@ -11,9 +11,9 @@ import puck/web.{State}
 
 const field_attended = "attended"
 
-const field_pal_name = "pal-name"
+const field_pod_members = "pod-members"
 
-const field_pal_attended = "pal-attended"
+const field_pod_attended = "pod-attended"
 
 const field_dietary_requirements = "dietary-requirements"
 
@@ -21,8 +21,8 @@ const field_accessibility_requirements = "accessibility-requirements"
 
 const all_fields = [
   field_attended,
-  field_pal_name,
-  field_pal_attended,
+  field_pod_members,
+  field_pod_attended,
   field_dietary_requirements,
   field_accessibility_requirements,
 ]
@@ -91,25 +91,26 @@ pub fn application_form(state: State) -> Response(String) {
               ]),
             ),
             web.form_group(
-              "What're the name of your PAL(s)?",
+              "Who is in your pod?",
               div([
                 p(
-                  "You and your PALs are responsible for each other. At least
-                  one of your PALs should have attended Midsummer Night's
-                  Teaparty before.",
+                  "You and the people in your pods are responsible for each other. 
+                  If someone in your pod is unwell, having a bad time, or
+                  otherwise needs help the rest of your pod will look after
+                  them.",
                 ),
-                html.a_text(
-                  [attrs.href("/the-pal-system"), Attr("target", "_blank")],
-                  "Read here for more information on the PAL system here.",
+                p(
+                  "At least one of your PALs should have attended Midsummer
+                  Night's Teaparty before.",
                 ),
-                web.text_input(field_pal_name, [Attr("required", "true")]),
+                web.text_input(field_pod_members, [Attr("required", "true")]),
               ]),
             ),
             web.form_group(
               "Have any of your PALs attended before?",
               div([
-                radio_button(field_pal_attended, "yes", "Yes"),
-                radio_button(field_pal_attended, "no", "No"),
+                radio_button(field_pod_attended, "yes", "Yes"),
+                radio_button(field_pod_attended, "no", "No"),
               ]),
             ),
             web.form_group(
@@ -204,12 +205,7 @@ fn attendance_html(state: State) -> html.Node(a) {
       html.p(
         [],
         [
-          html.Text("Yes! So long as you or one of your "),
-          html.a_text(
-            [attrs.href("/the-pal-system"), attrs.target("_blank")],
-            "PALs",
-          ),
-          html.Text(" has been before."),
+          html.Text("Yes! So long as someone in your pod has attended before."),
           html.ol(
             [],
             [

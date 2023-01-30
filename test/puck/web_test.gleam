@@ -10,14 +10,6 @@ pub fn unknown_page_test() {
   assert 404 = response.status
 }
 
-pub fn pal_system_page_test() {
-  use state <- tests.with_state
-  let response =
-    tests.request("/the-pal-system")
-    |> routes.router(state)
-  assert 200 = response.status
-}
-
 pub fn licence_page_test() {
   use state <- tests.with_state
   let response =

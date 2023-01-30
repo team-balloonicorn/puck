@@ -43,8 +43,8 @@ pub fn register_attendance_ok_test() {
   let body =
     uri.query_to_string([
       #("attended", "yes"),
-      #("pal-name", "Lauren my pal"),
-      #("pal-attended", "yes"),
+      #("pod-members", "Lauren, Bell"),
+      #("pod-attended", "Lauren"),
       #("dietary-requirements", "Vegan"),
       #("accessibility-requirements", "I walk with a stick"),
       #("other", "This should not be recorded"),
@@ -63,8 +63,8 @@ pub fn register_attendance_ok_test() {
     #("accessibility-requirements", "I walk with a stick"),
     #("attended", "yes"),
     #("dietary-requirements", "Vegan"),
-    #("pal-attended", "yes"),
-    #("pal-name", "Lauren my pal"),
+    #("pod-attended", "Lauren"),
+    #("pod-members", "Lauren, Bell"),
   ] =
     application.answers
     |> map.to_list

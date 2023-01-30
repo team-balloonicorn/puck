@@ -25,7 +25,6 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
     [] -> home(state)
     [key] if key == attend -> event.attendance(request, state)
     ["licence"] -> licence(state)
-    ["the-pal-system"] -> pal_system(state)
     ["sign-up", key] if key == attend -> auth.sign_up(request, state)
     ["login"] -> auth.login(request, state)
     ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
@@ -89,13 +88,6 @@ fn dashboard(
 
 fn licence(state: State) {
   let html = state.templates.licence()
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
-}
-
-fn pal_system(state: State) {
-  let html = state.templates.pal_system()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)

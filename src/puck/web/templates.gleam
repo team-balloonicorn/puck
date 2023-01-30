@@ -3,11 +3,7 @@ import gleam/string
 import gleam/bbmustache as bbm
 
 pub type Templates {
-  Templates(
-    licence: fn() -> String,
-    pal_system: fn() -> String,
-    submitted: fn(Submitted) -> String,
-  )
+  Templates(licence: fn() -> String, submitted: fn(Submitted) -> String)
 }
 
 pub type Submitted {
@@ -22,11 +18,9 @@ pub type Submitted {
 
 pub fn load(config: Config) -> Templates {
   let licence = load_template("licence", config)
-  let pal_system = load_template("pal_system", config)
   let submitted = load_template("submitted", config)
   Templates(
     licence: fn() { licence([]) },
-    pal_system: fn() { pal_system([]) },
     submitted: submitted_template(_, submitted),
   )
 }
