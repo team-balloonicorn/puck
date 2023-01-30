@@ -10,7 +10,7 @@ allowed_public_ports = []
 auto_rollback = true
 
 [deploy]
-strategy = "canary"
+strategy = "rolling"
 
 [[services]]
 http_checks = []
@@ -37,3 +37,7 @@ grace_period = "1s"
 interval = "15s"
 restart_limit = 0
 timeout = "2s"
+
+[mounts]
+source="puck_data"
+destination="/data"
