@@ -1,10 +1,10 @@
-FROM ghcr.io/gleam-lang/gleam:v0.26.0-rc1-erlang-alpine
+FROM ghcr.io/gleam-lang/gleam:v0.26.0-erlang-alpine
 
 # Add project code
 COPY . /build/
 
 # Compile the application
-RUN apk add --no-cache sqlite \
+RUN apk add --no-cache sqlite gcc make libc-dev bsd-compat-headers \
   && cd /build \
   && gleam export erlang-shipment \
   && mv build/erlang-shipment /app \
