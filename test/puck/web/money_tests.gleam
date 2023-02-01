@@ -95,7 +95,7 @@ pub fn webhook_matching_reference_test() {
   assert Ok(email) = process.receive(emails, 0)
   assert "Louis" = email.to_name
   assert "louis@example.com" = email.to_address
-  assert "Midsummer Night's Tea Party payment confirmation" = email.subject
+  assert "Midsummer contribution confirmation" = email.subject
   assert True = string.contains(email.content, "£120")
 }
 
