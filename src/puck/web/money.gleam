@@ -65,7 +65,7 @@ The Midsummer crew",
   state.send_email(Email(
     to_name: user.name,
     to_address: user.email,
-    subject: "Midsummer Night's Tea Party payment confirmation",
+    subject: "Midsummer contribution confirmation",
     content: content,
   ))
 }
