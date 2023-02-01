@@ -108,9 +108,8 @@ fn dashboard_html(
     payments
     |> list.fold(0, fn(total, payment) { total + payment.amount })
     |> money.pence_to_pounds
-  let total_costs = 500_000
-  let remaining = money.pence_to_pounds(total_costs - total_contributions)
-  let total_costs = money.pence_to_pounds(500_000)
+  let remaining = money.pence_to_pounds(event.total_cost - total_contributions)
+  let event_cost = money.pence_to_pounds(event.total_cost)
 
   let table_row = fn(label, value) {
     html.tr([], [html.td_text([], label), html.td_text([], value)])
@@ -122,8 +121,8 @@ fn dashboard_html(
       // TODO: link to costs breakdown page
       // TODO: add contribtion amount recommendations
       p(
-        "We need " <> remaining <> " more to reach " <> total_costs <> " and
-        break even. You have contributed £XXXX.",
+        "We need " <> remaining <> " more to reach " <> event_cost <> " and
+        break even. You have contributed " <> user_contributed <> ".",
       ),
       p(
         "We don't make any money off this event and the core team typically pay
@@ -148,14 +147,17 @@ fn dashboard_html(
     html.Fragment(event.application_answers_list_html(application)),
   ]
 
+  let expandable = fn(title, body) {
+    html.details([], [html.summary_text([], title), body])
+  }
+
   html.main(
     [Attr("role", "main"), attrs.class("content")],
     [
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party"),
       funding_section,
-      html.h2_text([], "Your details"),
-      html.dl([], info_list),
+      expandable("Your details", html.dl([], info_list)),
     ],
   )
   |> web.html_page

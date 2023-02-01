@@ -171,3 +171,13 @@ dt {
 dt {
   margin: var(--space-s);
 }
+
+summary {
+  font-family: var(--pretty-font);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+details {
+  margin-top: var(--space-l);
+}

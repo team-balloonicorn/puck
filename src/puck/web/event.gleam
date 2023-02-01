@@ -10,6 +10,8 @@ import nakai/html/attrs.{Attr}
 import puck/user.{Application}
 import puck/web.{State, p}
 
+pub const total_cost = 754_000
+
 const field_attended = "attended"
 
 const field_pod_members = "pod-members"
@@ -237,7 +239,9 @@ fn attendance_html(state: State) -> html.Node(a) {
       html.p(
         [],
         [
-          html.Text("Yes! So long as someone in your pod has attended before."),
+          html.Text(
+            "Yes! So long as you are with someone who has attended before.",
+          ),
           html.ol(
             [],
             [
