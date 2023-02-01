@@ -1,6 +1,6 @@
 import sqlight
 
 pub type Error {
-  SqlightError(sqlight.Error)
+  Database(sqlight.Error)
   EmailAlreadyInUse
 }

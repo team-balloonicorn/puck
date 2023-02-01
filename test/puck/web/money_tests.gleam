@@ -99,6 +99,38 @@ pub fn webhook_matching_reference_test() {
   assert True = string.contains(email.content, "£120")
 }
 
+pub fn webhook_duplicate_test() {
+  // Monzo likes to send the same webhook 4 times even if you return 200 as
+  // they say you should.
+  use state <- tests.with_state
+  let #(state, emails) = tests.track_sent_emails(state)
+
+  assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
+  assert Ok(application) = user.insert_application(state.db, user.id, map.new())
+  let payment =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 12_000,
+      counterparty: "Louis Pilfold",
+      reference: application.payment_reference,
+    )
+  assert Ok(True) = payment.insert(state.db, payment)
+
+  let payload = payload(application.payment_reference, 12_000)
+  let response =
+    tests.request("/api/payment/" <> state.config.payment_secret)
+    |> request.set_method(http.Post)
+    |> request.set_body(<<payload:utf8>>)
+    |> routes.router(state)
+  assert 200 = response.status
+  assert "" = response.body
+  assert Ok([_]) = payment.list_all(state.db)
+
+  // Email is not sent for the repeated webhooks
+  assert Error(Nil) = process.receive(emails, 0)
+}
+
 pub fn webhook_unknown_reference_test() {
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)

@@ -23,7 +23,7 @@ pub fn query(
   decoder: dynamic.Decoder(t),
 ) -> Result(List(t), Error) {
   sqlight.query(sql, connection, arguments, decoder)
-  |> result.map_error(error.SqlightError)
+  |> result.map_error(error.Database)
 }
 
 pub fn one(

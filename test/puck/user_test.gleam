@@ -2,7 +2,7 @@ import bcrypter
 import gleam/map
 import gleam/option.{None, Some}
 import gleam/string
-import puck/error.{SqlightError}
+import puck/error.{Database}
 import puck/user.{Application, User}
 import tests
 
@@ -25,12 +25,12 @@ pub fn insert_new_users_test() {
 
 pub fn insert_invalid_email_test() {
   use db <- tests.with_connection
-  assert Error(error.SqlightError(_)) = user.insert(db, "Blah", "not an email")
+  assert Error(error.Database(_)) = user.insert(db, "Blah", "not an email")
 }
 
 pub fn insert_invalid_name_test() {
   use db <- tests.with_connection
-  assert Error(error.SqlightError(_)) = user.insert(db, "", "louis@example.com")
+  assert Error(error.Database(_)) = user.insert(db, "", "louis@example.com")
 }
 
 pub fn insert_already_inserted_test() {

@@ -43,7 +43,7 @@ pub fn insert(
 
   case database.one(sql, conn, arguments, decoder) {
     Ok(user) -> Ok(user)
-    Error(error.SqlightError(sqlight.SqlightError(
+    Error(error.Database(sqlight.SqlightError(
       sqlight.ConstraintUnique,
       "UNIQUE constraint failed: users.email",
       _,

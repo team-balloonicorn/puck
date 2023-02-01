@@ -1,6 +1,5 @@
-import sqlight
+import sqlight.{ConstraintPrimarykey, SqlightError}
 import gleam/json
-import gleam/result
 import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
@@ -51,8 +50,11 @@ fn decoder(data: Dynamic) -> Result(Payment, List(dynamic.DecodeError)) {
   )
 }
 
-pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error) {
-  use <- utility.guard(when: payment.amount <= 0, return: Ok(Nil))
+pub fn insert(
+  conn: database.Connection,
+  payment: Payment,
+) -> Result(Bool, Error) {
+  use <- utility.guard(when: payment.amount <= 0, return: Ok(False))
 
   let sql =
     "
@@ -65,7 +67,6 @@ pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error)
     ) values (
       ?1, ?2, ?3, ?4, ?5
     )
-    on conflict (id) do nothing
     "
 
   let arguments = [
@@ -76,8 +77,11 @@ pub fn insert(conn: database.Connection, payment: Payment) -> Result(Nil, Error)
     sqlight.text(payment.reference),
   ]
 
-  database.query(sql, conn, arguments, Ok)
-  |> result.map(fn(_) { Nil })
+  case database.query(sql, conn, arguments, Ok) {
+    Ok(_) -> Ok(True)
+    Error(error.Database(SqlightError(ConstraintPrimarykey, _, _))) -> Ok(False)
+    Error(e) -> Error(e)
+  }
 }
 
 pub fn list_all(conn: database.Connection) -> Result(List(Payment), Error) {

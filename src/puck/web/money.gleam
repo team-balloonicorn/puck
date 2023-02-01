@@ -16,7 +16,11 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
   // Record payment
   use body <- web.require_bit_string_body(request)
   use payment <- web.ok(payment.from_json(body))
-  assert Ok(_) = payment.insert(state.db, payment)
+  assert Ok(newly_inserted) = payment.insert(state.db, payment)
+
+  // Nothing more to do if we already knew about this payment, meaning that this
+  // is a duplicate webhook.
+  use <- utility.guard(!newly_inserted, return: response.new(200))
 
   // Send a confirmation email to the user, if there is one
   assert Ok(result) =

@@ -130,8 +130,8 @@ pub fn insert_test() {
       reference: "test1234",
     )
 
-  assert Ok(Nil) = payment.insert(conn, payment1)
-  assert Ok(Nil) = payment.insert(conn, payment2)
+  assert Ok(True) = payment.insert(conn, payment1)
+  assert Ok(True) = payment.insert(conn, payment2)
   assert Ok([p1, p2]) = payment.list_all(conn)
   assert True = p1 == payment1
   assert True = p2 == payment2
@@ -150,9 +150,9 @@ pub fn inserting_is_idempotent_test() {
       reference: "test1234",
     )
 
-  assert Ok(Nil) = payment.insert(conn, payment1)
-  assert Ok(Nil) = payment.insert(conn, payment1)
-  assert Ok(Nil) = payment.insert(conn, payment1)
+  assert Ok(True) = payment.insert(conn, payment1)
+  assert Ok(False) = payment.insert(conn, payment1)
+  assert Ok(False) = payment.insert(conn, payment1)
 
   assert Ok([p1]) = payment.list_all(conn)
   assert True = p1 == payment1
@@ -188,7 +188,7 @@ pub fn insert_discards_negative_amounts_test() {
       reference: "test1234",
     )
 
-  assert Ok(Nil) = payment.insert(conn, payment1)
+  assert Ok(False) = payment.insert(conn, payment1)
   assert Ok([]) = payment.list_all(conn)
 }
 
@@ -201,9 +201,9 @@ pub fn for_reference_test() {
   let p2 = Payment("tx2", date, "Lou", 2, "ref2")
   let p3 = Payment("tx3", date, "Lou", 2, "ref1")
 
-  assert Ok(Nil) = payment.insert(conn, p1)
-  assert Ok(Nil) = payment.insert(conn, p2)
-  assert Ok(Nil) = payment.insert(conn, p3)
+  assert Ok(True) = payment.insert(conn, p1)
+  assert Ok(True) = payment.insert(conn, p2)
+  assert Ok(True) = payment.insert(conn, p3)
 
   assert Ok([p4, p5]) = payment.for_reference(conn, "ref1")
   assert True = p4 == p1
@@ -221,13 +221,13 @@ pub fn total_test() {
   assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
   assert Ok(a2) = user.insert_application(db, u2.id, map.new())
 
-  assert Ok(Nil) =
+  assert Ok(True) =
     payment.insert(db, Payment("tx1", date, "Lou", 1, a1.payment_reference))
-  assert Ok(Nil) =
+  assert Ok(True) =
     payment.insert(db, Payment("tx2", date, "Jay", 2, a2.payment_reference))
-  assert Ok(Nil) =
+  assert Ok(True) =
     payment.insert(db, Payment("tx3", date, "Jay", 3, a2.payment_reference))
-  assert Ok(Nil) =
+  assert Ok(False) =
     payment.insert(db, Payment("tx3", date, "Other", 4, "Unknown"))
 
   assert Ok(6) = payment.total(db)
