@@ -61,7 +61,7 @@ We received your contribution of ",
 Love,
 The Midsummer crew
 
-P.S. View your details and more at https://puck.lpil.uk/
+P.S. View your details and more at https://puck.midsummer.lpil.uk/
 ",
     ])
 
