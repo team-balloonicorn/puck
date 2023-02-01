@@ -375,7 +375,7 @@ pub fn costs_table() -> html.Node(a) {
     [],
     [
       web.table_row("Low income", "£60+"),
-      web.table_row("Median income", "£75+"),
+      web.table_row("Median income", "£80+"),
       web.table_row("High income", "£100+"),
       web.table_row("Superstar 💖", "£120+"),
     ],
