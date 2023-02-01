@@ -216,3 +216,7 @@ pub fn dt_dl(key: String, value: String) -> html.Node(a) {
 pub fn p(text: String) -> html.Node(a) {
   html.p_text([], text)
 }
+
+pub fn table_row(label: String, value: String) -> html.Node(a) {
+  html.tr([], [html.td_text([], label), html.td_text([], value)])
+}

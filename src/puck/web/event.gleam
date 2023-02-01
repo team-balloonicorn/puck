@@ -210,33 +210,46 @@ fn attendance_html(state: State) -> html.Node(a) {
     [
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party 2023"),
+      html.h2_text([], "What is it?"),
+      p(
+        "Midsummer is a delightful little festival in a wonderful wooded
+        location. Expect fun and joy with a delightful group of people.
+        If you're here you should know someone who has been before, so ask
+        them!",
+      ),
       html.h2_text([], "When is it?"),
       p("5pm Thursday the 8th June to 11am Monday the 12th June"),
       html.h2_text([], "Where is it"),
       p("The same site as usual, 20 minutes drive from King's Lynn in Norfolk."),
       html.h2_text([], "How much does it cost?"),
-      // TODO: work out how much it costs
-      p("TODO: work out how much it costs"),
+      p(
+        "This is a collaborative event where people contribute what they can
+        afford. We don't make any money off this event and the core team
+        typically pay around £500 each. Please contribute what you can.
+        Recommended contributions:",
+      ),
+      costs_table(),
+      p(
+        "If you cannot afford this much please get in touch. No one is excluded
+        from Midsummer.",
+      ),
       html.h2_text([], "How many people will there be?"),
-      // TODO: Decide how many people 
-      p("TODO: work out how many people"),
+      p("We are aiming for 100 people."),
       html.h2_text([], "Will meals be included?"),
-      // TODO: Work out meal situation
-      //   <p>
-      //     Due to this being last minute and the budget being very tight we are unable
-      //     to do food for this event.
-      //   </p>
-      //   <p>
-      //     If we do get enough contributions to cover the £3,450 site fee and have
-      //     enough left over we look into bringing the breakfast bar, BBQs, and the
-      //     drinks bar, as these can be organised quickly.
-      //   </p>
-      p("TODO: work out meal situation"),
+      p(
+        "Yes! We will be providing the breakfast buffet, and a delicious hot
+        dinner on Friday, Saturday, and Sunday.",
+      ),
+      p(
+        "If we get enough financial contributions early enough and get enough
+        kitchen volunteers we may be able to offer lunch also. We'll let you
+        know if this is the case.",
+      ),
       html.h2_text([], "What facilities are there on site?"),
       p(
         "There are flushing toilets, running water, hot showers, and a dreamy
-        outdoor bath. There are not mains electricity or cooking facilities so
-        bring your camping kit.",
+        outdoor bath. There is no mains electricity and the kitchen cannot be
+        used by people other than kitchen crew.",
       ),
       html.h2_text([], "Where will people be sleeping?"),
       p(
@@ -355,4 +368,16 @@ pub fn application_answers_list_html(
       result.unwrap(map.get(application.answers, question.key), "n/a")
     web.dt_dl(question.text, answer)
   })
+}
+
+pub fn costs_table() -> html.Node(a) {
+  html.table(
+    [],
+    [
+      web.table_row("Low income", "£60+"),
+      web.table_row("Median income", "£75+"),
+      web.table_row("High income", "£100+"),
+      web.table_row("Superstar 💖", "£120+"),
+    ],
+  )
 }

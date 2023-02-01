@@ -121,7 +121,6 @@ fn dashboard_html(
   let funding_section =
     html.Fragment([
       html.h2_text([], "Paying the bills"),
-      // TODO: link to costs breakdown page
       html.p(
         [],
         [
@@ -136,15 +135,7 @@ fn dashboard_html(
         "We don't make any money off this event and the core team typically pay
         around £500 each. Please contribute what you can. Recommended contributions:",
       ),
-      html.table(
-        [],
-        [
-          table_row("Low income", "£60+"),
-          table_row("Median income", "£75+"),
-          table_row("High income", "£100+"),
-          table_row("Superstar 💖", "£120+"),
-        ],
-      ),
+      event.costs_table(),
       p(
         "If you cannot afford this much please get in touch. No one is excluded
         from Midsummer.",
