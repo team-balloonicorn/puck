@@ -52,11 +52,11 @@ fn send_payment_notification_email(
 ) -> Nil {
   let content =
     string.concat([
-      "Hello!
+      "Hi
 
 We received your contribution of ",
       pence_to_pounds(payment.amount),
-      ".
+      ", thank you!
 
 Love,
 The Midsummer crew",
