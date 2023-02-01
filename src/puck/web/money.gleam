@@ -59,7 +59,10 @@ We received your contribution of ",
       ", thank you!
 
 Love,
-The Midsummer crew",
+The Midsummer crew
+
+P.S. View your details and more at https://puck.lpil.uk/
+",
     ])
 
   state.send_email(Email(

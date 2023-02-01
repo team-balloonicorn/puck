@@ -100,7 +100,7 @@ fn login_email(user: User, db: database.Connection) -> Email {
   let content =
     "Hello! 
 
-Here's a link to log in: https://puck.gleam.run/login/" <> id <> "/" <> token <> "
+Here's a link to log in: https://puck.lpil.uk/login/" <> id <> "/" <> token <> "
 
 Love,
 The Midsummer crew
