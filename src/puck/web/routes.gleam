@@ -126,7 +126,23 @@ fn dashboard_html(
       ),
       p(
         "We don't make any money off this event and the core team typically pay
-        over £500 each. Please contribute what you can. We recommend £XXXX.",
+        around £500 each. Please contribute what you can. Recommended contributions:",
+      ),
+      html.table(
+        [],
+        [
+          table_row("Low income", "£60+"),
+          table_row("Median income", "£75+"),
+          table_row("High income", "£100+"),
+          table_row("Superstar 💖", "£120+"),
+        ],
+      ),
+      p(
+        "If you cannot afford this much please get in touch. No one is excluded
+        from Midsummer.",
+      ),
+      p(
+        "Please make payments to this account using your unique reference code.",
       ),
       html.table(
         [],
