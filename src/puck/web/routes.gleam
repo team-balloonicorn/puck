@@ -3,6 +3,7 @@ import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/list
+import gleam/result
 import puck/config.{Config}
 import puck/database
 import puck/payment.{Payment}
@@ -27,6 +28,7 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     [] -> home(state)
     [key] if key == attend -> event.attendance(request, state)
+    ["costs"] -> costs(state)
     ["licence"] -> licence(state)
     ["sign-up", key] if key == attend -> auth.sign_up(request, state)
     ["login"] -> auth.login(request, state)
@@ -97,6 +99,10 @@ fn dashboard(
   ))
 }
 
+fn table_row(label, value) -> html.Node(a) {
+  html.tr([], [html.td_text([], label), html.td_text([], value)])
+}
+
 fn dashboard_html(
   user: User,
   application: Application,
@@ -108,21 +114,23 @@ fn dashboard_html(
     payments
     |> list.fold(0, fn(total, payment) { total + payment.amount })
     |> money.pence_to_pounds
-  let remaining = money.pence_to_pounds(event.total_cost - total_contributions)
-  let event_cost = money.pence_to_pounds(event.total_cost)
-
-  let table_row = fn(label, value) {
-    html.tr([], [html.td_text([], label), html.td_text([], value)])
-  }
+  let remaining =
+    money.pence_to_pounds(event.total_cost() - total_contributions)
+  let event_cost = money.pence_to_pounds(event.total_cost())
 
   let funding_section =
     html.Fragment([
       html.h2_text([], "Paying the bills"),
       // TODO: link to costs breakdown page
-      // TODO: add contribtion amount recommendations
-      p(
-        "We need " <> remaining <> " more to reach " <> event_cost <> " and
-        break even. You have contributed " <> user_contributed <> ".",
+      html.p(
+        [],
+        [
+          html.Text("We need " <> remaining <> " more to reach "),
+          html.a([attrs.href("/costs")], [html.Text(event_cost)]),
+          html.Text(
+            " and break even. You have contributed " <> user_contributed <> ".",
+          ),
+        ],
       ),
       p(
         "We don't make any money off this event and the core team typically pay
@@ -177,6 +185,45 @@ fn dashboard_html(
     ],
   )
   |> web.html_page
+}
+
+fn costs(state: State) {
+  use _ <- web.require_user(state)
+
+  let total = money.pence_to_pounds(event.total_cost())
+  let items =
+    event.costs
+    |> list.map(fn(entry) { table_row(entry.0, money.pence_to_pounds(entry.1)) })
+    |> list.append([])
+  assert Ok(raised) =
+    payment.total(state.db)
+    |> result.map(money.pence_to_pounds)
+
+  let html =
+    html.main(
+      [Attr("role", "main"), attrs.class("content")],
+      [
+        web.flamingo(),
+        html.h1_text([], "The costs"),
+        p(
+          "The numbers here may change as we get closer to the event if and
+          prices change.",
+        ),
+        html.table([], items),
+        p(
+          "That's " <> total <> " in total. So far we have raised " <> raised <> ".",
+        ),
+        html.p(
+          [attrs.class("center")],
+          [html.a_text([attrs.href("/")], "Back home")],
+        ),
+      ],
+    )
+    |> web.html_page
+
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
 }
 
 fn licence(state: State) {

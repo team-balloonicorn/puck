@@ -10,7 +10,24 @@ import nakai/html/attrs.{Attr}
 import puck/user.{Application}
 import puck/web.{State, p}
 
-pub const total_cost = 754_000
+pub const costs = [
+  #("Site fee", 300_000),
+  #("Site camping fee", 80_000),
+  #("Rubbish collection", 10_000),
+  #("Food", 180_000),
+  #("Bar", 50_000),
+  #("Kitchen equipment hire", 34_000),
+  #("Tables + chairs hire", 20_000),
+  #("Firewood", 10_000),
+  #("Transportation", 50_000),
+  #("Speakers", 0),
+  #("Cleaning supplies, etc", 30_000),
+]
+
+pub fn total_cost() {
+  costs
+  |> list.fold(0, fn(total, cost) { total + cost.1 })
+}
 
 const field_attended = "attended"
 
