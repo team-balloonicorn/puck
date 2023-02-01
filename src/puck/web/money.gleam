@@ -50,11 +50,11 @@ fn send_payment_notification_email(
     string.concat([
       "Hello!
 
-We received your payment of ",
+We received your contribution of ",
       pence_to_pounds(payment.amount),
       ".
 
-Thanks,
+Love,
 The Midsummer crew",
     ])
 
