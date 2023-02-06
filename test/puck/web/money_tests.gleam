@@ -158,7 +158,7 @@ pub fn webhook_unknown_reference_test() {
   ]) = payment.list_all(state.db)
   // No reference matches so no email is sent
   assert Error(Nil) = process.receive(emails, 0)
-  assert Ok(#("Unmatched Puck payment", "Louis Pilfold £1")) =
+  assert Ok(#("Unmatched Puck payment", "Louis Pilfold m-0123456789ab £1")) =
     process.receive(notifications, 0)
 }
 
