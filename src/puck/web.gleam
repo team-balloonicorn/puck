@@ -23,6 +23,7 @@ pub type State {
     config: Config,
     current_user: Option(User),
     send_email: fn(Email) -> Nil,
+    send_admin_notification: fn(String, String) -> Nil,
   )
 }
 

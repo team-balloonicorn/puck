@@ -27,7 +27,11 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
     user.get_user_by_payment_reference(state.db, payment.reference)
   case result {
     Some(user) -> send_payment_notification_email(user, payment, state)
-    None -> Nil
+    None ->
+      state.send_admin_notification(
+        "Unmatched Puck payment",
+        payment.counterparty <> " " <> pence_to_pounds(payment.amount),
+      )
   }
 
   response.new(200)

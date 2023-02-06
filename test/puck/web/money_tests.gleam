@@ -74,6 +74,7 @@ pub fn webhook_matching_reference_test() {
   assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
   assert Ok(application) = user.insert_application(state.db, user.id, map.new())
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
   let payload = payload(application.payment_reference, 12_000)
   let response =
     tests.request("/api/payment/" <> state.config.payment_secret)
@@ -97,6 +98,7 @@ pub fn webhook_matching_reference_test() {
   assert "louis@example.com" = email.to_address
   assert "Midsummer contribution confirmation" = email.subject
   assert True = string.contains(email.content, "£120")
+  assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_duplicate_test() {
@@ -104,6 +106,7 @@ pub fn webhook_duplicate_test() {
   // they say you should.
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
 
   assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
   assert Ok(application) = user.insert_application(state.db, user.id, map.new())
@@ -129,11 +132,13 @@ pub fn webhook_duplicate_test() {
 
   // Email is not sent for the repeated webhooks
   assert Error(Nil) = process.receive(emails, 0)
+  assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_unknown_reference_test() {
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
   let payload = payload("m-0123456789ab", 100)
   let response =
     tests.request("/api/payment/" <> state.config.payment_secret)
@@ -153,11 +158,14 @@ pub fn webhook_unknown_reference_test() {
   ]) = payment.list_all(state.db)
   // No reference matches so no email is sent
   assert Error(Nil) = process.receive(emails, 0)
+  assert Ok(#("Unmatched Puck payment", "Louis Pilfold £1")) =
+    process.receive(notifications, 0)
 }
 
 pub fn webhook_non_positive_amount_test() {
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
   let payload = payload("m-0123456789ab", 0)
   let response =
     tests.request("/api/payment/" <> state.config.payment_secret)
@@ -168,11 +176,13 @@ pub fn webhook_non_positive_amount_test() {
   assert "" = response.body
   assert Ok([]) = payment.list_all(state.db)
   assert Error(Nil) = process.receive(emails, 0)
+  assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_wrong_method_test() {
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
   let payload = payload("m-0123456789ab", 100)
   let response =
     tests.request("/api/payment/" <> state.config.payment_secret)
@@ -182,11 +192,13 @@ pub fn webhook_wrong_method_test() {
   assert 405 = response.status
   assert Ok([]) = payment.list_all(state.db)
   assert Error(Nil) = process.receive(emails, 0)
+  assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_wrong_secret_test() {
   use state <- tests.with_state
   let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
   let payload = payload("m-0123456789ab", 100)
   let response =
     tests.request("/api/payment/nope")
@@ -196,4 +208,5 @@ pub fn webhook_wrong_secret_test() {
   assert 404 = response.status
   assert Ok([]) = payment.list_all(state.db)
   assert Error(Nil) = process.receive(emails, 0)
+  assert Error(Nil) = process.receive(notifications, 0)
 }

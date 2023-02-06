@@ -50,6 +50,7 @@ pub fn with_state(f: fn(State) -> a) -> a {
       config: config,
       current_user: None,
       send_email: fn(_) { Nil },
+      send_admin_notification: fn(_, _) { Nil },
       templates: templates.load(config),
     )
   f(state)
@@ -66,6 +67,15 @@ pub fn request(path: String) -> Request(BitString) {
   request.new()
   |> request.set_path(path)
   |> request.set_body(<<>>)
+}
+
+pub fn track_sent_notifications(
+  state: State,
+) -> #(State, Subject(#(String, String))) {
+  let subject = process.new_subject()
+  let send = fn(title, message) { process.send(subject, #(title, message)) }
+  let state = State(..state, send_admin_notification: send)
+  #(state, subject)
 }
 
 pub fn track_sent_emails(state: State) -> #(State, Subject(Email)) {

@@ -1,24 +1,25 @@
 import gleam/bit_builder.{BitBuilder}
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
-import gleam/option.{None, Some}
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/result
+import nakai/html
+import nakai/html/attrs.{Attr}
 import puck/config.{Config}
 import puck/database
-import puck/payment.{Payment}
 import puck/email
+import puck/payment.{Payment}
+import puck/pushover
 import puck/user.{Application, User}
 import puck/web.{State, p}
-import puck/web/money
 import puck/web/auth
 import puck/web/event
+import puck/web/money
 import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
-import nakai/html
-import nakai/html/attrs.{Attr}
 import utility
 
 pub fn router(request: Request(BitString), state: State) -> Response(String) {
@@ -61,6 +62,10 @@ pub fn handle_request(
       templates: templates.load(config),
       current_user: user,
       send_email: email.send(_, config),
+      send_admin_notification: fn(title, message) {
+        assert Ok(_) = pushover.notify(config, title, message)
+        Nil
+      },
     )
 
   router(request, state)
