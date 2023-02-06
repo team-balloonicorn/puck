@@ -130,22 +130,6 @@ pub fn get_application(
   database.maybe_one(sql, conn, arguments, application_decoder)
 }
 
-pub fn list_applications(
-  conn: database.Connection,
-) -> Result(List(Application), Error) {
-  let sql =
-    "
-    select
-      id, payment_reference, user_id, answers
-    from
-      applications
-    limit
-      1000
-    "
-
-  database.query(sql, conn, [], application_decoder)
-}
-
 pub fn get_user_by_payment_reference(
   conn: database.Connection,
   reference: String,

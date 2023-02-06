@@ -181,3 +181,11 @@ summary {
 details {
   margin-top: var(--space-l);
 }
+
+li > *:first-child {
+  margin-top: 0;
+}
+
+th {
+  text-align: unset;
+}

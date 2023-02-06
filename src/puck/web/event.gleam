@@ -29,15 +29,15 @@ pub fn total_cost() {
   |> list.fold(0, fn(total, cost) { total + cost.1 })
 }
 
-const field_attended = "attended"
+pub const field_attended = "attended"
 
-const field_pod_members = "pod-members"
+pub const field_pod_members = "pod-members"
 
-const field_pod_attended = "pod-attended"
+pub const field_pod_attended = "pod-attended"
 
-const field_dietary_requirements = "dietary-requirements"
+pub const field_dietary_requirements = "dietary-requirements"
 
-const field_accessibility_requirements = "accessibility-requirements"
+pub const field_accessibility_requirements = "accessibility-requirements"
 
 type FieldKind {
   Text(placeholder: String)
