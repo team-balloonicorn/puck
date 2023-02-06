@@ -57,6 +57,7 @@ fn user_header() {
       html.th([], [html.Text("Name")]),
       html.th([], [html.Text("Email")]),
       html.th([], [html.Text("Visits")]),
+      html.th([], [html.Text("Paid")]),
       html.th([], [html.Text("Reference")]),
       html.th([], [html.Text("Attended")]),
       html.th([], [html.Text("Pod")]),
@@ -70,8 +71,11 @@ fn user_header() {
 fn user_row(index: Int, user: User, state: State) {
   let application_data = case user.get_application(state.db, user.id) {
     Ok(Some(application)) -> {
+      assert Ok(total) =
+        payment.total_for_reference(state.db, application.payment_reference)
       let get = fn(key) { result.unwrap(map.get(application.answers, key), "") }
       [
+        money.pence_to_pounds(total),
         application.payment_reference,
         get(event.field_attended),
         get(event.field_pod_members),
@@ -81,7 +85,7 @@ fn user_row(index: Int, user: User, state: State) {
       ]
     }
 
-    _ -> ["", "", "", "", "", ""]
+    _ -> ["", "", "", "", "", "", ""]
   }
 
   html.tr(

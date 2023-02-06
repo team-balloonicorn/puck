@@ -119,6 +119,28 @@ pub fn for_reference(
   database.query(sql, conn, [sqlight.text(reference)], decoder)
 }
 
+pub fn total_for_reference(
+  conn: database.Connection,
+  reference: String,
+) -> Result(Int, Error) {
+  let sql =
+    "
+    select
+      coalesce(sum(amount), 0) as total
+    from
+      payments
+    where
+      reference = ?1
+    "
+
+  database.one(
+    sql,
+    conn,
+    [sqlight.text(reference)],
+    dynamic.element(0, dynamic.int),
+  )
+}
+
 /// Get the total amount of payments which have been linked to an attendee.
 pub fn total(conn: database.Connection) -> Result(Int, Error) {
   let sql =
