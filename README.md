@@ -14,6 +14,8 @@ flyctl deploy     # Deploy
 - `ENVIRONMENT`: `development` or `production`. Used for crash reports.
 - `RELOAD_TEMPLATES`: Templates are reloaded on each rendering if this it set,
   to avoid having to restart the server when making HTML changes in development.
+- `PUSHOVER_USER`: Pushover user to send admin notification to.
+- `PUSHOVER_KEY`: Pushover API key.
 
 ### Users and authentication
 - `SIGNING_SECRET`: Secret used to sign cookies.

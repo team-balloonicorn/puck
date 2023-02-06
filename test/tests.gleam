@@ -25,6 +25,8 @@ pub fn config() -> Config {
     help_email: random(),
     signing_secret: random(),
     payment_secret: random(),
+    pushover_user: random(),
+    pushover_key: random(),
     attend_secret: "attendance-secret" <> random(),
     reload_templates: False,
     zeptomail_api_key: random(),

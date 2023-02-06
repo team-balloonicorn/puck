@@ -6,6 +6,9 @@ pub type Config {
     database_path: String,
     help_email: String,
     signing_secret: String,
+    /// Notifications
+    pushover_key: String,
+    pushover_user: String,
     /// Payment webhook secret
     payment_secret: String,
     /// Secret route to sign up
@@ -28,6 +31,8 @@ pub type Config {
 pub fn load_from_env_or_crash() -> Config {
   assert Ok(environment) = os.get_env("ENVIRONMENT")
   assert Ok(database_path) = os.get_env("DATABASE_PATH")
+  assert Ok(pushover_key) = os.get_env("PUSHOVER_KEY")
+  assert Ok(pushover_user) = os.get_env("PUSHOVER_USER")
   assert Ok(payment_secret) = os.get_env("PAYMENT_SECRET")
   assert Ok(attend_secret) = os.get_env("ATTEND_SECRET")
   assert Ok(zeptomail_api_key) = os.get_env("ZEPTOMAIL_API_KEY")
@@ -45,6 +50,8 @@ pub fn load_from_env_or_crash() -> Config {
   Config(
     environment: environment,
     database_path: database_path,
+    pushover_key: pushover_key,
+    pushover_user: pushover_user,
     attend_secret: attend_secret,
     payment_secret: payment_secret,
     reload_templates: reload_templates,
