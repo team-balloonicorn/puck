@@ -101,6 +101,38 @@ pub fn webhook_matching_reference_test() {
   assert Error(Nil) = process.receive(notifications, 0)
 }
 
+pub fn webhook_wrong_case_matching_reference_test() {
+  use state <- tests.with_state
+  assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
+  assert Ok(application) = user.insert_application(state.db, user.id, map.new())
+  let #(state, emails) = tests.track_sent_emails(state)
+  let #(state, notifications) = tests.track_sent_notifications(state)
+  let payload = payload(string.uppercase(application.payment_reference), 12_000)
+  let response =
+    tests.request("/api/payment/" <> state.config.payment_secret)
+    |> request.set_method(http.Post)
+    |> request.set_body(<<payload:utf8>>)
+    |> routes.router(state)
+  assert 200 = response.status
+  assert "" = response.body
+  assert Ok([
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 12_000,
+      counterparty: "Louis Pilfold",
+      reference: _,
+    ),
+  ]) = payment.list_all(state.db)
+  // No reference matches so no email is sent
+  assert Ok(email) = process.receive(emails, 0)
+  assert "Louis" = email.to_name
+  assert "louis@example.com" = email.to_address
+  assert "Midsummer contribution confirmation" = email.subject
+  assert True = string.contains(email.content, "£120")
+  assert Error(Nil) = process.receive(notifications, 0)
+}
+
 pub fn webhook_duplicate_test() {
   // Monzo likes to send the same webhook 4 times even if you return 200 as
   // they say you should.

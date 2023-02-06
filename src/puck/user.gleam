@@ -145,7 +145,7 @@ pub fn get_user_by_payment_reference(
     where
       payment_reference = ?1
     "
-  let arguments = [sqlight.text(reference)]
+  let arguments = [sqlight.text(string.uppercase(reference))]
   database.maybe_one(sql, conn, arguments, decoder)
 }
 
