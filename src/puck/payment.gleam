@@ -156,6 +156,7 @@ pub fn total(conn: database.Connection) -> Result(Int, Error) {
   database.one(sql, conn, [], dynamic.element(0, dynamic.int))
 }
 
+// TODO: test
 pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
   let sql =
     "
@@ -167,8 +168,10 @@ pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
       reference
     from
       payments
-    left outer join applications on
+    left join applications on
       payments.reference = applications.payment_reference
+    where
+      applications.id is null
     "
 
   database.query(sql, conn, [], decoder)
