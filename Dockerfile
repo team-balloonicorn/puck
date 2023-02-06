@@ -13,6 +13,8 @@ RUN apk add --no-cache sqlite gcc make libc-dev bsd-compat-headers \
   && adduser -S puck -G puck \
   && chown -R puck /app
 
+COPY bin/locally-backup-database.sh /app/bin/locally-backup-database.sh
+
 USER puck
 WORKDIR /app
 ENTRYPOINT ["/app/entrypoint.sh"]
