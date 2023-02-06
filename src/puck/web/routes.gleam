@@ -20,6 +20,7 @@ import puck/web/print_requests
 import puck/web/rescue_errors
 import puck/web/static
 import puck/web/templates
+import puck/web/admin
 import utility
 
 pub fn router(request: Request(BitString), state: State) -> Response(String) {
@@ -29,6 +30,7 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
   case request.path_segments(request) {
     [] -> home(state)
     [key] if key == attend -> event.attendance(request, state)
+    ["admin"] -> admin.dashboard(request, state)
     ["costs"] -> costs(state)
     ["licence"] -> licence(state)
     ["sign-up", key] if key == attend -> auth.sign_up(request, state)

@@ -63,6 +63,17 @@ pub fn require_user(
   }
 }
 
+pub fn require_admin_user(
+  state: State,
+  next: fn(User) -> Response(String),
+) -> Response(String) {
+  use user <- require_user(state)
+  case user.is_admin {
+    True -> next(user)
+    False -> not_found()
+  }
+}
+
 pub fn require_bit_string_body(
   request: Request(BitString),
   next: fn(String) -> Response(String),

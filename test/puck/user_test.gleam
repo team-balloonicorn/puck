@@ -9,17 +9,28 @@ import tests
 pub fn insert_new_users_test() {
   use db <- tests.with_connection
 
-  assert Ok(User(id: 1, name: "Jay", email: "jay@example.com", interactions: 0)) =
-    user.insert(db, "Jay", "jay@example.com")
+  assert Ok(User(
+    id: 1,
+    name: "Jay",
+    email: "jay@example.com",
+    interactions: 0,
+    is_admin: False,
+  )) = user.insert(db, "Jay", "jay@example.com")
 
-  assert Ok(User(id: 2, name: "Al", email: "al@example.com", interactions: 0)) =
-    user.insert(db, "Al", "al@example.com")
+  assert Ok(User(
+    id: 2,
+    name: "Al",
+    email: "al@example.com",
+    interactions: 0,
+    is_admin: False,
+  )) = user.insert(db, "Al", "al@example.com")
 
   assert Ok(User(
     id: 3,
     name: "Louis",
     email: "louis@example.com",
     interactions: 0,
+    is_admin: False,
   )) = user.insert(db, "Louis", "louis@example.com")
 }
 
@@ -36,8 +47,13 @@ pub fn insert_invalid_name_test() {
 pub fn insert_already_inserted_test() {
   use db <- tests.with_connection
 
-  assert Ok(User(1, name: "Louis", email: "louis@example.com", interactions: 0)) =
-    user.insert(db, "Louis", "louis@example.com")
+  assert Ok(User(
+    1,
+    name: "Louis",
+    email: "louis@example.com",
+    interactions: 0,
+    is_admin: False,
+  )) = user.insert(db, "Louis", "louis@example.com")
 
   assert Error(error.EmailAlreadyInUse) =
     user.insert(db, "Louis", "louis@example.com")

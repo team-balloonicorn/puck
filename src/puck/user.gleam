@@ -13,7 +13,7 @@ import gleam/string
 import gleam/bit_string
 
 pub type User {
-  User(id: Int, name: String, email: String, interactions: Int)
+  User(id: Int, name: String, email: String, interactions: Int, is_admin: Bool)
 }
 
 pub type Application {
@@ -37,7 +37,7 @@ pub fn insert(
     values
       (?1, ?2)
     returning
-      id, name, email, interactions
+      id, name, email, interactions, is_admin
     "
   let arguments = [sqlight.text(name), sqlight.text(email)]
 
@@ -52,6 +52,18 @@ pub fn insert(
   }
 }
 
+pub fn list_all(conn: database.Connection) -> Result(List(User), Error) {
+  let sql =
+    "
+    select
+      id, name, email, interactions, is_admin
+    from users
+    limit 1000
+    "
+
+  database.query(sql, conn, [], decoder)
+}
+
 pub fn get_by_email(
   conn: database.Connection,
   email: String,
@@ -59,7 +71,7 @@ pub fn get_by_email(
   let sql =
     "
     select 
-      id, name, email, interactions
+      id, name, email, interactions, is_admin
     from
       users
     where
@@ -118,6 +130,22 @@ pub fn get_application(
   database.maybe_one(sql, conn, arguments, application_decoder)
 }
 
+pub fn list_applications(
+  conn: database.Connection,
+) -> Result(List(Application), Error) {
+  let sql =
+    "
+    select
+      id, payment_reference, user_id, answers
+    from
+      applications
+    limit
+      1000
+    "
+
+  database.query(sql, conn, [], application_decoder)
+}
+
 pub fn get_user_by_payment_reference(
   conn: database.Connection,
   reference: String,
@@ -125,7 +153,7 @@ pub fn get_user_by_payment_reference(
   let sql =
     "
     select
-      users.id, name, email, interactions
+      users.id, name, email, interactions, is_admin
     from
       users
     join
@@ -148,7 +176,7 @@ pub fn get_and_increment_interaction(
     where
       id = ?1
     returning
-      id, name, email, interactions
+      id, name, email, interactions, is_admin
     "
   let arguments = [sqlight.int(user_id)]
   database.maybe_one(sql, conn, arguments, decoder)
@@ -223,12 +251,13 @@ pub fn get_login_token_hash(
 
 fn decoder(data: Dynamic) {
   data
-  |> dy.decode4(
+  |> dy.decode5(
     User,
     dy.element(0, dy.int),
     dy.element(1, dy.string),
     dy.element(2, dy.string),
     dy.element(3, dy.int),
+    dy.element(4, sqlight.decode_bool),
   )
 }
 
