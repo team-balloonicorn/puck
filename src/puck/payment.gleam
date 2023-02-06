@@ -133,3 +133,21 @@ pub fn total(conn: database.Connection) -> Result(Int, Error) {
 
   database.one(sql, conn, [], dynamic.element(0, dynamic.int))
 }
+
+pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
+  let sql =
+    "
+    select
+      payments.id,
+      created_at,
+      counterparty,
+      amount,
+      reference
+    from
+      payments
+    left outer join applications on
+      payments.reference = applications.payment_reference
+    "
+
+  database.query(sql, conn, [], decoder)
+}

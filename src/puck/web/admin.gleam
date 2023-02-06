@@ -3,7 +3,6 @@ import gleam/http/request.{Request}
 import gleam/http/response
 import gleam/option.{Some}
 import gleam/result
-import gleam/string
 import gleam/list
 import gleam/int
 import gleam/map
@@ -24,9 +23,10 @@ pub fn dashboard(request: Request(BitString), state: State) {
 
 fn get_dashboard(state: State) {
   assert Ok(users) = user.list_all(state.db)
-  assert Ok(payments) = payment.list_all(state.db)
+  assert Ok(unmatched_payments) = payment.unmatched(state.db)
   assert Ok(total) = payment.total(state.db)
   let user = fn(i, user) { user_row(i, user, state) }
+  let payment = fn(i, payment) { payment_row(i, payment) }
 
   let html =
     html.div(
@@ -34,10 +34,13 @@ fn get_dashboard(state: State) {
       [
         html.h1_text([], "Hi admin"),
         html.p_text([], "Total contributions: " <> money.pence_to_pounds(total)),
-        html.h2_text([], "Users " <> int.to_string(list.length(users))),
+        html.h2_text([], "Users"),
         html.table([], [user_header(), ..list.index_map(users, user)]),
-        html.h2_text([], "Payments " <> int.to_string(list.length(payments))),
-        html.ul([], list.map(payments, payment_entry)),
+        html.h2_text([], "Unmatched payments"),
+        html.table(
+          [],
+          [payment_header(), ..list.index_map(unmatched_payments, payment)],
+        ),
       ],
     )
 
@@ -96,6 +99,33 @@ fn user_row(index: Int, user: User, state: State) {
   )
 }
 
-fn payment_entry(payment: Payment) {
-  html.li([], [html.Text(string.inspect(payment))])
+fn payment_header() {
+  html.tr(
+    [],
+    [
+      html.th([], []),
+      html.th([], [html.Text("Id")]),
+      html.th([], [html.Text("Timestamp")]),
+      html.th([], [html.Text("Counterparty")]),
+      html.th([], [html.Text("Amount")]),
+      html.th([], [html.Text("Reference")]),
+    ],
+  )
+}
+
+fn payment_row(index: Int, payment: Payment) {
+  html.tr(
+    [],
+    list.map(
+      [
+        int.to_string(index + 1),
+        payment.id,
+        payment.created_at,
+        payment.counterparty,
+        money.pence_to_pounds(payment.amount),
+        payment.reference,
+      ],
+      fn(text) { html.td([], [html.Text(text)]) },
+    ),
+  )
 }

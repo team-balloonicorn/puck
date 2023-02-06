@@ -22,16 +22,24 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
   // is a duplicate webhook.
   use <- utility.guard(!newly_inserted, return: response.new(200))
 
-  // Send a confirmation email to the user, if there is one
   assert Ok(result) =
     user.get_user_by_payment_reference(state.db, payment.reference)
   case result {
+    // Send a confirmation email to the user, if there is one
     Some(user) -> send_payment_notification_email(user, payment, state)
-    None ->
+
+    // Otherwise notify that this payment is unknown
+    None -> {
+      let details = [
+        payment.counterparty,
+        payment.reference,
+        pence_to_pounds(payment.amount),
+      ]
       state.send_admin_notification(
         "Unmatched Puck payment",
-        payment.counterparty <> " " <> pence_to_pounds(payment.amount),
+        string.join(details, " "),
       )
+    }
   }
 
   response.new(200)
