@@ -1,5 +1,6 @@
 import sqlight.{ConstraintPrimarykey, SqlightError}
 import gleam/json
+import gleam/string as glstring
 import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
@@ -74,7 +75,7 @@ pub fn insert(
     sqlight.text(payment.created_at),
     sqlight.text(payment.counterparty),
     sqlight.int(payment.amount),
-    sqlight.text(payment.reference),
+    sqlight.text(glstring.lowercase(payment.reference)),
   ]
 
   case database.query(sql, conn, arguments, Ok) {

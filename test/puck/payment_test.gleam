@@ -119,7 +119,7 @@ pub fn insert_test() {
       created_at: "2015-09-04T14:28:40Z",
       amount: 350,
       counterparty: "The De Beauvoir Deli Co.",
-      reference: "Ozone Coffee Roasters",
+      reference: "ozone coffee roasters",
     )
   let payment2 =
     Payment(
@@ -190,6 +190,22 @@ pub fn insert_discards_negative_amounts_test() {
 
   assert Ok(False) = payment.insert(conn, payment1)
   assert Ok([]) = payment.list_all(conn)
+}
+
+pub fn insert_lowercases_reference_test() {
+  use conn <- tests.with_connection
+  assert Ok([]) = payment.list_all(conn)
+
+  let payment1 =
+    Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 1,
+      counterparty: "Louis Pilfold",
+      reference: "TEST1234",
+    )
+  assert Ok(True) = payment.insert(conn, payment1)
+  assert Ok([Payment(reference: "test1234", ..)]) = payment.list_all(conn)
 }
 
 pub fn for_reference_test() {
