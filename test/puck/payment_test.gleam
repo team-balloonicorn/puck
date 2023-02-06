@@ -105,7 +105,7 @@ pub fn from_json_purchase_test() {
     created_at: "2015-09-04T14:28:40Z",
     amount: -350,
     counterparty: "The De Beauvoir Deli Co.",
-    reference: "Ozone Coffee Roasters",
+    reference: "ozone coffee roasters",
   )))
 }
 

@@ -1,6 +1,7 @@
 import sqlight.{ConstraintPrimarykey, SqlightError}
 import gleam/json
-import gleam/string as glstring
+import gleam/string.{lowercase} as stringmod
+import gleam/result
 import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
@@ -36,7 +37,8 @@ pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
       ),
     )
 
-  json.decode(from: json, using: decoder)
+  use payment <- result.map(json.decode(from: json, using: decoder))
+  Payment(..payment, reference: lowercase(payment.reference))
 }
 
 fn decoder(data: Dynamic) -> Result(Payment, List(dynamic.DecodeError)) {
@@ -75,7 +77,7 @@ pub fn insert(
     sqlight.text(payment.created_at),
     sqlight.text(payment.counterparty),
     sqlight.int(payment.amount),
-    sqlight.text(glstring.lowercase(payment.reference)),
+    sqlight.text(lowercase(payment.reference)),
   ]
 
   case database.query(sql, conn, arguments, Ok) {
