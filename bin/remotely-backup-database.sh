@@ -2,6 +2,8 @@
 
 set -eu
 
+echo Running at $(date)
+
 REMOTE="/data/backups"
 HOURLY="hourly-$(date +%H).sqlite3"
 DAILY="daily-$(date +%d).sqlite3"
