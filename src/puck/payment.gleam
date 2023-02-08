@@ -7,6 +7,7 @@ import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
 import utility
+import gleam/pair
 
 pub type Payment {
   Payment(
@@ -183,7 +184,9 @@ pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
 
 // TODO: test
 /// Show the amount transferred per day over the last N months.
-pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error) {
+pub fn per_day(
+  conn: database.Connection,
+) -> Result(List(#(String, Int, Int)), Error) {
   let sql =
     "
     with recursive dates as (
@@ -210,7 +213,7 @@ pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error)
 
     select
       date,
-      coalesce(sum(amount), 0) as total
+      coalesce(sum(amount), 0) as daily_total
     from
       dates
     left join matched_payments as payments on
@@ -225,6 +228,14 @@ pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error)
   use rows <- result.then(database.query(sql, conn, [], decoder))
   rows
   |> list.drop_while(fn(row) { row.1 == 0 })
+  |> list.map_fold(
+    0,
+    fn(total, row) {
+      let total = total + row.1
+      #(total, #(row.0, row.1, total))
+    },
+  )
+  |> pair.second
   |> list.reverse
   |> Ok
 }

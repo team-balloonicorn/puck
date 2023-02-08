@@ -188,4 +188,5 @@ li > *:first-child {
 
 th {
   text-align: unset;
+  padding-right: var(--space);
 }

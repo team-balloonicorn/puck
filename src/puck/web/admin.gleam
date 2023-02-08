@@ -11,7 +11,6 @@ import puck/user.{User}
 import puck/payment.{Payment}
 import puck/web.{State}
 import puck/web/money
-import gleam/string
 import nakai/html
 
 pub fn dashboard(request: Request(BitString), state: State) {
@@ -38,14 +37,23 @@ fn get_dashboard(state: State) {
         html.h1_text([], "Hi admin"),
         html.p_text([], "Total contributions: " <> money.pence_to_pounds(total)),
         html.h2_text([], "Users"),
-        html.table([], [user_header(), ..list.index_map(users, user)]),
-        html.h2_text([], "Unmatched payments"),
-        html.table(
-          [],
-          [payment_header(), ..list.index_map(unmatched_payments, payment)],
+        table(
+          [
+            "", "Name", "Email", "Visits", "Paid", "Reference", "Attended",
+            "Pod", "Pod attended", "Diet", "Accessibility",
+          ],
+          list.index_map(users, user),
         ),
-        html.h2_text([], "Payments per day"),
-        html.table([], list.map(daily_income, day_income)),
+        html.h2_text([], "Unmatched payments"),
+        table(
+          ["", "Id", "Timestamp", "Counterparty", "Amount", "Reference"],
+          list.index_map(unmatched_payments, payment),
+        ),
+        html.h2_text([], "Contributions"),
+        table(
+          ["Date", "Daily", "Cumulative"],
+          list.map(daily_income, day_income),
+        ),
       ],
     )
 
@@ -54,31 +62,26 @@ fn get_dashboard(state: State) {
   |> response.set_body(web.html_page(html))
 }
 
-fn day_income(payment: #(String, Int)) {
+fn table(headings: List(String), rows: List(html.Node(a))) {
+  html.table(
+    [],
+    [
+      html.tr(
+        [],
+        list.map(headings, fn(heading) { html.th([], [html.Text(heading)]) }),
+      ),
+      ..rows
+    ],
+  )
+}
+
+fn day_income(payment: #(String, Int, Int)) {
   html.tr(
     [],
     [
       html.td([], [html.Text(payment.0)]),
       html.td([], [html.Text(money.pence_to_pounds(payment.1))]),
-    ],
-  )
-}
-
-fn user_header() {
-  html.tr(
-    [],
-    [
-      html.th([], []),
-      html.th([], [html.Text("Name")]),
-      html.th([], [html.Text("Email")]),
-      html.th([], [html.Text("Visits")]),
-      html.th([], [html.Text("Paid")]),
-      html.th([], [html.Text("Reference")]),
-      html.th([], [html.Text("Attended")]),
-      html.th([], [html.Text("Pod")]),
-      html.th([], [html.Text("Pod attended")]),
-      html.th([], [html.Text("Diet")]),
-      html.th([], [html.Text("Accessibility")]),
+      html.td([], [html.Text(money.pence_to_pounds(payment.2))]),
     ],
   )
 }
@@ -119,17 +122,7 @@ fn user_row(index: Int, user: User, state: State) {
 }
 
 fn payment_header() {
-  html.tr(
-    [],
-    [
-      html.th([], []),
-      html.th([], [html.Text("Id")]),
-      html.th([], [html.Text("Timestamp")]),
-      html.th([], [html.Text("Counterparty")]),
-      html.th([], [html.Text("Amount")]),
-      html.th([], [html.Text("Reference")]),
-    ],
-  )
+  html.tr([], [])
 }
 
 fn payment_row(index: Int, payment: Payment) {
