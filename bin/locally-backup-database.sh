@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo Running at $(date)
+
 set -eu
 
 BACKUPS="/data/backups"
