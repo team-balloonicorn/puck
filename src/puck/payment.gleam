@@ -1,4 +1,5 @@
 import sqlight.{ConstraintPrimarykey, SqlightError}
+import gleam/list
 import gleam/json
 import gleam/string.{lowercase} as stringmod
 import gleam/result
@@ -178,4 +179,44 @@ pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
     "
 
   database.query(sql, conn, [], decoder)
+}
+
+// TODO: test
+/// Show the amount transferred per day over the last N months.
+pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error) {
+  let sql =
+    "
+    with recursive dates as (
+      select
+        date('now', '-3 month') as date
+      union all
+      select
+        date(date, '+1 day')
+      from
+        dates
+      where
+        date < date('now')
+    )
+
+    select
+      date,
+      coalesce(sum(amount), 0) as total
+    from
+      dates
+    left join payments on
+       payments.created_at >= dates.date and
+       payments.created_at < date(dates.date, '+1 day')
+    left join applications on
+      payments.reference = applications.payment_reference
+    group by
+      date
+    order by
+      date asc
+    "
+  let decoder = dynamic.tuple2(string, int)
+  use rows <- result.then(database.query(sql, conn, [], decoder))
+  rows
+  |> list.drop_while(fn(row) { row.1 == 0 })
+  |> list.reverse
+  |> Ok
 }

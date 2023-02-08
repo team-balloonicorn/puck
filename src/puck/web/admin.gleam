@@ -11,6 +11,7 @@ import puck/user.{User}
 import puck/payment.{Payment}
 import puck/web.{State}
 import puck/web/money
+import gleam/string
 import nakai/html
 
 pub fn dashboard(request: Request(BitString), state: State) {
@@ -24,7 +25,9 @@ pub fn dashboard(request: Request(BitString), state: State) {
 fn get_dashboard(state: State) {
   assert Ok(users) = user.list_all(state.db)
   assert Ok(unmatched_payments) = payment.unmatched(state.db)
+  assert Ok(daily_income) = payment.per_day(state.db)
   assert Ok(total) = payment.total(state.db)
+
   let user = fn(i, user) { user_row(i, user, state) }
   let payment = fn(i, payment) { payment_row(i, payment) }
 
@@ -41,12 +44,24 @@ fn get_dashboard(state: State) {
           [],
           [payment_header(), ..list.index_map(unmatched_payments, payment)],
         ),
+        html.h2_text([], "Payments per day"),
+        html.table([], list.map(daily_income, day_income)),
       ],
     )
 
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(web.html_page(html))
+}
+
+fn day_income(payment: #(String, Int)) {
+  html.tr(
+    [],
+    [
+      html.td([], [html.Text(payment.0)]),
+      html.td([], [html.Text(money.pence_to_pounds(payment.1))]),
+    ],
+  )
 }
 
 fn user_header() {
