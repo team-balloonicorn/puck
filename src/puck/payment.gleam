@@ -196,6 +196,16 @@ pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error)
         dates
       where
         date < date('now')
+    ),
+
+    matched_payments as (
+      select
+        payments.amount,
+        payments.created_at
+      from
+        payments
+      inner join applications on
+        payments.reference = applications.payment_reference
     )
 
     select
@@ -203,11 +213,9 @@ pub fn per_day(conn: database.Connection) -> Result(List(#(String, Int)), Error)
       coalesce(sum(amount), 0) as total
     from
       dates
-    left join payments on
+    left join matched_payments as payments on
        payments.created_at >= dates.date and
        payments.created_at < date(dates.date, '+1 day')
-    left join applications on
-      payments.reference = applications.payment_reference
     group by
       date
     order by
