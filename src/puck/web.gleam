@@ -167,7 +167,7 @@ pub fn html_page(page_html: html.Node(a)) -> String {
           html.div(
             [],
             [
-              html.Text("© Louis Pilfold 2022. Made with "),
+              html.Text("© Louis Pilfold. Made with "),
               html.a([attrs.href("http://gleam.run/")], [html.Text("Gleam")]),
               html.Text("."),
             ],

@@ -39,8 +39,9 @@ fn get_dashboard(state: State) {
         html.table(
           [],
           [
-            tr([th("Total contributions"), td(money.pence_to_pounds(total))]),
+            tr([th("People signed up"), td(int.to_string(list.length(users)))]),
             tr([th("People contributed"), td(int.to_string(paid_users_count))]),
+            tr([th("Total contributions"), td(money.pence_to_pounds(total))]),
           ],
         ),
         html.h2_text([], "People"),
