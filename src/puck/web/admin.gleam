@@ -23,6 +23,7 @@ pub fn dashboard(request: Request(BitString), state: State) {
 
 fn get_dashboard(state: State) {
   assert Ok(users) = user.list_all(state.db)
+  assert Ok(paid_users_count) = user.count_users_with_payments(state.db)
   assert Ok(unmatched_payments) = payment.unmatched(state.db)
   assert Ok(daily_income) = payment.per_day(state.db)
   assert Ok(total) = payment.total(state.db)
@@ -35,8 +36,14 @@ fn get_dashboard(state: State) {
       [],
       [
         html.h1_text([], "Hi admin"),
-        html.p_text([], "Total contributions: " <> money.pence_to_pounds(total)),
-        html.h2_text([], "Users"),
+        html.table(
+          [],
+          [
+            tr([th("Total contributions"), td(money.pence_to_pounds(total))]),
+            tr([th("People contributed"), td(int.to_string(paid_users_count))]),
+          ],
+        ),
+        html.h2_text([], "People"),
         table(
           [
             "", "Name", "Email", "Visits", "Paid", "Reference", "Attended",
@@ -63,16 +70,7 @@ fn get_dashboard(state: State) {
 }
 
 fn table(headings: List(String), rows: List(html.Node(a))) {
-  html.table(
-    [],
-    [
-      html.tr(
-        [],
-        list.map(headings, fn(heading) { html.th([], [html.Text(heading)]) }),
-      ),
-      ..rows
-    ],
-  )
+  html.table([], [html.tr([], list.map(headings, th)), ..rows])
 }
 
 fn day_income(payment: #(String, Int, Int)) {
@@ -116,7 +114,7 @@ fn user_row(index: Int, user: User, state: State) {
         int.to_string(user.interactions),
         ..application_data
       ],
-      fn(text) { html.td([], [html.Text(text)]) },
+      td,
     ),
   )
 }
@@ -133,7 +131,19 @@ fn payment_row(index: Int, payment: Payment) {
         money.pence_to_pounds(payment.amount),
         payment.reference,
       ],
-      fn(text) { html.td([], [html.Text(text)]) },
+      td,
     ),
   )
+}
+
+fn tr(children: List(html.Node(a))) -> html.Node(a) {
+  html.tr([], children)
+}
+
+fn th(text: String) -> html.Node(a) {
+  html.th([], [html.Text(text)])
+}
+
+fn td(text: String) -> html.Node(a) {
+  html.td([], [html.Text(text)])
 }

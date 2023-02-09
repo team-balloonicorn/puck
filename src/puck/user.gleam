@@ -292,3 +292,24 @@ fn generate_reference() -> String {
   // Try again it if fails. It never should.
   |> result.lazy_unwrap(fn() { generate_reference() })
 }
+
+// TODO: test
+pub fn count_users_with_payments(
+  conn: database.Connection,
+) -> Result(Int, Error) {
+  let sql =
+    "
+    select
+      count(distinct users.id)
+    from
+      users
+    join
+      applications on users.id = applications.user_id
+    join
+      payments on payments.reference = applications.payment_reference
+    where
+      applications.id is not null
+    "
+  let arguments = []
+  database.one(sql, conn, arguments, dy.element(0, dy.int))
+}
