@@ -5,3 +5,4 @@ build
 erl_crash.dump
 secrets.env
 backups
+data

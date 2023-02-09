@@ -5,14 +5,14 @@ import puck/config.{Config}
 import gleam/io
 import gleam/erlang
 import gleam/erlang/process
+import gleam/erlang/file
+import gleam/list
+import gleam/string
 import mist
 
 const usage = "USAGE:
   puck server
-  puck email-everyone
-  puck get-attendee-email <reference>
-  puck send-attendance-email <email> <amount> <reference>
-  puck send-payment-confirmation-email <email> <paid_in_pence>
+  puck email <subject> <body.txt> <addresses.txt>
 "
 
 pub fn main() {
@@ -20,7 +20,8 @@ pub fn main() {
 
   case erlang.start_arguments() {
     ["server"] -> server(config)
-    ["email-everyone"] -> email_everyone(config)
+    ["email", subject, body, addresses] ->
+      email(subject, body, addresses, config)
     _ -> unknown()
   }
 }
@@ -64,28 +65,42 @@ fn send_error_email(error: String, config: Config) {
   Nil
 }
 
-/// Comment out the code to send an email to everyone
-fn email_everyone(_config: Config) -> Nil {
-  // let subject = ""
-  // let content = ""
-  //
-  // assert Ok(token) = sheets.get_access_token(config)
-  // assert Ok(emails) = sheets.all_attendee_emails(token, config)
-  //
-  // emails
-  // |> set.to_list
-  // |> list.each(fn(to) {
-  //   io.println(to)
-  //   assert Ok(_) =
-  //     gen_smtp.Email(
-  //       content: content,
-  //       to: [to],
-  //       from_email: config.smtp_from_email,
-  //       from_name: config.smtp_from_name,
-  //       subject: subject,
-  //     )
-  //     |> email.send(config)
-  //   Nil
-  // })
-  Nil
+fn email(
+  subject: String,
+  body: String,
+  addresses: String,
+  config: Config,
+) -> Nil {
+  assert Ok(addresses) = file.read(addresses)
+  assert Ok(body) = file.read(body)
+  let addresses = string.split(string.trim(addresses), "\n")
+
+  list.each(addresses, io.println)
+  use <- ask_confirmation("Do these emails look right?")
+
+  io.println(subject)
+  use <- ask_confirmation("Does this subject look right?")
+
+  io.println(body)
+  use <- ask_confirmation("Does this body look right?")
+
+  use address <- list.each(addresses)
+  io.println("Sending: " <> address)
+
+  email.Email(
+    to_name: address,
+    to_address: address,
+    subject: subject,
+    content: body,
+  )
+  |> email.send(config)
+  process.sleep(200)
+}
+
+fn ask_confirmation(prompt: String, next: fn() -> Nil) -> Nil {
+  let input = erlang.get_line(">>> " <> prompt <> " (y/N) ")
+  case input {
+    Ok("y\n") -> next()
+    _ -> io.println("Cancelled. Bye!")
+  }
 }

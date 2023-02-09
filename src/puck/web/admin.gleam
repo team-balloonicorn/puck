@@ -121,10 +121,6 @@ fn user_row(index: Int, user: User, state: State) {
   )
 }
 
-fn payment_header() {
-  html.tr([], [])
-}
-
 fn payment_row(index: Int, payment: Payment) {
   html.tr(
     [],
