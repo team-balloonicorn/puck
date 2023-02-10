@@ -73,7 +73,13 @@ create table if not exists users (
   is_admin integer not null default 0
     constraint valid_is_admin check (is_admin in (0, 1)),
 
-  login_token_hash text unique
+  login_token_hash text unique,
+
+  login_token_created_at text
+    constraint valid_login_token_created_at check (
+      login_token_created_at is null 
+      or datetime(login_token_created_at) not null
+    )
 ) strict;
 
 create table if not exists applications (
