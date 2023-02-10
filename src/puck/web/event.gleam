@@ -4,10 +4,12 @@ import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/result
 import gleam/list
+import gleam/string
 import gleam/map
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/user.{Application}
+import puck/fact
 import puck/web.{State, p}
 
 pub const costs = [
@@ -96,6 +98,43 @@ const questions = [
 fn all_fields() -> List(String) {
   questions
   |> list.map(fn(x) { x.key })
+}
+
+pub fn information(request: Request(BitString), state: State) {
+  case request.method {
+    http.Get -> show_information(state)
+    _ -> web.method_not_allowed()
+  }
+}
+
+fn show_information(state: State) {
+  assert Ok(facts) = fact.list_all(state.db)
+
+  let fact_html =
+    list.map(
+      facts,
+      fn(fact) {
+        let paragraphs =
+          fact.detail
+          |> string.split("\n\n")
+          |> list.map(html.p_text([], _))
+        html.details([], [html.summary_text([], fact.summary), ..paragraphs])
+      },
+    )
+
+  let html =
+    web.html_page(html.main(
+      [Attr("role", "main"), attrs.class("content")],
+      [
+        web.flamingo(),
+        html.h1_text([], "Midsummer Night's Tea Party 2023"),
+        ..fact_html
+      ],
+    ))
+
+  response.new(200)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
 }
 
 pub fn attendance(request: Request(BitString), state: State) {

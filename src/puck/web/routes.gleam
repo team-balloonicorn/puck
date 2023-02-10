@@ -33,6 +33,7 @@ pub fn router(request: Request(BitString), state: State) -> Response(String) {
     ["admin"] -> admin.dashboard(request, state)
     ["costs"] -> costs(state)
     ["licence"] -> licence(state)
+    ["information"] -> event.information(request, state)
     ["sign-up", key] if key == attend -> auth.sign_up(request, state)
     ["login"] -> auth.login(request, state)
     ["login", user_id, token] -> auth.login_via_token(user_id, token, state)
