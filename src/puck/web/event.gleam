@@ -177,6 +177,9 @@ pub fn application_form(state: State) -> Response(String) {
       [
         web.flamingo(),
         html.h1_text([], "Midsummer Night's Tea Party 2023"),
+        web.p(
+          "One person per submission please! We need to about everyone who is coming.",
+        ),
         html.form(
           [
             attrs.class("attendee-form"),
