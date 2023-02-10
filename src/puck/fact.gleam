@@ -1,6 +1,7 @@
 //// Facts about the event! FAQs and what have you!
 
 import gleam/dynamic.{Dynamic} as dy
+import gleam/option.{Option}
 import gleam/result
 import puck/database
 import puck/error.{Error}
@@ -43,6 +44,42 @@ pub fn insert(
     sqlight.text(summary),
     sqlight.text(detail),
     sqlight.float(priority),
+  ]
+
+  database.query(sql, conn, arguments, Ok)
+  |> result.replace(Nil)
+}
+
+pub fn get(conn: database.Connection, id: Int) -> Result(Option(Fact), Error) {
+  let sql =
+    "
+    select
+      id, summary, detail, priority
+    from
+      facts
+    where
+      id = ?1
+    "
+  let arguments = [sqlight.int(id)]
+  database.maybe_one(sql, conn, arguments, decoder)
+}
+
+pub fn update(conn: database.Connection, fact: Fact) -> Result(Nil, Error) {
+  let sql =
+    "
+    update facts
+    set
+      summary = ?2,
+      detail = ?3,
+      priority = ?4
+    where
+      id = ?1
+    "
+  let arguments = [
+    sqlight.int(fact.id),
+    sqlight.text(fact.summary),
+    sqlight.text(fact.detail),
+    sqlight.float(fact.priority),
   ]
 
   database.query(sql, conn, arguments, Ok)
