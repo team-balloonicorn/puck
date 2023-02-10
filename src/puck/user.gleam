@@ -179,7 +179,8 @@ pub fn create_login_token(
   let sql =
     "
     update users set 
-      login_token_hash = ?2
+      login_token_hash = ?2,
+      login_token_created_at = datetime('now')
     where
       id = ?1
     returning
@@ -190,28 +191,6 @@ pub fn create_login_token(
   row
   |> option.map(fn(_) { token })
   |> Ok
-}
-
-/// Set the login token hash for a user to null.
-///
-/// Returns `True` if the user exists, `False` otherwise.
-///
-pub fn delete_login_token_hash(
-  conn: database.Connection,
-  user_id: Int,
-) -> Result(Bool, Error) {
-  let sql =
-    "
-    update users set 
-      login_token_hash = null
-    where
-      id = ?1
-    returning
-      id
-    "
-  let arguments = [sqlight.int(user_id)]
-  database.maybe_one(sql, conn, arguments, Ok)
-  |> result.map(option.is_some)
 }
 
 pub fn get_login_token_hash(
@@ -226,6 +205,8 @@ pub fn get_login_token_hash(
       users
     where
       id = ?1
+    and
+      login_token_created_at > datetime('now', '-1 day')
     "
   let arguments = [sqlight.int(user_id)]
   let decoder = dy.element(0, dy.optional(dy.string))

@@ -7,6 +7,7 @@ import gleam/int
 import gleam/option.{Some}
 import gleam/string
 import puck/user
+import puck/database
 import puck/web/routes
 import puck/web/auth
 import tests
@@ -84,6 +85,19 @@ pub fn login_by_token_ok_test() {
   assert 302 = response.status
   assert Ok("/") = response.get_header(response, "location")
   assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
+}
+
+pub fn login_by_token_expired_test() {
+  use state <- tests.with_logged_in_state
+  assert Some(user) = state.current_user
+  assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
+  let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
+  assert Ok(Nil) = database.exec(sql, state.db)
+  let response =
+    tests.request("/login/" <> int.to_string(user.id) <> "/" <> token)
+    |> routes.router(state)
+  assert 422 = response.status
+  assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn sign_up_already_taken_test() {

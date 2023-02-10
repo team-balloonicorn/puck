@@ -111,6 +111,8 @@ fn login_email(user: User, db: database.Connection) -> Email {
 
 Here's a link to log in: https://puck.midsummer.lpil.uk/login/" <> id <> "/" <> token <> "
 
+It will expire after 24 hours, so use it quick!
+
 Love,
 The Midsummer crew
 "
@@ -204,8 +206,8 @@ fn bad_token_page() {
     [
       web.flamingo(),
       web.p(
-        "Sorry, that link is invalid. This may be because it has already been
-        used, or because someone used the login page again to request a new
+        "Sorry, that link is invalid. This may be because it is too old and has
+        expired, or because someone used the login page again to request a new
         link.",
       ),
       html.p(

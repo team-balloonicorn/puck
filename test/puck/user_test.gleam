@@ -2,6 +2,7 @@ import bcrypter
 import gleam/map
 import gleam/option.{None, Some}
 import gleam/string
+import puck/database
 import puck/error.{Database}
 import puck/user.{Application, User}
 import tests
@@ -177,10 +178,8 @@ pub fn login_token_hash_test() {
   assert True = bcrypter.verify(token, hash)
   assert False = bcrypter.verify("other", hash)
 
-  // Delete it
-  assert Ok(True) = user.delete_login_token_hash(db, id)
-  // It is gone!
+  // Old tokens are not valid
+  let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
+  assert Ok(Nil) = database.exec(sql, db)
   assert Ok(None) = user.get_login_token_hash(db, id)
-  // The user isn't though
-  assert Ok(Some(User(id: 1, ..))) = user.get_and_increment_interaction(db, id)
 }

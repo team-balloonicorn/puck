@@ -26,6 +26,11 @@ pub fn query(
   |> result.map_error(error.Database)
 }
 
+pub fn exec(sql: String, connection: sqlight.Connection) -> Result(Nil, Error) {
+  sqlight.exec(sql, connection)
+  |> result.map_error(error.Database)
+}
+
 pub fn one(
   sql: String,
   connection: sqlight.Connection,
