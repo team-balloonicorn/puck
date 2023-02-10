@@ -189,11 +189,12 @@ pub fn login_via_token(user_id: String, token: String, state: State) {
   )
   use hash <- web.some(hash, bad_token_page)
   case bcrypter.verify(token, hash) {
-    True -> {
-      assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
+    True ->
+      // TODO: expire after a period of time instead
+      // TODO: update error copy to reflect that it is expiry based
+      // assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
       web.redirect("/")
       |> set_signed_user_id_cookie(user_id, state.config.signing_secret)
-    }
     False -> bad_token_page()
   }
 }
