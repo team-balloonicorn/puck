@@ -49,7 +49,7 @@ pub fn login_by_token_unknown_test() {
   let response =
     tests.request("/login/1/token")
     |> routes.router(state)
-  assert 404 = response.status
+  assert 422 = response.status
   assert Error(_) = response.get_header(response, "set-cookie")
 }
 
@@ -59,7 +59,7 @@ pub fn login_by_token_no_token_test() {
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/token")
     |> routes.router(state)
-  assert 404 = response.status
+  assert 422 = response.status
   assert Error(_) = response.get_header(response, "set-cookie")
 }
 
@@ -70,7 +70,7 @@ pub fn login_by_token_wrong_token_test() {
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/token")
     |> routes.router(state)
-  assert 404 = response.status
+  assert 422 = response.status
   assert Error(_) = response.get_header(response, "set-cookie")
 }
 

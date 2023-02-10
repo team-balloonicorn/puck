@@ -15,7 +15,7 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
 
   // Record payment
   use body <- web.require_bit_string_body(request)
-  use payment <- web.ok(payment.from_json(body))
+  use payment <- web.try_(payment.from_json(body), web.unprocessable_entity)
   assert Ok(newly_inserted) = payment.insert(state.db, payment)
 
   // Nothing more to do if we already knew about this payment, meaning that this

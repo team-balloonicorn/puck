@@ -95,13 +95,14 @@ pub fn require_form_urlencoded_body(
   }
 }
 
-pub fn ok(
+pub fn try_(
   result: Result(a, b),
-  next: fn(a) -> Response(String),
+  or alternative: fn() -> Response(String),
+  then next: fn(a) -> Response(String),
 ) -> Response(String) {
   case result {
     Ok(value) -> next(value)
-    Error(_) -> unprocessable_entity()
+    Error(_) -> alternative()
   }
 }
 
@@ -117,11 +118,12 @@ pub fn ok_or_404(
 
 pub fn some(
   result: Option(a),
-  next: fn(a) -> Response(String),
+  or alternative: fn() -> Response(String),
+  then next: fn(a) -> Response(String),
 ) -> Response(String) {
   case result {
     Some(value) -> next(value)
-    None -> not_found()
+    None -> alternative()
   }
 }
 

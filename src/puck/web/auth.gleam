@@ -56,8 +56,14 @@ fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
 
 fn attempt_login(request: Request(BitString), state: State) -> Response(String) {
   use params <- web.require_form_urlencoded_body(request)
-  use email <- web.ok(list.key_find(params, "email"))
-  use user <- web.ok(user.get_by_email(state.db, email))
+  use email <- web.try_(
+    list.key_find(params, "email"),
+    or: web.unprocessable_entity,
+  )
+  use user <- web.try_(
+    user.get_by_email(state.db, email),
+    or: web.unprocessable_entity,
+  )
 
   let html = case user {
     Some(user) -> {
@@ -76,8 +82,11 @@ pub fn sign_up(request: Request(BitString), state: State) {
   use <- utility.guard(request.method != http.Post, web.method_not_allowed())
 
   use params <- web.require_form_urlencoded_body(request)
-  use name <- web.ok(list.key_find(params, "name"))
-  use email <- web.ok(list.key_find(params, "email"))
+  use name <- web.try_(list.key_find(params, "name"), web.unprocessable_entity)
+  use email <- web.try_(
+    list.key_find(params, "email"),
+    web.unprocessable_entity,
+  )
 
   case user.insert(state.db, name: name, email: email) {
     Ok(user) -> {
@@ -173,17 +182,52 @@ fn layout(content: List(html.Node(a))) -> html.Node(a) {
 }
 
 pub fn login_via_token(user_id: String, token: String, state: State) {
-  use user_id <- web.ok(int.parse(user_id))
-  use hash <- web.ok_or_404(user.get_login_token_hash(state.db, user_id))
-  use hash <- web.some(hash)
+  use user_id <- web.try_(int.parse(user_id), bad_token_page)
+  use hash <- web.try_(
+    user.get_login_token_hash(state.db, user_id),
+    bad_token_page,
+  )
+  use hash <- web.some(hash, bad_token_page)
   case bcrypter.verify(token, hash) {
     True -> {
       assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
       web.redirect("/")
       |> set_signed_user_id_cookie(user_id, state.config.signing_secret)
     }
-    False -> web.not_found()
+    False -> bad_token_page()
   }
+}
+
+fn bad_token_page() {
+  let html =
+    [
+      web.flamingo(),
+      web.p(
+        "Sorry, that link is invalid. This may be because it has already been
+        used, or because someone used the login page again to request a new
+        link.",
+      ),
+      html.p(
+        [],
+        [
+          html.Text(
+            "Please check your email for a new login link. If you can't find one
+            request a new one using the ",
+          ),
+          html.a([Attr("href", "/login")], [html.Text("login page")]),
+          html.Text(
+            " and use that to login, ensuring the email was received at a time
+            after you used the login page to request it.",
+          ),
+        ],
+      ),
+    ]
+    |> layout
+    |> web.html_page
+
+  response.new(422)
+  |> response.prepend_header("content-type", "text/html")
+  |> response.set_body(html)
 }
 
 fn set_signed_user_id_cookie(
