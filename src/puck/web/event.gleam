@@ -112,7 +112,7 @@ pub fn information(request: Request(BitString), state: State) {
 // TODO: test
 // TODO: test admin only
 fn save_fact(request: Request(BitString), state: State) {
-  use _ <- web.require_user(state)
+  use _ <- web.require_admin_user(state)
   use params <- web.require_form_urlencoded_body(request)
   use summary <- web.try_(
     list.key_find(params, "summary"),
