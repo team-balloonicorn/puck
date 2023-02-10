@@ -100,35 +100,89 @@ fn all_fields() -> List(String) {
   |> list.map(fn(x) { x.key })
 }
 
+// TODO: fact editing
 pub fn information(request: Request(BitString), state: State) {
   case request.method {
     http.Get -> show_information(state)
+    http.Post -> save_fact(request, state)
     _ -> web.method_not_allowed()
   }
 }
 
+// TODO: test
+// TODO: test admin only
+fn save_fact(request: Request(BitString), state: State) {
+  use _ <- web.require_user(state)
+  use params <- web.require_form_urlencoded_body(request)
+  use summary <- web.try_(
+    list.key_find(params, "summary"),
+    web.unprocessable_entity,
+  )
+  use detail <- web.try_(
+    list.key_find(params, "detail"),
+    web.unprocessable_entity,
+  )
+  assert Ok(_) = fact.insert(state.db, summary, detail, 0.0)
+  response.redirect("/information")
+}
+
+// TODO: test
+// TODO: test form showing
 fn show_information(state: State) {
+  use user <- web.require_user(state)
   assert Ok(facts) = fact.list_all(state.db)
 
-  let fact_html =
-    list.map(
-      facts,
-      fn(fact) {
-        let paragraphs =
-          fact.detail
-          |> string.split("\n\n")
-          |> list.map(html.p_text([], _))
-        html.details([], [html.summary_text([], fact.summary), ..paragraphs])
-      },
-    )
+  let form = case user.is_admin {
+    False -> html.Nothing
+    True ->
+      html.form(
+        [Attr("method", "post"), Attr("onsubmit", "this.disable = true")],
+        [
+          // TODO: position this properly
+          html.br([]),
+          html.br([]),
+          html.br([]),
+          html.i_text(
+            [],
+            "ooooh it's the special form that only shows for admins ✨",
+          ),
+          web.form_group(
+            "One line summary",
+            web.text_input("summary", [Attr("required", "")]),
+          ),
+          web.form_group(
+            "Detail",
+            html.textarea_text([attrs.name("detail"), Attr("rows", "5")], ""),
+          ),
+          web.submit_input_group("Save new fact"),
+        ],
+      )
+  }
+
+  let fact_html = fn(fact: fact.Fact) {
+    let paragraphs =
+      fact.detail
+      |> string.split("\n")
+      |> list.filter(fn(x) { x != "" })
+      |> list.map(html.p_text([], _))
+    html.details([], [html.summary_text([], fact.summary), ..paragraphs])
+  }
 
   let html =
     web.html_page(html.main(
       [Attr("role", "main"), attrs.class("content")],
       [
         web.flamingo(),
-        html.h1_text([], "Midsummer Night's Tea Party 2023"),
-        ..fact_html
+        html.h1_text([], "All the deets"),
+        html.p(
+          [],
+          [
+            html.Text("Can't find what you wanna know? "),
+            web.mailto("Send us an email!", state.config.help_email),
+          ],
+        ),
+        html.Fragment(list.map(facts, fact_html)),
+        form,
       ],
     ))
 

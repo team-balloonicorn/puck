@@ -220,7 +220,7 @@ pub fn submit_input_group(text: String) -> html.Node(a) {
 }
 
 pub fn flamingo() -> html.Node(a) {
-  html.div_text([attrs.class("flamingo")], "🦩")
+  html.div([attrs.class("flamingo")], [html.a_text([attrs.href("/")], "🦩")])
 }
 
 pub fn dt_dl(key: String, value: String) -> html.Node(a) {
@@ -233,4 +233,8 @@ pub fn p(text: String) -> html.Node(a) {
 
 pub fn table_row(label: String, value: String) -> html.Node(a) {
   html.tr([], [html.td_text([], label), html.td_text([], value)])
+}
+
+pub fn mailto(text: String, email: String) -> html.Node(a) {
+  html.a([Attr("href", "mailto:" <> email)], [html.Text(text)])
 }
