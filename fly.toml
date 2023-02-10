@@ -10,7 +10,7 @@ allowed_public_ports = []
 auto_rollback = true
 
 [deploy]
-strategy = "rolling"
+strategy = "immediate"
 
 [[services]]
 http_checks = []
