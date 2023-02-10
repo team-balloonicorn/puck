@@ -116,6 +116,18 @@ create table if not exists payments (
 
   reference text not null
 ) strict;
+
+create table if not exists facts (
+  id integer primary key autoincrement not null,
+
+  summary text not null
+    constraint non_empty_summary check (length(summary) > 0),
+
+  detail text not null
+    constraint non_empty_detail check (length(detail) > 0),
+
+  priority real not null default 0
+) strict;
 ",
       db,
     )
