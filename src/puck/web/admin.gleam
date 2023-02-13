@@ -28,7 +28,7 @@ fn get_dashboard(state: State) {
   assert Ok(daily_income) = payment.per_day(state.db)
   assert Ok(total) = payment.total(state.db)
 
-  let user = fn(i, user) { user_row(i, user, state) }
+  let user = fn(user) { user_row(user, state) }
   let payment = fn(i, payment) { payment_row(i, payment) }
 
   let html =
@@ -47,10 +47,10 @@ fn get_dashboard(state: State) {
         html.h2_text([], "People"),
         table(
           [
-            "", "Name", "Email", "Visits", "Paid", "Reference", "Attended",
+            "Id", "Name", "Email", "Visits", "Paid", "Reference", "Attended",
             "Pod", "Pod attended", "Diet", "Accessibility",
           ],
-          list.index_map(users, user),
+          list.map(users, user),
         ),
         html.h2_text([], "Unmatched payments"),
         table(
@@ -85,7 +85,7 @@ fn day_income(payment: #(String, Int, Int)) {
   )
 }
 
-fn user_row(index: Int, user: User, state: State) {
+fn user_row(user: User, state: State) {
   let application_data = case user.get_application(state.db, user.id) {
     Ok(Some(application)) -> {
       assert Ok(total) =
@@ -109,7 +109,7 @@ fn user_row(index: Int, user: User, state: State) {
     [],
     list.map(
       [
-        int.to_string(index + 1),
+        int.to_string(user.id),
         user.name,
         user.email,
         int.to_string(user.interactions),
