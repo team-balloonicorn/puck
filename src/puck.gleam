@@ -1,8 +1,11 @@
 import puck/web/routes
 import puck/email
+import puck/user
 import puck/database
 import puck/config.{Config}
 import gleam/io
+import gleam/int
+import gleam/option.{Some}
 import gleam/erlang
 import gleam/erlang/process
 import gleam/erlang/file
@@ -20,6 +23,7 @@ pub fn main() {
 
   case erlang.start_arguments() {
     ["server"] -> server(config)
+    ["login-url", user_id] -> login_url(user_id, config)
     ["email", subject, body, addresses] ->
       email(subject, body, addresses, config)
     _ -> unknown()
@@ -103,4 +107,11 @@ fn ask_confirmation(prompt: String, next: fn() -> Nil) -> Nil {
     Ok("y\n") -> next()
     _ -> io.println("Cancelled. Bye!")
   }
+}
+
+fn login_url(user_id: String, config: Config) -> Nil {
+  use db <- database.with_connection(config.database_path)
+  assert Ok(id) = int.parse(user_id)
+  assert Ok(Some(token)) = user.create_login_token(db, id)
+  io.println("https://puck.midsummer.lpil.uk/login/" <> user_id <> "/" <> token)
 }
