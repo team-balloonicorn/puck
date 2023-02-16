@@ -133,7 +133,10 @@ pub fn html_page(page_html: html.Node(a)) -> String {
     [
       html.head([
         html.meta([attrs.charset("utf-8")]),
-        html.meta([Attr("viewport", "width=device-width, initial-scale=1")]),
+        html.meta([
+          attrs.name("viewport"),
+          attrs.content("width=device-width, initial-scale=1"),
+        ]),
         html.title_text([], "Midsummer Night's Tea Party"),
         html.link([
           attrs.rel("preconnect"),
