@@ -39,7 +39,7 @@ pub fn insert(
     returning
       id, name, email, interactions, is_admin
     "
-  let arguments = [sqlight.text(name), sqlight.text(email)]
+  let arguments = [sqlight.text(name), sqlight.text(string.lowercase(email))]
 
   case database.one(sql, conn, arguments, decoder) {
     Ok(user) -> Ok(user)
@@ -77,7 +77,12 @@ pub fn get_by_email(
     where
       email = ?1
     "
-  database.maybe_one(sql, conn, [sqlight.text(email)], decoder)
+  database.maybe_one(
+    sql,
+    conn,
+    [sqlight.text(string.lowercase(email))],
+    decoder,
+  )
 }
 
 /// Insert the application for a user. If the user already has an application then

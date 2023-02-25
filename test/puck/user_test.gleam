@@ -35,6 +35,17 @@ pub fn insert_new_users_test() {
   )) = user.insert(db, "Louis", "louis@example.com")
 }
 
+pub fn insert_lowercases_email_test() {
+  use db <- tests.with_connection
+  assert Ok(User(
+    id: 1,
+    name: "Jay",
+    email: "jay@example.com",
+    interactions: 0,
+    is_admin: False,
+  )) = user.insert(db, "Jay", "JAY@EXAMPLE.COM")
+}
+
 pub fn insert_invalid_email_test() {
   use db <- tests.with_connection
   assert Error(error.Database(_)) = user.insert(db, "Blah", "not an email")
@@ -182,4 +193,12 @@ pub fn login_token_hash_test() {
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
   assert Ok(Nil) = database.exec(sql, db)
   assert Ok(None) = user.get_login_token_hash(db, id)
+}
+
+pub fn get_by_email_test() {
+  use db <- tests.with_connection
+  assert Ok(None) = user.get_by_email(db, "jay@example.com")
+  assert Ok(User(id: 1, ..)) = user.insert(db, "Jay", "jay@example.com")
+  assert Ok(Some(User(id: 1, ..))) = user.get_by_email(db, "jay@example.com")
+  assert Ok(Some(User(id: 1, ..))) = user.get_by_email(db, "JAY@EXAMPLE.COM")
 }
