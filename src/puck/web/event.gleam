@@ -4,13 +4,13 @@ import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/result
 import gleam/list
-import gleam/string
 import gleam/map
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/user.{Application}
 import puck/fact
 import puck/web.{State, p}
+import markdown
 
 pub const costs = [
   #("Site fee", 300_000),
@@ -151,7 +151,7 @@ fn show_information(state: State) {
             web.text_input("summary", [Attr("required", "")]),
           ),
           web.form_group(
-            "Detail",
+            "Detail (markdown)",
             html.textarea_text([attrs.name("detail"), Attr("rows", "5")], ""),
           ),
           web.submit_input_group("Save new fact"),
@@ -160,12 +160,13 @@ fn show_information(state: State) {
   }
 
   let fact_html = fn(fact: fact.Fact) {
-    let paragraphs =
-      fact.detail
-      |> string.split("\n")
-      |> list.filter(fn(x) { x != "" })
-      |> list.map(html.p_text([], _))
-    html.details([], [html.summary_text([], fact.summary), ..paragraphs])
+    html.details(
+      [],
+      [
+        html.summary_text([], fact.summary),
+        html.UnsafeText(markdown.to_html(fact.detail)),
+      ],
+    )
   }
 
   let html =
