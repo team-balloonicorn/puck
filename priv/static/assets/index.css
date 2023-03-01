@@ -194,3 +194,13 @@ th {
   text-align: unset;
   padding-right: var(--space);
 }
+
+.page-nav {
+  text-align: center;
+  margin-top: calc(var(--space-l) * -1);
+}
+
+.page-nav a {
+  display: inline-block;
+  margin: 0 var(--space-s);
+}

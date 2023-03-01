@@ -241,3 +241,14 @@ pub fn table_row(label: String, value: String) -> html.Node(a) {
 pub fn mailto(text: String, email: String) -> html.Node(a) {
   html.a([Attr("href", "mailto:" <> email)], [html.Text(text)])
 }
+
+pub fn page_nav() -> html.Node(a) {
+  html.nav(
+    [attrs.class("page-nav")],
+    [
+      html.a([attrs.href("/home")], [html.Text("Home")]),
+      html.a([attrs.href("/costs")], [html.Text("Costs")]),
+      html.a([attrs.href("/information")], [html.Text("FAQs")]),
+    ],
+  )
+}

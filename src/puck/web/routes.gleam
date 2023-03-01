@@ -179,6 +179,7 @@ fn dashboard_html(
     [
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party"),
+      web.page_nav(),
       funding_section,
       expandable("Your details", html.dl([], info_list)),
     ],
@@ -204,6 +205,7 @@ fn costs(state: State) {
       [
         web.flamingo(),
         html.h1_text([], "The costs"),
+        web.page_nav(),
         p(
           "The numbers here may change as we get closer to the event if and
           prices change.",
