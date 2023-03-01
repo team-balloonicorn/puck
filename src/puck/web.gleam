@@ -246,7 +246,7 @@ pub fn page_nav() -> html.Node(a) {
   html.nav(
     [attrs.class("page-nav")],
     [
-      html.a([attrs.href("/home")], [html.Text("Home")]),
+      html.a([attrs.href("/")], [html.Text("Home")]),
       html.a([attrs.href("/costs")], [html.Text("Costs")]),
       html.a([attrs.href("/information")], [html.Text("FAQs")]),
     ],
