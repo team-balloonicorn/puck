@@ -8,14 +8,24 @@ import puck/error.{Error}
 import sqlight
 
 pub type Fact {
-  Fact(id: Int, summary: String, detail: String, priority: Float)
+  Fact(
+    id: Int,
+    section_id: Int,
+    summary: String,
+    detail: String,
+    priority: Float,
+  )
+}
+
+pub type Section {
+  Section(id: Int, title: String, blurb: String, priority: Float)
 }
 
 pub fn list_all(db: database.Connection) -> Result(List(Fact), Error) {
   let sql =
     "
     select
-      id, summary, detail, priority
+      id, section_id, summary, detail, priority
     from
       facts
     order by
@@ -27,8 +37,27 @@ pub fn list_all(db: database.Connection) -> Result(List(Fact), Error) {
   database.query(sql, db, [], decoder)
 }
 
+pub fn list_all_sections(
+  db: database.Connection,
+) -> Result(List(Section), Error) {
+  let sql =
+    "
+    select
+      id, title, blurb, priority
+    from
+      fact_sections
+    order by
+      priority desc,
+      id asc
+    limit
+      1000
+    "
+  database.query(sql, db, [], section_decoder)
+}
+
 pub fn insert(
   conn: database.Connection,
+  section_id section_id: Int,
   summary summary: String,
   detail detail: String,
   priority priority: Float,
@@ -36,11 +65,12 @@ pub fn insert(
   let sql =
     "
     insert into facts
-      (summary, detail, priority) 
+      (section_id, summary, detail, priority) 
     values
-      (?1, ?2, ?3)
+      (?1, ?2, ?3, ?4)
     "
   let arguments = [
+    sqlight.int(section_id),
     sqlight.text(summary),
     sqlight.text(detail),
     sqlight.float(priority),
@@ -50,11 +80,30 @@ pub fn insert(
   |> result.replace(Nil)
 }
 
+pub fn insert_section(
+  conn: database.Connection,
+  title title: String,
+  blurb blurb: String,
+) -> Result(Section, Error) {
+  let sql =
+    "
+    insert into fact_sections
+      (title, blurb, priority) 
+    values
+      (?1, ?2, ?3)
+    returning
+      id, title, blurb, priority
+    "
+  let arguments = [sqlight.text(title), sqlight.text(blurb), sqlight.float(0.1)]
+
+  database.one(sql, conn, arguments, section_decoder)
+}
+
 pub fn get(conn: database.Connection, id: Int) -> Result(Option(Fact), Error) {
   let sql =
     "
     select
-      id, summary, detail, priority
+      id, section_id, summary, detail, priority
     from
       facts
     where
@@ -88,8 +137,20 @@ pub fn update(conn: database.Connection, fact: Fact) -> Result(Nil, Error) {
 
 fn decoder(data: Dynamic) {
   data
-  |> dy.decode4(
+  |> dy.decode5(
     Fact,
+    dy.element(0, dy.int),
+    dy.element(1, dy.int),
+    dy.element(2, dy.string),
+    dy.element(3, dy.string),
+    dy.element(4, dy.float),
+  )
+}
+
+fn section_decoder(data: Dynamic) {
+  data
+  |> dy.decode4(
+    Section,
     dy.element(0, dy.int),
     dy.element(1, dy.string),
     dy.element(2, dy.string),

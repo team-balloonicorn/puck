@@ -98,6 +98,7 @@ h1 {
 .button,
 .form-group button,
 .form-group input,
+.form-group select,
 .form-group textarea {
   resize: none;
   border-radius: 7px;

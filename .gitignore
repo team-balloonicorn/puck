@@ -6,3 +6,4 @@ erl_crash.dump
 secrets.env
 backups
 data
+development.sqlite3.bak

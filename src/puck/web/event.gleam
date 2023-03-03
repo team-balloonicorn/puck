@@ -6,6 +6,7 @@ import gleam/string
 import gleam/result
 import gleam/list
 import gleam/map
+import gleam/int
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/user.{Application}
@@ -115,15 +116,21 @@ pub fn information(request: Request(BitString), state: State) {
 fn save_fact(request: Request(BitString), state: State) {
   use _ <- web.require_admin_user(state)
   use params <- web.require_form_urlencoded_body(request)
-  use summary <- web.try_(
-    list.key_find(params, "summary"),
-    web.unprocessable_entity,
-  )
   use detail <- web.try_(
     list.key_find(params, "detail"),
     web.unprocessable_entity,
   )
-  assert Ok(_) = fact.insert(state.db, summary, detail, 0.0)
+  use summary <- web.try_(
+    list.key_find(params, "summary"),
+    web.unprocessable_entity,
+  )
+  use section_id <- web.try_(
+    params
+    |> list.key_find("section_id")
+    |> result.then(int.parse),
+    web.unprocessable_entity,
+  )
+  assert Ok(_) = fact.insert(state.db, section_id, summary, detail, 0.0)
   response.redirect("/information")
 }
 
@@ -135,7 +142,16 @@ fn show_information(state: State) {
 
   let form = case user.is_admin {
     False -> html.Nothing
-    True ->
+    True -> {
+      assert Ok(sections) = fact.list_all_sections(state.db)
+      let sections =
+        sections
+        |> list.map(fn(section) {
+          html.option_text(
+            [Attr("value", int.to_string(section.id))],
+            section.title,
+          )
+        })
       html.form(
         [Attr("method", "post"), Attr("onsubmit", "this.disable = true")],
         [
@@ -148,6 +164,10 @@ fn show_information(state: State) {
             "ooooh it's the special form that only shows for admins ✨",
           ),
           web.form_group(
+            "Section",
+            html.select([attrs.name("section_id")], sections),
+          ),
+          web.form_group(
             "One line summary",
             web.text_input("summary", [Attr("required", "")]),
           ),
@@ -158,6 +178,7 @@ fn show_information(state: State) {
           web.submit_input_group("Save new fact"),
         ],
       )
+    }
   }
 
   let fact_html = fn(fact: fact.Fact) {

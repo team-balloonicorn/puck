@@ -126,7 +126,22 @@ create table if not exists facts (
   detail text not null
     constraint non_empty_detail check (length(detail) > 0),
 
-  priority real not null default 0
+  priority real not null default 0.0,
+
+  section_id integer not null,
+
+  foreign key (section_id) references fact_sections(id)
+) strict;
+
+create table if not exists fact_sections (
+  id integer primary key autoincrement not null,
+
+  title text not null
+    constraint non_empty_title check (length(title) > 0),
+
+  blurb text not null,
+
+  priority real not null default 0.0
 ) strict;
 ",
       db,
