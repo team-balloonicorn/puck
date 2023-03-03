@@ -2,6 +2,7 @@ import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Some}
+import gleam/string
 import gleam/result
 import gleam/list
 import gleam/map
@@ -160,10 +161,23 @@ fn show_information(state: State) {
   }
 
   let fact_html = fn(fact: fact.Fact) {
+    let slug =
+      fact.summary
+      |> string.replace(" ", "-")
+      |> string.lowercase
+      |> string.to_graphemes
+      |> list.filter(string.contains("abcdefghijklmnopqrstuvwxyz-", _))
+      |> string.concat
+
     html.details(
-      [],
       [
-        html.summary_text([], fact.summary),
+        Attr(
+          "onclick",
+          "window.history.pushState(null, null, '#" <> slug <> "')",
+        ),
+      ],
+      [
+        html.summary_text([attrs.id(slug)], fact.summary),
         html.UnsafeText(markdown.to_html(fact.detail)),
       ],
     )
