@@ -37,6 +37,29 @@ pub fn list_all(db: database.Connection) -> Result(List(Fact), Error) {
   database.query(sql, db, [], decoder)
 }
 
+// TODO: test
+pub fn list_for_section(
+  db: database.Connection,
+  section_id: Int,
+) -> Result(List(Fact), Error) {
+  let sql =
+    "
+    select
+      id, section_id, summary, detail, priority
+    from
+      facts
+    where
+      section_id = ?1
+    order by
+      priority desc,
+      id asc
+    limit
+      1000
+    "
+  database.query(sql, db, [sqlight.int(section_id)], decoder)
+}
+
+// TODO: test
 pub fn list_all_sections(
   db: database.Connection,
 ) -> Result(List(Section), Error) {

@@ -138,7 +138,7 @@ fn save_fact(request: Request(BitString), state: State) {
 // TODO: test form showing
 fn show_information(state: State) {
   use user <- web.require_user(state)
-  assert Ok(facts) = fact.list_all(state.db)
+  assert Ok(sections) = fact.list_all_sections(state.db)
 
   let form = case user.is_admin {
     False -> html.Nothing
@@ -182,26 +182,25 @@ fn show_information(state: State) {
   }
 
   let fact_html = fn(fact: fact.Fact) {
-    let slug =
-      fact.summary
-      |> string.replace(" ", "-")
-      |> string.lowercase
-      |> string.to_graphemes
-      |> list.filter(string.contains("abcdefghijklmnopqrstuvwxyz-", _))
-      |> string.concat
-
+    let id = slug(fact.summary)
     html.details(
+      [Attr("onclick", "window.history.pushState(null, null, '#" <> id <> "')")],
       [
-        Attr(
-          "onclick",
-          "window.history.pushState(null, null, '#" <> slug <> "')",
-        ),
-      ],
-      [
-        html.summary_text([attrs.id(slug)], fact.summary),
+        html.summary_text([attrs.id(id)], fact.summary),
         html.UnsafeText(markdown.to_html(fact.detail)),
       ],
     )
+  }
+
+  let section_html = fn(section: fact.Section) {
+    assert Ok(facts) = fact.list_for_section(state.db, section.id)
+    let id = slug(section.title)
+
+    html.Fragment([
+      html.h2_text([attrs.id(id)], section.title),
+      html.UnsafeText(markdown.to_html(section.blurb)),
+      html.Fragment(list.map(facts, fact_html)),
+    ])
   }
 
   let html =
@@ -218,7 +217,7 @@ fn show_information(state: State) {
             web.mailto("Send us an email!", state.config.help_email),
           ],
         ),
-        html.Fragment(list.map(facts, fact_html)),
+        html.Fragment(list.map(sections, section_html)),
         form,
       ],
     ))
@@ -514,4 +513,13 @@ pub fn costs_table() -> html.Node(a) {
       web.table_row("Superstar 💖", "£120+"),
     ],
   )
+}
+
+fn slug(text: String) {
+  text
+  |> string.replace(" ", "-")
+  |> string.lowercase
+  |> string.to_graphemes
+  |> list.filter(string.contains("abcdefghijklmnopqrstuvwxyz-", _))
+  |> string.concat
 }

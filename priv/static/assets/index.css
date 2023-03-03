@@ -178,8 +178,7 @@ dt {
 }
 
 summary {
-  font-family: var(--pretty-font);
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   cursor: pointer;
 }
 
