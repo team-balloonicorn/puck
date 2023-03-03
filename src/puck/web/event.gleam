@@ -184,9 +184,12 @@ fn show_information(state: State) {
   let fact_html = fn(fact: fact.Fact) {
     let id = slug(fact.summary)
     html.details(
-      [Attr("onclick", "window.history.pushState(null, null, '#" <> id <> "')")],
       [
-        html.summary_text([attrs.id(id)], fact.summary),
+        attrs.id(id),
+        Attr("onclick", "window.history.pushState(null, null, '#" <> id <> "')"),
+      ],
+      [
+        html.summary_text([], fact.summary),
         html.UnsafeText(markdown.to_html(fact.detail)),
       ],
     )
@@ -202,6 +205,12 @@ fn show_information(state: State) {
       html.Fragment(list.map(facts, fact_html)),
     ])
   }
+
+  let js =
+    "
+document.getElementById(document.location.hash.slice(1))
+  ?.setAttribute('open', '')
+"
 
   let html =
     web.html_page(html.main(
@@ -219,6 +228,7 @@ fn show_information(state: State) {
         ),
         html.Fragment(list.map(sections, section_html)),
         form,
+        html.Element("script", [], [html.Text(js)]),
       ],
     ))
 
