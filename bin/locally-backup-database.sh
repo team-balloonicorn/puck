@@ -9,6 +9,11 @@ WEEKLY="$BACKUPS/weekly-$(date +%Y-%U).sqlite3"
 
 mkdir -p "$BACKUPS"
 
-[ -f "$HOURLY" ] || sqlite3 "$DATABASE_PATH" ".backup $HOURLY"
-[ -f "$DAILY"  ] || cp "$HOURLY" "$DAILY"
-[ -f "$WEEKLY" ] || cp "$DAILY" "$WEEKLY"
+rm -f "$HOURLY"
+sqlite3 "$DATABASE_PATH" ".backup $HOURLY"
+
+rm -f "$DAILY"
+cp "$HOURLY" "$DAILY"
+
+rm -f "$WEEKLY"
+cp "$DAILY" "$WEEKLY"
