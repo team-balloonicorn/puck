@@ -218,7 +218,7 @@ document.getElementById(document.location.hash.slice(1))
       [
         web.flamingo(),
         html.h1_text([], "All the deets"),
-        web.page_nav(),
+        web.page_nav(Some(user)),
         html.p(
           [],
           [
@@ -316,7 +316,7 @@ pub fn application_form(state: State) -> Response(String) {
       [
         web.flamingo(),
         html.h1_text([], "Midsummer Night's Tea Party 2023"),
-        web.page_nav(),
+        web.page_nav(state.current_user),
         web.p(
           "One person per submission please! We need to know about everyone who is coming.",
         ),

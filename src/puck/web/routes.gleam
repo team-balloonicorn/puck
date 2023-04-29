@@ -179,7 +179,7 @@ fn dashboard_html(
     [
       web.flamingo(),
       html.h1_text([], "Midsummer Night's Tea Party"),
-      web.page_nav(),
+      web.page_nav(Some(user)),
       funding_section,
       expandable("Your details", html.dl([], info_list)),
     ],
@@ -188,7 +188,7 @@ fn dashboard_html(
 }
 
 fn costs(state: State) {
-  use _ <- web.require_user(state)
+  use user <- web.require_user(state)
 
   let total = money.pence_to_pounds(event.total_cost())
   let items =
@@ -205,7 +205,7 @@ fn costs(state: State) {
       [
         web.flamingo(),
         html.h1_text([], "The costs"),
-        web.page_nav(),
+        web.page_nav(Some(user)),
         p(
           "The numbers here may change as we get closer to the event if and
           prices change.",

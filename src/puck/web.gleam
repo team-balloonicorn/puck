@@ -242,13 +242,20 @@ pub fn mailto(text: String, email: String) -> html.Node(a) {
   html.a([Attr("href", "mailto:" <> email)], [html.Text(text)])
 }
 
-pub fn page_nav() -> html.Node(a) {
+pub fn page_nav(user: Option(User)) -> html.Node(a) {
+  let admin = case user {
+    Some(User(is_admin: True, ..)) ->
+      html.a([attrs.href("/admin")], [html.Text("Admin")])
+    _ -> html.Nothing
+  }
+
   html.nav(
     [attrs.class("page-nav")],
     [
       html.a([attrs.href("/")], [html.Text("Home")]),
       html.a([attrs.href("/costs")], [html.Text("Costs")]),
       html.a([attrs.href("/information")], [html.Text("FAQs")]),
+      admin,
     ],
   )
 }
