@@ -22,11 +22,11 @@ fn load_template(
 
   case config.reload_templates {
     True -> fn(arguments) {
-      assert Ok(template) = bbm.compile_file(path)
+      let assert Ok(template) = bbm.compile_file(path)
       bbm.render(template, arguments)
     }
     False -> {
-      assert Ok(template) = bbm.compile_file(path)
+      let assert Ok(template) = bbm.compile_file(path)
       fn(arguments) { bbm.render(template, arguments) }
     }
   }

@@ -16,12 +16,12 @@ pub fn verify(password: String, hash: String) -> Bool {
 external type BcrypeErlangError
 
 fn generate_salt() -> String {
-  assert Ok(salt) = gen_salt()
+  let assert Ok(salt) = gen_salt()
   charlist.to_string(salt)
 }
 
 fn hash_with_salt(password: String, salt: String) -> String {
-  assert Ok(hash) = hashpw(password, salt)
+  let assert Ok(hash) = hashpw(password, salt)
   charlist.to_string(hash)
 }
 

@@ -58,7 +58,7 @@ pub fn with_state(f: fn(State) -> a) -> a {
 
 pub fn with_logged_in_state(f: fn(State) -> a) -> a {
   use state <- with_state
-  assert Ok(user) = user.insert(state.db, "Puck", "puck@example.com")
+  let assert Ok(user) = user.insert(state.db, "Puck", "puck@example.com")
   let state = State(..state, current_user: Some(user))
   f(state)
 }

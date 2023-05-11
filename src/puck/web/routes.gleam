@@ -1,4 +1,5 @@
 import gleam/bit_builder.{BitBuilder}
+import gleam/string_builder.{StringBuilder}
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/list
@@ -23,7 +24,10 @@ import puck/web/templates
 import puck/web/admin
 import utility
 
-pub fn router(request: Request(BitString), state: State) -> Response(String) {
+pub fn router(
+  request: Request(BitString),
+  state: State,
+) -> Response(StringBuilder) {
   let pay = state.config.payment_secret
   let attend = state.config.attend_secret
 
@@ -66,7 +70,7 @@ pub fn handle_request(
       current_user: user,
       send_email: email.send(_, config),
       send_admin_notification: fn(title, message) {
-        assert Ok(_) = pushover.notify(config, title, message)
+        let assert Ok(_) = pushover.notify(config, title, message)
         Nil
       },
     )
@@ -74,12 +78,12 @@ pub fn handle_request(
   router(request, state)
   |> response.prepend_header("x-robots-tag", "noindex")
   |> response.prepend_header("made-with", "Gleam")
-  |> response.map(bit_builder.from_string)
+  |> response.map(bit_builder.from_string_builder)
 }
 
-fn home(state: State) -> Response(String) {
+fn home(state: State) -> Response(StringBuilder) {
   use user <- web.require_user(state)
-  assert Ok(application) = user.get_application(state.db, user.id)
+  let assert Ok(application) = user.get_application(state.db, user.id)
 
   case application {
     Some(application) -> dashboard(user, application, state)
@@ -91,10 +95,10 @@ fn dashboard(
   user: User,
   application: Application,
   state: State,
-) -> Response(String) {
-  assert Ok(payments) =
+) -> Response(StringBuilder) {
+  let assert Ok(payments) =
     payment.for_reference(state.db, application.payment_reference)
-  assert Ok(total) = payment.total(state.db)
+  let assert Ok(total) = payment.total(state.db)
 
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
@@ -117,7 +121,7 @@ fn dashboard_html(
   payments: List(Payment),
   total_contributions: Int,
   config: Config,
-) -> String {
+) -> StringBuilder {
   let user_contributed =
     payments
     |> list.fold(0, fn(total, payment) { total + payment.amount })
@@ -195,7 +199,7 @@ fn costs(state: State) {
     event.costs
     |> list.map(fn(entry) { table_row(entry.0, money.pence_to_pounds(entry.1)) })
     |> list.append([])
-  assert Ok(raised) =
+  let assert Ok(raised) =
     payment.total(state.db)
     |> result.map(money.pence_to_pounds)
 
@@ -227,9 +231,10 @@ fn costs(state: State) {
   |> response.set_body(html)
 }
 
-fn licence(state: State) {
+fn licence(state: State) -> Response(StringBuilder) {
   let html = state.templates.licence()
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
   |> response.set_body(html)
+  |> response.map(string_builder.from_string)
 }

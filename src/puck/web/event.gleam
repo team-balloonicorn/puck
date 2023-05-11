@@ -1,3 +1,4 @@
+import gleam/string_builder.{StringBuilder}
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
@@ -130,20 +131,20 @@ fn save_fact(request: Request(BitString), state: State) {
     |> result.then(int.parse),
     web.unprocessable_entity,
   )
-  assert Ok(_) = fact.insert(state.db, section_id, summary, detail, 0.0)
-  response.redirect("/information")
+  let assert Ok(_) = fact.insert(state.db, section_id, summary, detail, 0.0)
+  web.redirect("/information")
 }
 
 // TODO: test
 // TODO: test form showing
 fn show_information(state: State) {
   use user <- web.require_user(state)
-  assert Ok(sections) = fact.list_all_sections(state.db)
+  let assert Ok(sections) = fact.list_all_sections(state.db)
 
   let form = case user.is_admin {
     False -> html.Nothing
     True -> {
-      assert Ok(sections) = fact.list_all_sections(state.db)
+      let assert Ok(sections) = fact.list_all_sections(state.db)
       let sections =
         sections
         |> list.map(fn(section) {
@@ -196,7 +197,7 @@ fn show_information(state: State) {
   }
 
   let section_html = fn(section: fact.Section) {
-    assert Ok(facts) = fact.list_for_section(state.db, section.id)
+    let assert Ok(facts) = fact.list_for_section(state.db, section.id)
     let id = slug(section.title)
 
     html.Fragment([
@@ -255,7 +256,7 @@ fn register_attendance(request: Request(BitString), state: State) {
     }
   }
   let answers = list.fold(all_fields(), map.new(), get_answer)
-  assert Ok(_) = user.insert_application(state.db, user.id, answers)
+  let assert Ok(_) = user.insert_application(state.db, user.id, answers)
   web.redirect("/")
 }
 
@@ -309,7 +310,7 @@ fn field_html(question: Question) -> html.Node(a) {
   web.form_group(question.text, elements)
 }
 
-pub fn application_form(state: State) -> Response(String) {
+pub fn application_form(state: State) -> Response(StringBuilder) {
   let html =
     html.main(
       [Attr("role", "main"), attrs.class("content")],

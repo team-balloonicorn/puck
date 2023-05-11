@@ -1,7 +1,8 @@
+import gleam/string_builder.{StringBuilder}
 import gleam/option.{None, Some}
 import gleam/http.{Post}
 import gleam/http/request.{Request}
-import gleam/http/response
+import gleam/http/response.{Response}
 import gleam/string
 import gleam/int
 import puck/user.{User}
@@ -10,19 +11,26 @@ import puck/web.{State}
 import puck/email.{Email}
 import utility
 
-pub fn payment_webhook(request: Request(BitString), state: State) {
+pub fn payment_webhook(
+  request: Request(BitString),
+  state: State,
+) -> Response(StringBuilder) {
+  let ok =
+    response.new(200)
+    |> response.set_body(string_builder.new())
+
   use <- utility.guard(request.method != Post, return: web.method_not_allowed())
 
   // Record payment
   use body <- web.require_bit_string_body(request)
   use payment <- web.try_(payment.from_json(body), web.unprocessable_entity)
-  assert Ok(newly_inserted) = payment.insert(state.db, payment)
+  let assert Ok(newly_inserted) = payment.insert(state.db, payment)
 
   // Nothing more to do if we already knew about this payment, meaning that this
   // is a duplicate webhook.
-  use <- utility.guard(!newly_inserted, return: response.new(200))
+  use <- utility.guard(!newly_inserted, return: ok)
 
-  assert Ok(result) =
+  let assert Ok(result) =
     user.get_user_by_payment_reference(state.db, payment.reference)
   case result {
     // Send a confirmation email to the user, if there is one
@@ -42,7 +50,7 @@ pub fn payment_webhook(request: Request(BitString), state: State) {
     }
   }
 
-  response.new(200)
+  ok
 }
 
 pub fn pence_to_pounds(pence: Int) -> String {

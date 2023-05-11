@@ -4,6 +4,7 @@ import gleam/http/response
 import gleam/map
 import gleam/option.{Some}
 import gleam/string
+import gleam/string_builder
 import gleam/list
 import gleam/uri
 import puck/user
@@ -16,11 +17,23 @@ pub fn attendance_form_not_logged_in_test() {
   let response =
     tests.request("/" <> secret)
     |> routes.router(state)
-  assert 200 = response.status
-  assert True = string.contains(response.body, "Midsummer Night's Tea Party")
-  assert False = string.contains(response.body, "Continue to your account")
-  assert True = string.contains(response.body, "What's your email?")
-  assert True = string.contains(response.body, "action=\"/sign-up/" <> secret)
+  let assert 200 = response.status
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("Midsummer Night's Tea Party")
+  let assert False =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("Continue to your account")
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("What's your email?")
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("action=\"/sign-up/" <> secret)
 }
 
 pub fn attendance_form_logged_in_test() {
@@ -29,16 +42,28 @@ pub fn attendance_form_logged_in_test() {
   let response =
     tests.request("/" <> secret)
     |> routes.router(state)
-  assert 200 = response.status
-  assert True = string.contains(response.body, "Midsummer Night's Tea Party")
-  assert True = string.contains(response.body, "Continue to your account")
-  assert False = string.contains(response.body, "What's your email?")
-  assert False = string.contains(response.body, "href=\"/sign-up/" <> secret)
+  let assert 200 = response.status
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("Midsummer Night's Tea Party")
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("Continue to your account")
+  let assert False =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("What's your email?")
+  let assert False =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("href=\"/sign-up/" <> secret)
 }
 
 pub fn register_attendance_ok_test() {
   use state <- tests.with_logged_in_state
-  assert Some(user) = state.current_user
+  let assert Some(user) = state.current_user
   let secret = state.config.attend_secret
   let body =
     uri.query_to_string([
@@ -54,12 +79,12 @@ pub fn register_attendance_ok_test() {
     |> request.set_method(http.Post)
     |> request.set_body(<<body:utf8>>)
     |> routes.router(state)
-  assert 302 = response.status
-  assert Ok("/") = response.get_header(response, "location")
-  assert Ok(Some(application)) = user.get_application(state.db, user.id)
-  assert "m-" <> _ = application.payment_reference
-  assert True = application.user_id == user.id
-  assert [
+  let assert 302 = response.status
+  let assert Ok("/") = response.get_header(response, "location")
+  let assert Ok(Some(application)) = user.get_application(state.db, user.id)
+  let assert "m-" <> _ = application.payment_reference
+  let assert True = application.user_id == user.id
+  let assert [
     #("accessibility-requirements", "I walk with a stick"),
     #("attended", "Yes"),
     #("dietary-requirements", "Vegan"),
@@ -78,6 +103,6 @@ pub fn register_attendance_not_logged_in_test() {
     tests.request("/" <> secret)
     |> request.set_method(http.Post)
     |> routes.router(state)
-  assert 302 = response.status
-  assert Ok("/login") = response.get_header(response, "location")
+  let assert 302 = response.status
+  let assert Ok("/login") = response.get_header(response, "location")
 }

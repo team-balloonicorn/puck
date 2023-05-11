@@ -8,7 +8,7 @@ pub type Email {
 }
 
 pub fn send(email: Email, config: Config) -> Nil {
-  assert Ok(response) =
+  let assert Ok(response) =
     zeptomail.Email(
       from: zeptomail.Addressee(
         name: config.email_from_name,
@@ -28,7 +28,7 @@ pub fn send(email: Email, config: Config) -> Nil {
     )
     |> zeptomail.email_request(config.zeptomail_api_key)
     |> hackney.send
-  assert Ok(_) =
+  let assert Ok(_) =
     response
     |> zeptomail.decode_email_response
   io.println("Email sent to " <> email.to_name)

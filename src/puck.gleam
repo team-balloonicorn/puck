@@ -43,7 +43,7 @@ fn server(config: Config) {
   database.with_connection(config.database_path, database.migrate)
 
   // Start the web server process
-  assert Ok(_) =
+  let assert Ok(_) =
     mist.run_service(3000, routes.service(config), max_body_limit: 4_000_000)
   io.println("Started listening on http://localhost:3000 ✨")
 
@@ -75,8 +75,8 @@ fn email(
   addresses: String,
   config: Config,
 ) -> Nil {
-  assert Ok(addresses) = file.read(addresses)
-  assert Ok(body) = file.read(body)
+  let assert Ok(addresses) = file.read(addresses)
+  let assert Ok(body) = file.read(body)
   let addresses = string.split(string.trim(addresses), "\n")
 
   list.each(addresses, io.println)
@@ -111,7 +111,7 @@ fn ask_confirmation(prompt: String, next: fn() -> Nil) -> Nil {
 
 fn login_url(user_id: String, config: Config) -> Nil {
   use db <- database.with_connection(config.database_path)
-  assert Ok(id) = int.parse(user_id)
-  assert Ok(Some(token)) = user.create_login_token(db, id)
+  let assert Ok(id) = int.parse(user_id)
+  let assert Ok(Some(token)) = user.create_login_token(db, id)
   io.println("https://puck.midsummer.lpil.uk/login/" <> user_id <> "/" <> token)
 }

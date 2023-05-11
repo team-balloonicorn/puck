@@ -111,7 +111,7 @@ pub fn from_json_purchase_test() {
 
 pub fn insert_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
 
   let payment1 =
     Payment(
@@ -130,16 +130,16 @@ pub fn insert_test() {
       reference: "test1234",
     )
 
-  assert Ok(True) = payment.insert(conn, payment1)
-  assert Ok(True) = payment.insert(conn, payment2)
-  assert Ok([p1, p2]) = payment.list_all(conn)
-  assert True = p1 == payment1
-  assert True = p2 == payment2
+  let assert Ok(True) = payment.insert(conn, payment1)
+  let assert Ok(True) = payment.insert(conn, payment2)
+  let assert Ok([p1, p2]) = payment.list_all(conn)
+  let assert True = p1 == payment1
+  let assert True = p2 == payment2
 }
 
 pub fn inserting_is_idempotent_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
 
   let payment1 =
     Payment(
@@ -150,17 +150,17 @@ pub fn inserting_is_idempotent_test() {
       reference: "test1234",
     )
 
-  assert Ok(True) = payment.insert(conn, payment1)
-  assert Ok(False) = payment.insert(conn, payment1)
-  assert Ok(False) = payment.insert(conn, payment1)
+  let assert Ok(True) = payment.insert(conn, payment1)
+  let assert Ok(False) = payment.insert(conn, payment1)
+  let assert Ok(False) = payment.insert(conn, payment1)
 
-  assert Ok([p1]) = payment.list_all(conn)
-  assert True = p1 == payment1
+  let assert Ok([p1]) = payment.list_all(conn)
+  let assert True = p1 == payment1
 }
 
 pub fn insert_rejects_invalid_dates_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
 
   let payment1 =
     Payment(
@@ -171,13 +171,13 @@ pub fn insert_rejects_invalid_dates_test() {
       reference: "test1234",
     )
 
-  assert Error(_) = payment.insert(conn, payment1)
-  assert Ok([]) = payment.list_all(conn)
+  let assert Error(_) = payment.insert(conn, payment1)
+  let assert Ok([]) = payment.list_all(conn)
 }
 
 pub fn insert_discards_negative_amounts_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
 
   let payment1 =
     Payment(
@@ -188,13 +188,13 @@ pub fn insert_discards_negative_amounts_test() {
       reference: "test1234",
     )
 
-  assert Ok(False) = payment.insert(conn, payment1)
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok(False) = payment.insert(conn, payment1)
+  let assert Ok([]) = payment.list_all(conn)
 }
 
 pub fn insert_lowercases_reference_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
 
   let payment1 =
     Payment(
@@ -204,47 +204,47 @@ pub fn insert_lowercases_reference_test() {
       counterparty: "Louis Pilfold",
       reference: "TEST1234",
     )
-  assert Ok(True) = payment.insert(conn, payment1)
-  assert Ok([Payment(reference: "test1234", ..)]) = payment.list_all(conn)
+  let assert Ok(True) = payment.insert(conn, payment1)
+  let assert Ok([Payment(reference: "test1234", ..)]) = payment.list_all(conn)
 }
 
 pub fn for_reference_test() {
   use conn <- tests.with_connection
-  assert Ok([]) = payment.list_all(conn)
+  let assert Ok([]) = payment.list_all(conn)
   let date = "2022-02-01T20:47:19.022Z"
 
   let p1 = Payment("tx1", date, "Lou", 1, "ref1")
   let p2 = Payment("tx2", date, "Lou", 2, "ref2")
   let p3 = Payment("tx3", date, "Lou", 2, "ref1")
 
-  assert Ok(True) = payment.insert(conn, p1)
-  assert Ok(True) = payment.insert(conn, p2)
-  assert Ok(True) = payment.insert(conn, p3)
+  let assert Ok(True) = payment.insert(conn, p1)
+  let assert Ok(True) = payment.insert(conn, p2)
+  let assert Ok(True) = payment.insert(conn, p3)
 
-  assert Ok([p4, p5]) = payment.for_reference(conn, "ref1")
-  assert True = p4 == p1
-  assert True = p5 == p3
+  let assert Ok([p4, p5]) = payment.for_reference(conn, "ref1")
+  let assert True = p4 == p1
+  let assert True = p5 == p3
 }
 
 pub fn total_test() {
   use db <- tests.with_connection
   let date = "2022-02-01T20:47:19.022Z"
 
-  assert Ok(0) = payment.total(db)
+  let assert Ok(0) = payment.total(db)
 
-  assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
-  assert Ok(a1) = user.insert_application(db, u1.id, map.new())
-  assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
-  assert Ok(a2) = user.insert_application(db, u2.id, map.new())
+  let assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
+  let assert Ok(a1) = user.insert_application(db, u1.id, map.new())
+  let assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
+  let assert Ok(a2) = user.insert_application(db, u2.id, map.new())
 
-  assert Ok(True) =
+  let assert Ok(True) =
     payment.insert(db, Payment("tx1", date, "Lou", 1, a1.payment_reference))
-  assert Ok(True) =
+  let assert Ok(True) =
     payment.insert(db, Payment("tx2", date, "Jay", 2, a2.payment_reference))
-  assert Ok(True) =
+  let assert Ok(True) =
     payment.insert(db, Payment("tx3", date, "Jay", 3, a2.payment_reference))
-  assert Ok(False) =
+  let assert Ok(False) =
     payment.insert(db, Payment("tx3", date, "Other", 4, "Unknown"))
 
-  assert Ok(6) = payment.total(db)
+  let assert Ok(6) = payment.total(db)
 }

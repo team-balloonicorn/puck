@@ -22,11 +22,11 @@ pub fn dashboard(request: Request(BitString), state: State) {
 }
 
 fn get_dashboard(state: State) {
-  assert Ok(users) = user.list_all(state.db)
-  assert Ok(paid_users_count) = user.count_users_with_payments(state.db)
-  assert Ok(unmatched_payments) = payment.unmatched(state.db)
-  assert Ok(daily_income) = payment.per_day(state.db)
-  assert Ok(total) = payment.total(state.db)
+  let assert Ok(users) = user.list_all(state.db)
+  let assert Ok(paid_users_count) = user.count_users_with_payments(state.db)
+  let assert Ok(unmatched_payments) = payment.unmatched(state.db)
+  let assert Ok(daily_income) = payment.per_day(state.db)
+  let assert Ok(total) = payment.total(state.db)
 
   let user = fn(user) { user_row(user, state) }
   let payment = fn(i, payment) { payment_row(i, payment) }
@@ -88,7 +88,7 @@ fn day_income(payment: #(String, Int, Int)) {
 fn user_row(user: User, state: State) {
   let application_data = case user.get_application(state.db, user.id) {
     Ok(Some(application)) -> {
-      assert Ok(total) =
+      let assert Ok(total) =
         payment.total_for_reference(state.db, application.payment_reference)
       let get = fn(key) { result.unwrap(map.get(application.answers, key), "") }
       [

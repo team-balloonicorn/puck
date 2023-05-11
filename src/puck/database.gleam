@@ -11,7 +11,7 @@ pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
   use db <- sqlight.with_connection(path)
 
   // Enable configuration we want for all connections
-  assert Ok(_) = sqlight.exec("pragma foreign_keys = on;", db)
+  let assert Ok(_) = sqlight.exec("pragma foreign_keys = on;", db)
 
   f(db)
 }
@@ -39,7 +39,7 @@ pub fn one(
 ) -> Result(t, Error) {
   query(sql, connection, arguments, decoder)
   |> result.map(fn(rows) {
-    assert [row] = rows
+    let assert [row] = rows
     row
   })
 }
@@ -60,7 +60,7 @@ pub fn maybe_one(
 }
 
 pub fn migrate(db: sqlight.Connection) -> Nil {
-  assert Ok(_) =
+  let assert Ok(_) =
     sqlight.exec(
       "
 create table if not exists users (

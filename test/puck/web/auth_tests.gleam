@@ -6,6 +6,7 @@ import gleam/uri
 import gleam/int
 import gleam/option.{Some}
 import gleam/string
+import gleam/string_builder
 import puck/user
 import puck/database
 import puck/web/routes
@@ -17,10 +18,12 @@ pub fn login_not_logged_in_test() {
   let response =
     tests.request("/login")
     |> routes.router(state)
-  assert 200 = response.status
-  assert Error(Nil) = response.get_header(response, "location")
-  assert False =
-    string.contains(response.body, auth.email_already_in_use_message)
+  let assert 200 = response.status
+  let assert Error(Nil) = response.get_header(response, "location")
+  let assert False =
+    response.body
+    |> string_builder.to_string
+    |> string.contains(auth.email_already_in_use_message)
 }
 
 pub fn login_already_registered_query_param_test() {
@@ -29,11 +32,16 @@ pub fn login_already_registered_query_param_test() {
     tests.request("/login")
     |> request.set_query([#("already-registered", "louis@example.com")])
     |> routes.router(state)
-  assert 200 = response.status
-  assert Error(Nil) = response.get_header(response, "location")
-  assert True =
-    string.contains(response.body, auth.email_already_in_use_message)
-  assert True = string.contains(response.body, "value=\"louis@example.com\"")
+  let assert 200 = response.status
+  let assert Error(Nil) = response.get_header(response, "location")
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains(auth.email_already_in_use_message)
+  let assert True =
+    response.body
+    |> string_builder.to_string
+    |> string.contains("value=\"louis@example.com\"")
 }
 
 pub fn login_logged_in_test() {
@@ -41,8 +49,8 @@ pub fn login_logged_in_test() {
   let response =
     tests.request("/login")
     |> routes.router(state)
-  assert 302 = response.status
-  assert Ok("/") = response.get_header(response, "location")
+  let assert 302 = response.status
+  let assert Ok("/") = response.get_header(response, "location")
 }
 
 pub fn login_by_token_unknown_test() {
@@ -50,70 +58,70 @@ pub fn login_by_token_unknown_test() {
   let response =
     tests.request("/login/1/token")
     |> routes.router(state)
-  assert 422 = response.status
-  assert Error(_) = response.get_header(response, "set-cookie")
+  let assert 422 = response.status
+  let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_no_token_test() {
   use state <- tests.with_logged_in_state
-  assert Some(user) = state.current_user
+  let assert Some(user) = state.current_user
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/token")
     |> routes.router(state)
-  assert 422 = response.status
-  assert Error(_) = response.get_header(response, "set-cookie")
+  let assert 422 = response.status
+  let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_wrong_token_test() {
   use state <- tests.with_logged_in_state
-  assert Some(user) = state.current_user
-  assert Ok(Some(_)) = user.create_login_token(state.db, user.id)
+  let assert Some(user) = state.current_user
+  let assert Ok(Some(_)) = user.create_login_token(state.db, user.id)
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/token")
     |> routes.router(state)
-  assert 422 = response.status
-  assert Error(_) = response.get_header(response, "set-cookie")
+  let assert 422 = response.status
+  let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_ok_test() {
   use state <- tests.with_logged_in_state
-  assert Some(user) = state.current_user
-  assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
+  let assert Some(user) = state.current_user
+  let assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/" <> token)
     |> routes.router(state)
-  assert 302 = response.status
-  assert Ok("/") = response.get_header(response, "location")
-  assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
+  let assert 302 = response.status
+  let assert Ok("/") = response.get_header(response, "location")
+  let assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_expired_test() {
   use state <- tests.with_logged_in_state
-  assert Some(user) = state.current_user
-  assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
+  let assert Some(user) = state.current_user
+  let assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
-  assert Ok(Nil) = database.exec(sql, state.db)
+  let assert Ok(Nil) = database.exec(sql, state.db)
   let response =
     tests.request("/login/" <> int.to_string(user.id) <> "/" <> token)
     |> routes.router(state)
-  assert 422 = response.status
-  assert Error(_) = response.get_header(response, "set-cookie")
+  let assert 422 = response.status
+  let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn sign_up_already_taken_test() {
   use state <- tests.with_logged_in_state
   let #(state, emails) = tests.track_sent_emails(state)
-  assert Some(user) = state.current_user
+  let assert Some(user) = state.current_user
   let body = uri.query_to_string([#("email", user.email), #("name", "Louis")])
   let response =
     tests.request("/sign-up/" <> state.config.attend_secret)
     |> request.set_method(http.Post)
     |> request.set_body(<<body:utf8>>)
     |> routes.router(state)
-  assert 302 = response.status
-  assert Ok("/login?already-registered=puck%40example.com") =
+  let assert 302 = response.status
+  let assert Ok("/login?already-registered=puck%40example.com") =
     response.get_header(response, "location")
-  assert Error(Nil) = process.receive(emails, 0)
+  let assert Error(Nil) = process.receive(emails, 0)
 }
 
 pub fn sign_up_ok_test() {
@@ -126,9 +134,9 @@ pub fn sign_up_ok_test() {
     |> request.set_method(http.Post)
     |> request.set_body(<<body:utf8>>)
     |> routes.router(state)
-  assert 200 = response.status
-  assert Ok(email) = process.receive(emails, 0)
-  assert "Louis" = email.to_name
-  assert "louis@example.com" = email.to_address
-  assert "Midsummer Night's Tea Party Login" = email.subject
+  let assert 200 = response.status
+  let assert Ok(email) = process.receive(emails, 0)
+  let assert "Louis" = email.to_name
+  let assert "louis@example.com" = email.to_address
+  let assert "Midsummer Night's Tea Party Login" = email.subject
 }

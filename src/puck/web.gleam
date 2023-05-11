@@ -1,4 +1,5 @@
 import gleam/bit_string
+import gleam/string_builder.{StringBuilder}
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
 import gleam/option.{None, Option, Some}
@@ -27,36 +28,41 @@ pub type State {
   )
 }
 
-pub fn redirect(target: String) -> Response(String) {
+pub fn redirect(target: String) -> Response(StringBuilder) {
   response.new(302)
   |> response.set_header("location", target)
   |> response.set_body("You are being redirected")
+  |> response.map(string_builder.from_string)
 }
 
-pub fn not_found() -> Response(String) {
+pub fn not_found() -> Response(StringBuilder) {
   response.new(404)
   |> response.set_body("There's nothing here.")
+  |> response.map(string_builder.from_string)
 }
 
-pub fn method_not_allowed() -> Response(String) {
+pub fn method_not_allowed() -> Response(StringBuilder) {
   response.new(405)
   |> response.set_body("Method not allowed")
+  |> response.map(string_builder.from_string)
 }
 
-pub fn unprocessable_entity() -> Response(String) {
+pub fn unprocessable_entity() -> Response(StringBuilder) {
   response.new(422)
   |> response.set_body("Unprocessable entity." <> please_try_again)
+  |> response.map(string_builder.from_string)
 }
 
-pub fn bad_request() -> Response(String) {
+pub fn bad_request() -> Response(StringBuilder) {
   response.new(400)
   |> response.set_body("Invalid request." <> please_try_again)
+  |> response.map(string_builder.from_string)
 }
 
 pub fn require_user(
   state: State,
-  next: fn(User) -> Response(String),
-) -> Response(String) {
+  next: fn(User) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   case state.current_user {
     Some(user) -> next(user)
     None -> redirect(login_path)
@@ -65,8 +71,8 @@ pub fn require_user(
 
 pub fn require_admin_user(
   state: State,
-  next: fn(User) -> Response(String),
-) -> Response(String) {
+  next: fn(User) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   use user <- require_user(state)
   case user.is_admin {
     True -> next(user)
@@ -76,8 +82,8 @@ pub fn require_admin_user(
 
 pub fn require_bit_string_body(
   request: Request(BitString),
-  next: fn(String) -> Response(String),
-) -> Response(String) {
+  next: fn(String) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   case bit_string.to_string(request.body) {
     Ok(body) -> next(body)
     Error(_) -> bad_request()
@@ -86,8 +92,8 @@ pub fn require_bit_string_body(
 
 pub fn require_form_urlencoded_body(
   request: Request(BitString),
-  next: fn(List(#(String, String))) -> Response(String),
-) -> Response(String) {
+  next: fn(List(#(String, String))) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   use body <- require_bit_string_body(request)
   case uri.parse_query(body) {
     Ok(body) -> next(body)
@@ -97,9 +103,9 @@ pub fn require_form_urlencoded_body(
 
 pub fn try_(
   result: Result(a, b),
-  or alternative: fn() -> Response(String),
-  then next: fn(a) -> Response(String),
-) -> Response(String) {
+  or alternative: fn() -> Response(StringBuilder),
+  then next: fn(a) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   case result {
     Ok(value) -> next(value)
     Error(_) -> alternative()
@@ -108,8 +114,8 @@ pub fn try_(
 
 pub fn ok_or_404(
   result: Result(a, b),
-  next: fn(a) -> Response(String),
-) -> Response(String) {
+  next: fn(a) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   case result {
     Ok(value) -> next(value)
     Error(_) -> not_found()
@@ -118,26 +124,26 @@ pub fn ok_or_404(
 
 pub fn some(
   result: Option(a),
-  or alternative: fn() -> Response(String),
-  then next: fn(a) -> Response(String),
-) -> Response(String) {
+  or alternative: fn() -> Response(StringBuilder),
+  then next: fn(a) -> Response(StringBuilder),
+) -> Response(StringBuilder) {
   case result {
     Some(value) -> next(value)
     None -> alternative()
   }
 }
 
-pub fn html_page(page_html: html.Node(a)) -> String {
+pub fn html_page(page_html: html.Node(a)) -> StringBuilder {
   html.div(
     [],
     [
-      html.head([
+      html.Head([
         html.meta([attrs.charset("utf-8")]),
         html.meta([
           attrs.name("viewport"),
           attrs.content("width=device-width, initial-scale=1"),
         ]),
-        html.title_text([], "Midsummer Night's Tea Party"),
+        html.title("Midsummer Night's Tea Party"),
         html.link([
           attrs.rel("preconnect"),
           attrs.href("https://fonts.googleapis.com"),
@@ -200,7 +206,7 @@ pub fn html_page(page_html: html.Node(a)) -> String {
       ),
     ],
   )
-  |> nakai.render
+  |> nakai.to_string_builder
 }
 
 pub fn form_group(label: String, input: html.Node(a)) -> html.Node(a) {

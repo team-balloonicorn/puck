@@ -1,5 +1,6 @@
 import bcrypter
 import gleam/bit_builder.{BitBuilder}
+import gleam/string_builder.{StringBuilder}
 import gleam/bit_string
 import gleam/crypto
 import gleam/http.{Https}
@@ -22,7 +23,10 @@ import utility
 
 const auth_cookie = "uid"
 
-pub fn login(request: Request(BitString), state: State) -> Response(String) {
+pub fn login(
+  request: Request(BitString),
+  state: State,
+) -> Response(StringBuilder) {
   use <- utility.guard(
     when: state.current_user != None,
     return: web.redirect("/"),
@@ -35,7 +39,7 @@ pub fn login(request: Request(BitString), state: State) -> Response(String) {
   }
 }
 
-fn login_form_page(request: Request(BitString)) -> Response(String) {
+fn login_form_page(request: Request(BitString)) -> Response(StringBuilder) {
   let mode = login_page_mode_from_query(request)
   response.new(200)
   |> response.prepend_header("content-type", "text/html")
@@ -54,7 +58,10 @@ fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
   }
 }
 
-fn attempt_login(request: Request(BitString), state: State) -> Response(String) {
+fn attempt_login(
+  request: Request(BitString),
+  state: State,
+) -> Response(StringBuilder) {
   use params <- web.require_form_urlencoded_body(request)
   use email <- web.try_(
     list.key_find(params, "email"),
@@ -104,7 +111,7 @@ pub fn sign_up(request: Request(BitString), state: State) {
 }
 
 fn login_email(user: User, db: database.Connection) -> Email {
-  assert Ok(Some(token)) = user.create_login_token(db, user.id)
+  let assert Ok(Some(token)) = user.create_login_token(db, user.id)
   let id = int.to_string(user.id)
   let content =
     "Hello! 
@@ -125,7 +132,7 @@ The Midsummer crew
   )
 }
 
-fn login_email_sent_page() -> String {
+fn login_email_sent_page() -> StringBuilder {
   [
     web.flamingo(),
     html.p_text([], "Thank you. We've sent you an email with a link to log in."),
@@ -144,7 +151,7 @@ pub const email_already_in_use_message = "That email is already in use, would yo
 
 pub const email_unknown_message = "Sorry, I couldn't find anyone with with email address."
 
-fn login_page_html(mode: LoginPageMode) -> String {
+fn login_page_html(mode: LoginPageMode) -> StringBuilder {
   let #(error, email) = case mode {
     EmailAlreadyInUse(email) -> #(
       html.p_text([], email_already_in_use_message),
@@ -258,7 +265,7 @@ pub fn get_user_from_session(
     Error(Nil) ->
       web.not_found()
       |> expire_cookie(auth_cookie)
-      |> response.map(bit_builder.from_string)
+      |> response.map(bit_builder.from_string_builder)
   }
 }
 
