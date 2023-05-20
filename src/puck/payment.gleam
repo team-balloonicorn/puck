@@ -191,7 +191,7 @@ pub fn per_day(
     "
     with recursive dates as (
       select
-        date('now', '-3 month') as date
+        date('now', '-8 month') as date
       union all
       select
         date(date, '+1 day')
