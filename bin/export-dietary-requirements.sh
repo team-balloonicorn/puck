@@ -21,9 +21,9 @@ select
   money.amount / 100 as paid,
   applications.answers ->> 'dietary-requirements' as diet
 from users
-join
+left join
   applications on applications.user_id = users.id
-join
+left join
   money on money.reference = applications.payment_reference
 where
   diet is not null
