@@ -15,6 +15,8 @@ NEW_REFERENCE="$3"
 
 sqlite3 "$DB_FILE" <<EOF
 .bail on
+.headers on
+.mode column
 
 begin;
 

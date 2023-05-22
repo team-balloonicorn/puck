@@ -8,6 +8,7 @@ CSV_FILE="$2"
 sqlite3 "$DB_FILE" <<EOF
 .headers on
 .mode csv
+.bail on
 .output $CSV_FILE
 
 with money as (
