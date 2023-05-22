@@ -13,7 +13,11 @@ RUN apk add --no-cache sqlite gcc make libc-dev bsd-compat-headers \
   && adduser -S puck -G puck \
   && chown -R puck /app
 
-COPY bin/locally-backup-database.sh /app/bin/locally-backup-database.sh
+COPY \
+  bin/locally-backup-database.sh \
+  bin/payments-for-reference.sh \
+  bin/split-joint-payment.sh \
+  /app/bin/
 
 USER puck
 WORKDIR /app
