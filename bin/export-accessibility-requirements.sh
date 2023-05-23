@@ -19,6 +19,7 @@ with money as (
 
 select
   users.name as name,
+  users.email as email,
   money.amount / 100 as paid,
   applications.answers ->> 'accessibility-requirements' as access
 from users
