@@ -175,7 +175,7 @@ fn dashboard_html(
   ]
 
   let expandable = fn(title, body) {
-    html.details([], [html.summary_text([], title), body])
+    html.details([Attr("open", "")], [html.summary_text([], title), body])
   }
 
   html.main(

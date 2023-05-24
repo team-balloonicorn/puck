@@ -62,19 +62,19 @@ const questions = [
     kind: Bool,
   ),
   Question(
-    text: "Who is in your pod?",
+    text: "Who is in your support network?",
     key: field_pod_members,
     blurb: [
-      "You and the people in your pods are responsible for each other. If
-      someone in your pod is unwell, having a bad time, or otherwise needs help
-      the rest of your pod will look after them.",
-      "At least one of your pod should have attended Midsummer Night's Teaparty
-      before.",
+      "Your support network are the people who are responsible for you. If
+      you are unwell, having a bad time, or otherwise need help then your
+      support network are to look after you.",
+      "At least one of your support network should have attended Midsummer
+      Night's Teaparty before.",
     ],
     kind: Text("Oberon, Titania, Nick Bottom"),
   ),
   Question(
-    text: "Who in your pod has attended before?",
+    text: "Who in your support network has attended before?",
     key: field_pod_attended,
     blurb: [],
     kind: Text("Titania"),
