@@ -362,7 +362,7 @@ fn attendance_html(state: State) -> html.Node(a) {
         them!",
       ),
       html.h2_text([], "When is it?"),
-      p("5pm Thursday the 8th June to 11am Monday the 12th June"),
+      p("5pm Thursday the 8th June to 10am Monday the 12th June"),
       html.h2_text([], "Where is it?"),
       p("The same site as usual, 20 minutes drive from King's Lynn in Norfolk."),
       html.h2_text([], "How much does it cost?"),
