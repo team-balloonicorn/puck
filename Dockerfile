@@ -17,6 +17,7 @@ COPY \
   bin/locally-backup-database.sh \
   bin/payments-for-reference.sh \
   bin/split-joint-payment.sh \
+  bin/edit-reference.sh \
   /app/bin/
 
 USER puck
