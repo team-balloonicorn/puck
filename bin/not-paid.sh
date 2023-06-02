@@ -5,14 +5,10 @@ set -eu
 # All the people who have filled in the form but not paid.
 
 DB_FILE="$1"
-# CSV_FILE="$2"
 
-# .output $CSV_FILE
 sqlite3 "$DB_FILE" <<EOF
 .bail on
 .mode column
---.headers on
---.mode csv
 
 with money as (
   select reference, sum(amount) as amount
@@ -21,12 +17,7 @@ with money as (
 )
 
 select
-  users.name as name--,
-  --users.email as email,
-  --applications.answers ->> 'pod-members' as pod,
-  --applications.answers ->> 'attended' as attended,
-  --applications.answers ->> 'accessibility-requirements' as access,
-  --applications.answers ->> 'dietary-requirements' as diet
+  users.name as name
 from users
 inner join
   applications on applications.user_id = users.id

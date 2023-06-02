@@ -2,12 +2,12 @@
 
 set -eu
 
-echo Running at $(date)
+echo Running at $(date -u)
 
 REMOTE="/data/backups"
-HOURLY="hourly-$(date +%H).sqlite3"
-DAILY="daily-$(date +%d).sqlite3"
-WEEKLY="weekly-$(date +%Y-%U).sqlite3"
+HOURLY="hourly-$(date -u +%H).sqlite3"
+DAILY="daily-$(date -u +%d).sqlite3"
+WEEKLY="weekly-$(date -u +%Y-%U).sqlite3"
 LOCAL="$HOME/backups/puck"
 
 mkdir -p "$LOCAL"

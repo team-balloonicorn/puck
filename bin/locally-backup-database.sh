@@ -3,9 +3,9 @@
 set -eu
 
 BACKUPS="/data/backups"
-HOURLY="$BACKUPS/hourly-$(date +%H).sqlite3"
-DAILY="$BACKUPS/daily-$(date +%d).sqlite3"
-WEEKLY="$BACKUPS/weekly-$(date +%Y-%U).sqlite3"
+HOURLY="$BACKUPS/hourly-$(date -u +%H).sqlite3"
+DAILY="$BACKUPS/daily-$(date -u +%d).sqlite3"
+WEEKLY="$BACKUPS/weekly-$(date -u +%Y-%U).sqlite3"
 
 mkdir -p "$BACKUPS"
 
