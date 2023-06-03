@@ -25,7 +25,8 @@ from users
 join
   applications on applications.user_id = users.id
 join
-  money on money.reference = applications.payment_reference;
+  money on money.reference = applications.payment_reference
+order by name;
 
 .quit
 EOF
