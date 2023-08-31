@@ -11,8 +11,8 @@ pub fn load(config: Config) -> Templates {
   Templates(licence: fn() { licence([]) })
 }
 
-external fn priv_directory() -> String =
-  "puck_ffi" "priv_directory"
+@external(erlang, "puck_ffi", "priv_directory")
+fn priv_directory() -> String
 
 fn load_template(
   name: String,

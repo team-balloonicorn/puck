@@ -5,8 +5,8 @@ import gleam/erlang/file
 import gleam/result
 import gleam/string
 
-external fn priv_directory() -> String =
-  "puck_ffi" "priv_directory"
+@external(erlang, "puck_ffi", "priv_directory")
+pub fn priv_directory() -> String
 
 pub fn serve_assets(
   request: Request(a),

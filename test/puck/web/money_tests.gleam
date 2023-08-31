@@ -6,8 +6,9 @@ import gleam/string
 import gleam/map
 import puck/payment.{Payment}
 import puck/user
-import puck/web/routes
+import puck/router
 import tests
+import wisp/testing
 
 fn payload(reference: String, amount: Int) {
   "{
@@ -70,18 +71,20 @@ fn payload(reference: String, amount: Int) {
 }
 
 pub fn webhook_matching_reference_test() {
-  use state <- tests.with_state
-  let assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
+  use ctx <- tests.with_context
+  let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(state.db, user.id, map.new())
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+    user.insert_application(ctx.db, user.id, map.new())
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload(application.payment_reference, 12_000)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -91,7 +94,7 @@ pub fn webhook_matching_reference_test() {
       counterparty: "Louis Pilfold",
       reference: _,
     ),
-  ]) = payment.list_all(state.db)
+  ]) = payment.list_all(ctx.db)
   // No reference matches so no email is sent
   let assert Ok(email) = process.receive(emails, 0)
   let assert "Louis" = email.to_name
@@ -102,18 +105,20 @@ pub fn webhook_matching_reference_test() {
 }
 
 pub fn webhook_wrong_case_matching_reference_test() {
-  use state <- tests.with_state
-  let assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
+  use ctx <- tests.with_context
+  let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(state.db, user.id, map.new())
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+    user.insert_application(ctx.db, user.id, map.new())
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload(string.uppercase(application.payment_reference), 12_000)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -123,7 +128,7 @@ pub fn webhook_wrong_case_matching_reference_test() {
       counterparty: "Louis Pilfold",
       reference: _,
     ),
-  ]) = payment.list_all(state.db)
+  ]) = payment.list_all(ctx.db)
   // No reference matches so no email is sent
   let assert Ok(email) = process.receive(emails, 0)
   let assert "Louis" = email.to_name
@@ -136,13 +141,13 @@ pub fn webhook_wrong_case_matching_reference_test() {
 pub fn webhook_duplicate_test() {
   // Monzo likes to send the same webhook 4 times even if you return 200 as
   // they say you should.
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
 
-  let assert Ok(user) = user.insert(state.db, "Louis", "louis@example.com")
+  let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(state.db, user.id, map.new())
+    user.insert_application(ctx.db, user.id, map.new())
   let payment =
     Payment(
       id: "tx_0000AG2o6vNOP3W9owpal8",
@@ -151,16 +156,18 @@ pub fn webhook_duplicate_test() {
       counterparty: "Louis Pilfold",
       reference: application.payment_reference,
     )
-  let assert Ok(True) = payment.insert(state.db, payment)
+  let assert Ok(True) = payment.insert(ctx.db, payment)
 
   let payload = payload(application.payment_reference, 12_000)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 200 = response.status
-  let assert Ok([_]) = payment.list_all(state.db)
+  let assert Ok([_]) = payment.list_all(ctx.db)
 
   // Email is not sent for the repeated webhooks
   let assert Error(Nil) = process.receive(emails, 0)
@@ -168,15 +175,17 @@ pub fn webhook_duplicate_test() {
 }
 
 pub fn webhook_unknown_reference_test() {
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload("m-0123456789ab", 100)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -186,7 +195,7 @@ pub fn webhook_unknown_reference_test() {
       counterparty: "Louis Pilfold",
       reference: "m-0123456789ab",
     ),
-  ]) = payment.list_all(state.db)
+  ]) = payment.list_all(ctx.db)
   // No reference matches so no email is sent
   let assert Error(Nil) = process.receive(emails, 0)
   let assert Ok(#("Unmatched Puck payment", "Louis Pilfold m-0123456789ab £1")) =
@@ -194,49 +203,51 @@ pub fn webhook_unknown_reference_test() {
 }
 
 pub fn webhook_non_positive_amount_test() {
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload("m-0123456789ab", 0)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 200 = response.status
-  let assert Ok([]) = payment.list_all(state.db)
+  let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
   let assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_wrong_method_test() {
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload("m-0123456789ab", 100)
   let response =
-    tests.request("/api/payment/" <> state.config.payment_secret)
-    |> request.set_method(http.Get)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.patch(
+      "/api/payment/" <> ctx.config.payment_secret,
+      [#("content-type", "application/json")],
+      payload,
+    )
+    |> router.handle_request(ctx)
   let assert 405 = response.status
-  let assert Ok([]) = payment.list_all(state.db)
+  let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
   let assert Error(Nil) = process.receive(notifications, 0)
 }
 
 pub fn webhook_wrong_secret_test() {
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let #(state, notifications) = tests.track_sent_notifications(state)
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload("m-0123456789ab", 100)
   let response =
-    tests.request("/api/payment/nope")
-    |> request.set_method(http.Get)
-    |> request.set_body(<<payload:utf8>>)
-    |> routes.router(state)
+    testing.post("/api/payment/nope", [], payload)
+    |> router.handle_request(ctx)
   let assert 404 = response.status
-  let assert Ok([]) = payment.list_all(state.db)
+  let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
   let assert Error(Nil) = process.receive(notifications, 0)
 }

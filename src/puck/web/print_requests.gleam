@@ -1,3 +1,4 @@
+// TODO: work out if we want to steal this timing stuff and put it in Wisp.
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/http/response.{Response}
@@ -41,8 +42,8 @@ type TimeUnit {
   Microsecond
 }
 
-external fn now() -> Int =
-  "erlang" "monotonic_time"
+@external(erlang, "erlang", "monotonic_time")
+fn now() -> Int
 
-external fn convert_time_unit(Int, TimeUnit, TimeUnit) -> Int =
-  "erlang" "convert_time_unit"
+@external(erlang, "erlang", "convert_time_unit")
+fn convert_time_unit(amount: Int, from: TimeUnit, to: TimeUnit) -> Int

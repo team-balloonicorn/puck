@@ -1,4 +1,4 @@
-import bcrypter
+import beecrypt
 import gleam/base
 import gleam/crypto
 import gleam/dynamic.{Dynamic} as dy
@@ -180,7 +180,7 @@ pub fn create_login_token(
   let token =
     crypto.strong_random_bytes(24)
     |> base.url_encode64(False)
-  let hash = bcrypter.hash(token)
+  let hash = beecrypt.hash(token)
   let sql =
     "
     update users set 
