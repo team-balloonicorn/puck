@@ -2,7 +2,9 @@ import tests
 import gleeunit/should
 import puck/payment.{Payment}
 import puck/user
+import gleam/json
 import gleam/map
+import gleam/result
 
 pub fn from_json_transfer_test() {
   "{
@@ -56,7 +58,12 @@ pub fn from_json_transfer_test() {
     \"parent_account_id\": \"\"
   }
 }"
-  |> payment.from_json
+  |> json.decode(Ok)
+  |> result.nil_error
+  |> result.try(fn(d) {
+    payment.from_dynamic(d)
+    |> result.nil_error
+  })
   |> should.equal(Ok(Payment(
     id: "tx_0000AG2o6vNOP3W9owpal8",
     created_at: "2022-02-01T20:47:19.022Z",
@@ -99,7 +106,12 @@ pub fn from_json_purchase_test() {
         }
     }
 }"
-  |> payment.from_json
+  |> json.decode(Ok)
+  |> result.nil_error
+  |> result.try(fn(d) {
+    payment.from_dynamic(d)
+    |> result.nil_error
+  })
   |> should.equal(Ok(Payment(
     id: "tx_00008zjky19HyFLAzlUk7t",
     created_at: "2015-09-04T14:28:40Z",

@@ -6,7 +6,7 @@ import puck/config.{Config}
 import puck/database
 import puck/user
 import puck/email.{Email}
-import puck/web.{State}
+import puck/web.{Context}
 import puck/web/templates
 import sqlight
 
@@ -40,12 +40,12 @@ pub fn config() -> Config {
   )
 }
 
-pub fn with_state(f: fn(State) -> a) -> a {
+pub fn with_context(f: fn(Context) -> a) -> a {
   let config = config()
   use db <- database.with_connection("")
   database.migrate(db)
-  let state =
-    State(
+  let ctx =
+    Context(
       db: db,
       config: config,
       current_user: None,
@@ -53,34 +53,28 @@ pub fn with_state(f: fn(State) -> a) -> a {
       send_admin_notification: fn(_, _) { Nil },
       templates: templates.load(config),
     )
-  f(state)
+  f(ctx)
 }
 
-pub fn with_logged_in_state(f: fn(State) -> a) -> a {
-  use state <- with_state
-  let assert Ok(user) = user.insert(state.db, "Puck", "puck@example.com")
-  let state = State(..state, current_user: Some(user))
-  f(state)
-}
-
-pub fn request(path: String) -> Request(BitString) {
-  request.new()
-  |> request.set_path(path)
-  |> request.set_body(<<>>)
+pub fn with_logged_in_context(f: fn(Context) -> a) -> a {
+  use ctx <- with_context
+  let assert Ok(user) = user.insert(ctx.db, "Puck", "puck@example.com")
+  let ctx = Context(..ctx, current_user: Some(user))
+  f(ctx)
 }
 
 pub fn track_sent_notifications(
-  state: State,
-) -> #(State, Subject(#(String, String))) {
+  ctx: Context,
+) -> #(Context, Subject(#(String, String))) {
   let subject = process.new_subject()
   let send = fn(title, message) { process.send(subject, #(title, message)) }
-  let state = State(..state, send_admin_notification: send)
-  #(state, subject)
+  let ctx = Context(..ctx, send_admin_notification: send)
+  #(ctx, subject)
 }
 
-pub fn track_sent_emails(state: State) -> #(State, Subject(Email)) {
+pub fn track_sent_emails(ctx: Context) -> #(Context, Subject(Email)) {
   let subject = process.new_subject()
   let send_email = fn(email) { process.send(subject, email) }
-  let state = State(..state, send_email: send_email)
-  #(state, subject)
+  let ctx = Context(..ctx, send_email: send_email)
+  #(ctx, subject)
 }

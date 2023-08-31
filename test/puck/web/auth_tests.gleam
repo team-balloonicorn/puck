@@ -1,139 +1,130 @@
-import gleam/http
 import gleam/http/response
-import gleam/http/request
 import gleam/erlang/process
-import gleam/uri
 import gleam/int
 import gleam/option.{Some}
 import gleam/string
-import gleam/string_builder
 import puck/user
 import puck/database
-import puck/web/routes
+import puck/router
 import puck/web/auth
 import tests
+import wisp/testing
 
 pub fn login_not_logged_in_test() {
-  use state <- tests.with_state
+  use ctx <- tests.with_context
   let response =
-    tests.request("/login")
-    |> routes.router(state)
+    testing.get("/login", [])
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Error(Nil) = response.get_header(response, "location")
   let assert False =
-    response.body
-    |> string_builder.to_string
+    response
+    |> testing.string_body
     |> string.contains(auth.email_already_in_use_message)
 }
 
 pub fn login_already_registered_query_param_test() {
-  use state <- tests.with_state
+  use ctx <- tests.with_context
   let response =
-    tests.request("/login")
-    |> request.set_query([#("already-registered", "louis@example.com")])
-    |> routes.router(state)
+    testing.get("/login?already-registered=louis@example.com", [])
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Error(Nil) = response.get_header(response, "location")
   let assert True =
-    response.body
-    |> string_builder.to_string
+    response
+    |> testing.string_body
     |> string.contains(auth.email_already_in_use_message)
   let assert True =
-    response.body
-    |> string_builder.to_string
+    response
+    |> testing.string_body
     |> string.contains("value=\"louis@example.com\"")
 }
 
 pub fn login_logged_in_test() {
-  use state <- tests.with_logged_in_state
+  use ctx <- tests.with_logged_in_context
   let response =
-    tests.request("/login")
-    |> routes.router(state)
-  let assert 302 = response.status
+    testing.get("/login", [])
+    |> router.handle_request(ctx)
+  let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
 }
 
 pub fn login_by_token_unknown_test() {
-  use state <- tests.with_state
+  use ctx <- tests.with_context
   let response =
-    tests.request("/login/1/token")
-    |> routes.router(state)
+    testing.get("/login/1/token", [])
+    |> router.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_no_token_test() {
-  use state <- tests.with_logged_in_state
-  let assert Some(user) = state.current_user
+  use ctx <- tests.with_logged_in_context
+  let assert Some(user) = ctx.current_user
   let response =
-    tests.request("/login/" <> int.to_string(user.id) <> "/token")
-    |> routes.router(state)
+    testing.get("/login/" <> int.to_string(user.id) <> "/token", [])
+    |> router.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_wrong_token_test() {
-  use state <- tests.with_logged_in_state
-  let assert Some(user) = state.current_user
-  let assert Ok(Some(_)) = user.create_login_token(state.db, user.id)
+  use ctx <- tests.with_logged_in_context
+  let assert Some(user) = ctx.current_user
+  let assert Ok(Some(_)) = user.create_login_token(ctx.db, user.id)
   let response =
-    tests.request("/login/" <> int.to_string(user.id) <> "/token")
-    |> routes.router(state)
+    testing.get("/login/" <> int.to_string(user.id) <> "/token", [])
+    |> router.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_ok_test() {
-  use state <- tests.with_logged_in_state
-  let assert Some(user) = state.current_user
-  let assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
+  use ctx <- tests.with_logged_in_context
+  let assert Some(user) = ctx.current_user
+  let assert Ok(Some(token)) = user.create_login_token(ctx.db, user.id)
   let response =
-    tests.request("/login/" <> int.to_string(user.id) <> "/" <> token)
-    |> routes.router(state)
-  let assert 302 = response.status
+    testing.get("/login/" <> int.to_string(user.id) <> "/" <> token, [])
+    |> router.handle_request(ctx)
+  let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
   let assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
 }
 
 pub fn login_by_token_expired_test() {
-  use state <- tests.with_logged_in_state
-  let assert Some(user) = state.current_user
-  let assert Ok(Some(token)) = user.create_login_token(state.db, user.id)
+  use ctx <- tests.with_logged_in_context
+  let assert Some(user) = ctx.current_user
+  let assert Ok(Some(token)) = user.create_login_token(ctx.db, user.id)
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
-  let assert Ok(Nil) = database.exec(sql, state.db)
+  let assert Ok(Nil) = database.exec(sql, ctx.db)
   let response =
-    tests.request("/login/" <> int.to_string(user.id) <> "/" <> token)
-    |> routes.router(state)
+    testing.get("/login/" <> int.to_string(user.id) <> "/" <> token, [])
+    |> router.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
 
 pub fn sign_up_already_taken_test() {
-  use state <- tests.with_logged_in_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let assert Some(user) = state.current_user
-  let body = uri.query_to_string([#("email", user.email), #("name", "Louis")])
+  use ctx <- tests.with_logged_in_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let assert Some(user) = ctx.current_user
+  let form = [#("email", user.email), #("name", "Louis")]
   let response =
-    tests.request("/sign-up/" <> state.config.attend_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<body:utf8>>)
-    |> routes.router(state)
-  let assert 302 = response.status
+    testing.post_form("/sign-up/" <> ctx.config.attend_secret, [], form)
+    |> router.handle_request(ctx)
+  let assert 303 = response.status
   let assert Ok("/login?already-registered=puck%40example.com") =
     response.get_header(response, "location")
   let assert Error(Nil) = process.receive(emails, 0)
 }
 
 pub fn sign_up_ok_test() {
-  use state <- tests.with_state
-  let #(state, emails) = tests.track_sent_emails(state)
-  let body =
-    uri.query_to_string([#("email", "louis@example.com"), #("name", "Louis")])
+  use ctx <- tests.with_context
+  let #(ctx, emails) = tests.track_sent_emails(ctx)
+  let form = [#("email", "louis@example.com"), #("name", "Louis")]
   let response =
-    tests.request("/sign-up/" <> state.config.attend_secret)
-    |> request.set_method(http.Post)
-    |> request.set_body(<<body:utf8>>)
-    |> routes.router(state)
+    testing.post_form("/sign-up/" <> ctx.config.attend_secret, [], form)
+    |> router.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok(email) = process.receive(emails, 0)
   let assert "Louis" = email.to_name

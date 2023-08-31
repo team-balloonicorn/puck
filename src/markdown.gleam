@@ -1,2 +1,2 @@
-pub external fn to_html(String) -> String =
-  "erlmarkdown" "conv"
+@external(erlang, "erlmarkdown", "conv")
+pub fn to_html(markdown: String) -> String

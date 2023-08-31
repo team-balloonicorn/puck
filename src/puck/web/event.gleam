@@ -1,7 +1,4 @@
-import gleam/string_builder.{StringBuilder}
 import gleam/http
-import gleam/http/request.{Request}
-import gleam/http/response.{Response}
 import gleam/option.{None, Some}
 import gleam/string
 import gleam/result
@@ -12,8 +9,9 @@ import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/user.{Application}
 import puck/fact
-import puck/web.{State, p}
+import puck/web.{Context, p}
 import markdown
+import wisp.{Request, Response}
 
 pub const costs = [
   #("Site fee", 300_000),
@@ -104,47 +102,48 @@ fn all_fields() -> List(String) {
 }
 
 // TODO: fact editing
-pub fn information(request: Request(BitString), state: State) {
+pub fn information(request: Request, ctx: Context) -> Response {
   case request.method {
-    http.Get -> show_information(state)
-    http.Post -> save_fact(request, state)
-    _ -> web.method_not_allowed()
+    http.Get -> show_information(ctx)
+    http.Post -> save_fact(request, ctx)
+    _ -> wisp.method_not_allowed([http.Get, http.Post])
   }
 }
 
 // TODO: test
 // TODO: test admin only
-fn save_fact(request: Request(BitString), state: State) {
-  use _ <- web.require_admin_user(state)
-  use params <- web.require_form_urlencoded_body(request)
+fn save_fact(request: Request, ctx: Context) -> Response {
+  use _ <- web.require_admin_user(ctx)
+  use form <- wisp.require_form(request)
+  let params = form.values
   use detail <- web.try_(
     list.key_find(params, "detail"),
-    web.unprocessable_entity,
+    wisp.unprocessable_entity,
   )
   use summary <- web.try_(
     list.key_find(params, "summary"),
-    web.unprocessable_entity,
+    wisp.unprocessable_entity,
   )
   use section_id <- web.try_(
     params
     |> list.key_find("section_id")
     |> result.then(int.parse),
-    web.unprocessable_entity,
+    wisp.unprocessable_entity,
   )
-  let assert Ok(_) = fact.insert(state.db, section_id, summary, detail, 0.0)
-  web.redirect("/information")
+  let assert Ok(_) = fact.insert(ctx.db, section_id, summary, detail, 0.0)
+  wisp.redirect("/information")
 }
 
 // TODO: test
 // TODO: test form showing
-fn show_information(state: State) {
-  use user <- web.require_user(state)
-  let assert Ok(sections) = fact.list_all_sections(state.db)
+fn show_information(ctx: Context) -> Response {
+  use user <- web.require_user(ctx)
+  let assert Ok(sections) = fact.list_all_sections(ctx.db)
 
   let form = case user.is_admin {
     False -> html.Nothing
     True -> {
-      let assert Ok(sections) = fact.list_all_sections(state.db)
+      let assert Ok(sections) = fact.list_all_sections(ctx.db)
       let sections =
         sections
         |> list.map(fn(section) {
@@ -197,7 +196,7 @@ fn show_information(state: State) {
   }
 
   let section_html = fn(section: fact.Section) {
-    let assert Ok(facts) = fact.list_for_section(state.db, section.id)
+    let assert Ok(facts) = fact.list_for_section(ctx.db, section.id)
     let id = slug(section.title)
 
     html.Fragment([
@@ -224,7 +223,7 @@ document.getElementById(document.location.hash.slice(1))
           [],
           [
             html.Text("Can't find what you wanna know? "),
-            web.mailto("Send us an email!", state.config.help_email),
+            web.mailto("Send us an email!", ctx.config.help_email),
           ],
         ),
         html.Fragment(list.map(sections, section_html)),
@@ -233,22 +232,22 @@ document.getElementById(document.location.hash.slice(1))
       ],
     ))
 
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
+  html
+  |> wisp.html_response(200)
 }
 
-pub fn attendance(request: Request(BitString), state: State) {
+pub fn attendance(request: Request, ctx: Context) -> Response {
   case request.method {
-    http.Get -> attendance_form(state)
-    http.Post -> register_attendance(request, state)
-    _ -> web.method_not_allowed()
+    http.Get -> attendance_form(ctx)
+    http.Post -> register_attendance(request, ctx)
+    _ -> wisp.method_not_allowed([http.Get, http.Post])
   }
 }
 
-fn register_attendance(request: Request(BitString), state: State) {
-  use user <- web.require_user(state)
-  use params <- web.require_form_urlencoded_body(request)
+fn register_attendance(request: Request, ctx: Context) -> Response {
+  use user <- web.require_user(ctx)
+  use form <- wisp.require_form(request)
+  let params = form.values
   let get_answer = fn(map, name) {
     case list.key_find(params, name) {
       Ok(value) -> map.insert(map, name, value)
@@ -256,8 +255,8 @@ fn register_attendance(request: Request(BitString), state: State) {
     }
   }
   let answers = list.fold(all_fields(), map.new(), get_answer)
-  let assert Ok(_) = user.insert_application(state.db, user.id, answers)
-  web.redirect("/")
+  let assert Ok(_) = user.insert_application(ctx.db, user.id, answers)
+  wisp.redirect("/")
 }
 
 fn field_html(question: Question) -> html.Node(a) {
@@ -310,45 +309,41 @@ fn field_html(question: Question) -> html.Node(a) {
   web.form_group(question.text, elements)
 }
 
-pub fn application_form(state: State) -> Response(StringBuilder) {
-  let html =
-    html.main(
-      [Attr("role", "main"), attrs.class("content")],
-      [
-        web.flamingo(),
-        html.h1_text([], "Midsummer Night's Tea Party 2023"),
-        web.page_nav(state.current_user),
-        web.p(
-          "One person per submission please! We need to know about everyone who is coming.",
-        ),
-        html.form(
-          [
-            attrs.class("attendee-form"),
-            attrs.action("/" <> state.config.attend_secret),
-            Attr("method", "post"),
-            Attr("onsubmit", "this.disable = true"),
-          ],
-          [
-            html.div([], list.map(questions, field_html)),
-            web.submit_input_group("Sign up!"),
-          ],
-        ),
-      ],
-    )
-    |> web.html_page
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
+pub fn application_form(ctx: Context) -> Response {
+  html.main(
+    [Attr("role", "main"), attrs.class("content")],
+    [
+      web.flamingo(),
+      html.h1_text([], "Midsummer Night's Tea Party 2023"),
+      web.page_nav(ctx.current_user),
+      web.p(
+        "One person per submission please! We need to know about everyone who is coming.",
+      ),
+      html.form(
+        [
+          attrs.class("attendee-form"),
+          attrs.action("/" <> ctx.config.attend_secret),
+          Attr("method", "post"),
+          Attr("onsubmit", "this.disable = true"),
+        ],
+        [
+          html.div([], list.map(questions, field_html)),
+          web.submit_input_group("Sign up!"),
+        ],
+      ),
+    ],
+  )
+  |> web.html_page
+  |> wisp.html_response(200)
 }
 
-fn attendance_form(state: State) {
-  let html = web.html_page(attendance_html(state))
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
+fn attendance_form(ctx: Context) -> Response {
+  attendance_html(ctx)
+  |> web.html_page
+  |> wisp.html_response(200)
 }
 
-fn attendance_html(state: State) -> html.Node(a) {
+fn attendance_html(ctx: Context) -> html.Node(a) {
   html.main(
     [Attr("role", "main"), attrs.class("content")],
     [
@@ -443,7 +438,7 @@ fn attendance_html(state: State) -> html.Node(a) {
             [
               html.Text("If you've any questions before or after payment "),
               html.a_text(
-                [attrs.href("mailto:" <> state.config.help_email)],
+                [attrs.href("mailto:" <> ctx.config.help_email)],
                 "email us",
               ),
               html.Text(" and we'll help you out."),
@@ -452,7 +447,7 @@ fn attendance_html(state: State) -> html.Node(a) {
         ],
       ),
       html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
-      case state.current_user {
+      case ctx.current_user {
         Some(_) ->
           html.div(
             [attrs.class("center form-group")],
@@ -467,7 +462,7 @@ fn attendance_html(state: State) -> html.Node(a) {
           html.form(
             [
               attrs.class("attendee-form"),
-              attrs.action("/sign-up/" <> state.config.attend_secret),
+              attrs.action("/sign-up/" <> ctx.config.attend_secret),
               Attr("method", "post"),
               Attr("onsubmit", "this.disable = true"),
             ],

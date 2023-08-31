@@ -1,12 +1,11 @@
 import sqlight.{ConstraintPrimarykey, SqlightError}
 import gleam/list
-import gleam/json
 import gleam/string.{lowercase} as stringmod
 import gleam/result
 import gleam/dynamic.{Dynamic, element, field, int, string}
 import puck/error.{Error}
 import puck/database
-import utility
+import gleam/bool
 import gleam/pair
 
 pub type Payment {
@@ -19,7 +18,7 @@ pub type Payment {
   )
 }
 
-pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
+pub fn from_dynamic(dyn: Dynamic) -> Result(Payment, dynamic.DecodeErrors) {
   let decoder =
     dynamic.decode5(
       Payment,
@@ -39,7 +38,7 @@ pub fn from_json(json: String) -> Result(Payment, json.DecodeError) {
       ),
     )
 
-  use payment <- result.map(json.decode(from: json, using: decoder))
+  use payment <- result.map(decoder(dyn))
   Payment(..payment, reference: lowercase(payment.reference))
 }
 
@@ -59,7 +58,7 @@ pub fn insert(
   conn: database.Connection,
   payment: Payment,
 ) -> Result(Bool, Error) {
-  use <- utility.guard(when: payment.amount <= 0, return: Ok(False))
+  use <- bool.guard(when: payment.amount <= 0, return: Ok(False))
 
   let sql =
     "

@@ -1,13 +1,13 @@
-import bcrypter
-import gleam/bit_builder.{BitBuilder}
+import beecrypt
 import gleam/string_builder.{StringBuilder}
 import gleam/bit_string
 import gleam/crypto
 import gleam/http.{Https}
 import gleam/http/cookie
-import gleam/http/request.{Request}
-import gleam/http/response.{Response}
+import gleam/http/request
+import gleam/http/response
 import gleam/int
+import gleam/bool
 import gleam/list
 import gleam/option.{None, Option, Some}
 import gleam/result
@@ -18,35 +18,28 @@ import puck/database
 import puck/email.{Email}
 import puck/error.{Error}
 import puck/user.{User}
-import puck/web.{State}
-import utility
+import puck/web.{Context}
+import wisp.{Request, Response}
 
 const auth_cookie = "uid"
 
-pub fn login(
-  request: Request(BitString),
-  state: State,
-) -> Response(StringBuilder) {
-  use <- utility.guard(
-    when: state.current_user != None,
-    return: web.redirect("/"),
-  )
+pub fn login(request: Request, ctx: Context) -> Response {
+  use <- bool.guard(when: ctx.current_user != None, return: wisp.redirect("/"))
 
   case request.method {
     http.Get -> login_form_page(request)
-    http.Post -> attempt_login(request, state)
-    _ -> web.method_not_allowed()
+    http.Post -> attempt_login(request, ctx)
+    _ -> wisp.method_not_allowed([http.Get, http.Post])
   }
 }
 
-fn login_form_page(request: Request(BitString)) -> Response(StringBuilder) {
+fn login_form_page(request: Request) -> Response {
   let mode = login_page_mode_from_query(request)
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(login_page_html(mode))
+  login_page_html(mode)
+  |> wisp.html_response(200)
 }
 
-fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
+fn login_page_mode_from_query(request: Request) -> LoginPageMode {
   let result = {
     let query = option.unwrap(request.query, "")
     use query <- result.then(uri.parse_query(query))
@@ -58,54 +51,51 @@ fn login_page_mode_from_query(request: Request(BitString)) -> LoginPageMode {
   }
 }
 
-fn attempt_login(
-  request: Request(BitString),
-  state: State,
-) -> Response(StringBuilder) {
-  use params <- web.require_form_urlencoded_body(request)
+fn attempt_login(request: Request, ctx: Context) -> Response {
+  use form <- wisp.require_form(request)
+  let params = form.values
   use email <- web.try_(
     list.key_find(params, "email"),
-    or: web.unprocessable_entity,
+    or: wisp.unprocessable_entity,
   )
   use user <- web.try_(
-    user.get_by_email(state.db, email),
-    or: web.unprocessable_entity,
+    user.get_by_email(ctx.db, email),
+    or: wisp.unprocessable_entity,
   )
 
-  let html = case user {
+  case user {
     Some(user) -> {
-      state.send_email(login_email(user, state.db))
+      ctx.send_email(login_email(user, ctx.db))
       login_email_sent_page()
     }
     None -> login_page_html(UserNotFound)
   }
-
-  response.new(200)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
+  |> wisp.html_response(200)
 }
 
-pub fn sign_up(request: Request(BitString), state: State) {
-  use <- utility.guard(request.method != http.Post, web.method_not_allowed())
+pub fn sign_up(request: Request, ctx: Context) {
+  use <- wisp.require_method(request, http.Post)
 
-  use params <- web.require_form_urlencoded_body(request)
-  use name <- web.try_(list.key_find(params, "name"), web.unprocessable_entity)
+  use form <- wisp.require_form(request)
+  use name <- web.try_(
+    list.key_find(form.values, "name"),
+    wisp.unprocessable_entity,
+  )
   use email <- web.try_(
-    list.key_find(params, "email"),
-    web.unprocessable_entity,
+    list.key_find(form.values, "email"),
+    wisp.unprocessable_entity,
   )
 
-  case user.insert(state.db, name: name, email: email) {
+  case user.insert(ctx.db, name: name, email: email) {
     Ok(user) -> {
-      state.send_email(login_email(user, state.db))
-      response.new(200)
-      |> response.prepend_header("content-type", "text/html")
-      |> response.set_body(login_email_sent_page())
+      ctx.send_email(login_email(user, ctx.db))
+      login_email_sent_page()
+      |> wisp.html_response(200)
     }
 
     Error(error.EmailAlreadyInUse) -> {
       let query = uri.query_to_string([#("already-registered", email)])
-      web.redirect("/login?" <> query)
+      wisp.redirect("/login?" <> query)
     }
   }
 }
@@ -190,72 +180,68 @@ fn layout(content: List(html.Node(a))) -> html.Node(a) {
   html.main([attrs.Attr("role", "main"), attrs.class("content login")], content)
 }
 
-pub fn login_via_token(user_id: String, token: String, state: State) {
+pub fn login_via_token(user_id: String, token: String, ctx: Context) {
   use user_id <- web.try_(int.parse(user_id), bad_token_page)
   use hash <- web.try_(
-    user.get_login_token_hash(state.db, user_id),
+    user.get_login_token_hash(ctx.db, user_id),
     bad_token_page,
   )
   use hash <- web.some(hash, bad_token_page)
-  case bcrypter.verify(token, hash) {
+  case beecrypt.verify(token, hash) {
     True ->
       // TODO: expire after a period of time instead
       // TODO: update error copy to reflect that it is expiry based
-      // assert Ok(_) = user.delete_login_token_hash(state.db, user_id)
-      web.redirect("/")
-      |> set_signed_user_id_cookie(user_id, state.config.signing_secret)
+      // assert Ok(_) = user.delete_login_token_hash(ctx.db, user_id)
+      wisp.redirect("/")
+      |> set_signed_user_id_cookie(user_id, ctx.config.signing_secret)
     False -> bad_token_page()
   }
 }
 
-fn bad_token_page() {
-  let html =
-    [
-      web.flamingo(),
-      web.p(
-        "Sorry, that link is invalid. This may be because it is too old and has
+fn bad_token_page() -> Response {
+  [
+    web.flamingo(),
+    web.p(
+      "Sorry, that link is invalid. This may be because it is too old and has
         expired, or because someone used the login page again to request a new
         link.",
-      ),
-      html.p(
-        [],
-        [
-          html.Text(
-            "Please check your email for a new login link. If you can't find one
+    ),
+    html.p(
+      [],
+      [
+        html.Text(
+          "Please check your email for a new login link. If you can't find one
             request a new one using the ",
-          ),
-          html.a([Attr("href", "/login")], [html.Text("login page")]),
-          html.Text(
-            " and use that to login, ensuring the email was received at a time
+        ),
+        html.a([Attr("href", "/login")], [html.Text("login page")]),
+        html.Text(
+          " and use that to login, ensuring the email was received at a time
             after you used the login page to request it.",
-          ),
-        ],
-      ),
-    ]
-    |> layout
-    |> web.html_page
-
-  response.new(422)
-  |> response.prepend_header("content-type", "text/html")
-  |> response.set_body(html)
+        ),
+      ],
+    ),
+  ]
+  |> layout
+  |> web.html_page
+  |> wisp.html_response(422)
 }
 
 fn set_signed_user_id_cookie(
-  response: Response(a),
+  response: Response,
   user_id: Int,
   signing_secret: String,
-) -> Response(a) {
+) -> Response {
   <<int.to_string(user_id):utf8>>
   |> crypto.sign_message(<<signing_secret:utf8>>, crypto.Sha256)
   |> response.set_cookie(response, auth_cookie, _, cookie.defaults(Https))
 }
 
 pub fn get_user_from_session(
-  request: Request(a),
+  request: Request,
   db: database.Connection,
   signing_secret: String,
-  next: fn(Option(User)) -> Response(BitBuilder),
-) -> Response(BitBuilder) {
+  next: fn(Option(User)) -> Response,
+) -> Response {
   case get_user_from_cookie(request, db, signing_secret) {
     Ok(user) -> next(user)
 
@@ -263,14 +249,13 @@ pub fn get_user_from_session(
     // signing secret has changed. In either case set the cookie to expire
     // immediately.
     Error(Nil) ->
-      web.not_found()
+      wisp.not_found()
       |> expire_cookie(auth_cookie)
-      |> response.map(bit_builder.from_string_builder)
   }
 }
 
 fn get_user_from_cookie(
-  request: Request(a),
+  request: Request,
   db: database.Connection,
   signing_secret: String,
 ) -> Result(Option(User), Nil) {
@@ -291,7 +276,7 @@ fn get_user_from_cookie(
   }
 }
 
-fn expire_cookie(response: Response(a), name: String) -> Response(a) {
+fn expire_cookie(response: Response, name: String) -> Response {
   let attributes =
     cookie.Attributes(..cookie.defaults(Https), max_age: option.Some(0))
   response

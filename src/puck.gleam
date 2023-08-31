@@ -1,17 +1,22 @@
-import puck/web/routes
-import puck/email
-import puck/user
-import puck/database
-import puck/config.{Config}
-import gleam/io
-import gleam/int
-import gleam/option.{Some}
 import gleam/erlang
-import gleam/erlang/process
 import gleam/erlang/file
+import gleam/erlang/process
+import gleam/int
+import gleam/io
 import gleam/list
+import gleam/option.{Some}
 import gleam/string
 import mist
+import puck/config.{Config}
+import puck/database
+import puck/email
+import puck/pushover
+import puck/router
+import puck/user
+import puck/web.{Context}
+import puck/web/templates
+import puck/web/auth
+import wisp
 
 const usage = "USAGE:
   puck server
@@ -42,20 +47,40 @@ fn server(config: Config) {
   }
   database.with_connection(config.database_path, database.migrate)
 
+  let handle_request = fn(req) {
+    use db <- database.with_connection(config.database_path)
+    use user <- auth.get_user_from_session(req, db, config.signing_secret)
+    let ctx =
+      Context(
+        config: config,
+        db: db,
+        templates: templates.load(config),
+        current_user: user,
+        send_email: email.send(_, config),
+        send_admin_notification: fn(title, message) {
+          let assert Ok(_) = pushover.notify(config, title, message)
+          Nil
+        },
+      )
+    router.handle_request(req, ctx)
+  }
+
   // Start the web server process
   let assert Ok(_) =
-    mist.run_service(3000, routes.service(config), max_body_limit: 4_000_000)
-  io.println("Started listening on http://localhost:3000 ✨")
+    wisp.mist_handler(handle_request, config.signing_secret)
+    |> mist.new
+    |> mist.port(3000)
+    |> mist.start_http
 
   // Put the main process to sleep while the web server does its thing
   process.sleep_forever()
 }
 
-external fn halt(Int) -> Nil =
-  "erlang" "halt"
+@external(erlang, "erlang", "halt")
+fn halt(code: Int) -> Nil
 
-external fn install_log_handler(fn(String) -> Nil) -> Nil =
-  "puck_log_handler" "install"
+@external(erlang, "puck_log_handler", "install")
+fn install_log_handler(formatter: fn(String) -> Nil) -> Nil
 
 fn send_error_email(error: String, config: Config) {
   email.Email(

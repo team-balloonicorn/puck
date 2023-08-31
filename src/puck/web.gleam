@@ -1,9 +1,5 @@
-import gleam/bit_string
 import gleam/string_builder.{StringBuilder}
-import gleam/http/request.{Request}
-import gleam/http/response.{Response}
 import gleam/option.{None, Option, Some}
-import gleam/uri
 import puck/config.{Config}
 import puck/database
 import puck/user.{User}
@@ -12,13 +8,12 @@ import puck/web/templates.{Templates}
 import nakai
 import nakai/html
 import nakai/html/attrs.{Attr}
+import wisp.{Response}
 
 const login_path = "/login"
 
-const please_try_again = " Please try again and contact the organisers if the problem continues."
-
-pub type State {
-  State(
+pub type Context {
+  Context(
     templates: Templates,
     db: database.Connection,
     config: Config,
@@ -28,105 +23,44 @@ pub type State {
   )
 }
 
-pub fn redirect(target: String) -> Response(StringBuilder) {
-  response.new(302)
-  |> response.set_header("location", target)
-  |> response.set_body("You are being redirected")
-  |> response.map(string_builder.from_string)
-}
-
-pub fn not_found() -> Response(StringBuilder) {
-  response.new(404)
-  |> response.set_body("There's nothing here.")
-  |> response.map(string_builder.from_string)
-}
-
-pub fn method_not_allowed() -> Response(StringBuilder) {
-  response.new(405)
-  |> response.set_body("Method not allowed")
-  |> response.map(string_builder.from_string)
-}
-
-pub fn unprocessable_entity() -> Response(StringBuilder) {
-  response.new(422)
-  |> response.set_body("Unprocessable entity." <> please_try_again)
-  |> response.map(string_builder.from_string)
-}
-
-pub fn bad_request() -> Response(StringBuilder) {
-  response.new(400)
-  |> response.set_body("Invalid request." <> please_try_again)
-  |> response.map(string_builder.from_string)
-}
-
-pub fn require_user(
-  state: State,
-  next: fn(User) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
-  case state.current_user {
+pub fn require_user(ctx: Context, next: fn(User) -> Response) -> Response {
+  case ctx.current_user {
     Some(user) -> next(user)
-    None -> redirect(login_path)
+    None -> wisp.redirect(login_path)
   }
 }
 
-pub fn require_admin_user(
-  state: State,
-  next: fn(User) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
-  use user <- require_user(state)
+pub fn require_admin_user(ctx: Context, next: fn(User) -> Response) -> Response {
+  use user <- require_user(ctx)
   case user.is_admin {
     True -> next(user)
-    False -> not_found()
-  }
-}
-
-pub fn require_bit_string_body(
-  request: Request(BitString),
-  next: fn(String) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
-  case bit_string.to_string(request.body) {
-    Ok(body) -> next(body)
-    Error(_) -> bad_request()
-  }
-}
-
-pub fn require_form_urlencoded_body(
-  request: Request(BitString),
-  next: fn(List(#(String, String))) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
-  use body <- require_bit_string_body(request)
-  case uri.parse_query(body) {
-    Ok(body) -> next(body)
-    Error(_) -> unprocessable_entity()
+    False -> wisp.not_found()
   }
 }
 
 pub fn try_(
   result: Result(a, b),
-  or alternative: fn() -> Response(StringBuilder),
-  then next: fn(a) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
+  or alternative: fn() -> Response,
+  then next: fn(a) -> Response,
+) -> Response {
   case result {
     Ok(value) -> next(value)
     Error(_) -> alternative()
   }
 }
 
-pub fn ok_or_404(
-  result: Result(a, b),
-  next: fn(a) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
+pub fn ok_or_404(result: Result(a, b), next: fn(a) -> Response) -> Response {
   case result {
     Ok(value) -> next(value)
-    Error(_) -> not_found()
+    Error(_) -> wisp.not_found()
   }
 }
 
 pub fn some(
   result: Option(a),
-  or alternative: fn() -> Response(StringBuilder),
-  then next: fn(a) -> Response(StringBuilder),
-) -> Response(StringBuilder) {
+  or alternative: fn() -> Response,
+  then next: fn(a) -> Response,
+) -> Response {
   case result {
     Some(value) -> next(value)
     None -> alternative()
