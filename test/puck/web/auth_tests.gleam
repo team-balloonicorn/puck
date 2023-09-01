@@ -5,7 +5,7 @@ import gleam/option.{Some}
 import gleam/string
 import puck/user
 import puck/database
-import puck/router
+import puck/routes
 import puck/web/auth
 import tests
 import wisp/testing
@@ -14,7 +14,7 @@ pub fn login_not_logged_in_test() {
   use ctx <- tests.with_context
   let response =
     testing.get("/login", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Error(Nil) = response.get_header(response, "location")
   let assert False =
@@ -27,7 +27,7 @@ pub fn login_already_registered_query_param_test() {
   use ctx <- tests.with_context
   let response =
     testing.get("/login?already-registered=louis@example.com", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Error(Nil) = response.get_header(response, "location")
   let assert True =
@@ -44,7 +44,7 @@ pub fn login_logged_in_test() {
   use ctx <- tests.with_logged_in_context
   let response =
     testing.get("/login", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
 }
@@ -53,7 +53,7 @@ pub fn login_by_token_unknown_test() {
   use ctx <- tests.with_context
   let response =
     testing.get("/login/1/token", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
@@ -63,7 +63,7 @@ pub fn login_by_token_no_token_test() {
   let assert Some(user) = ctx.current_user
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/token", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
@@ -74,7 +74,7 @@ pub fn login_by_token_wrong_token_test() {
   let assert Ok(Some(_)) = user.create_login_token(ctx.db, user.id)
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/token", [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
@@ -85,7 +85,7 @@ pub fn login_by_token_ok_test() {
   let assert Ok(Some(token)) = user.create_login_token(ctx.db, user.id)
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/" <> token, [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
   let assert Ok("uid" <> _) = response.get_header(response, "set-cookie")
@@ -99,7 +99,7 @@ pub fn login_by_token_expired_test() {
   let assert Ok(Nil) = database.exec(sql, ctx.db)
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/" <> token, [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 422 = response.status
   let assert Error(_) = response.get_header(response, "set-cookie")
 }
@@ -111,7 +111,7 @@ pub fn sign_up_already_taken_test() {
   let form = [#("email", user.email), #("name", "Louis")]
   let response =
     testing.post_form("/sign-up/" <> ctx.config.attend_secret, [], form)
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/login?already-registered=puck%40example.com") =
     response.get_header(response, "location")
@@ -124,7 +124,7 @@ pub fn sign_up_ok_test() {
   let form = [#("email", "louis@example.com"), #("name", "Louis")]
   let response =
     testing.post_form("/sign-up/" <> ctx.config.attend_secret, [], form)
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok(email) = process.receive(emails, 0)
   let assert "Louis" = email.to_name

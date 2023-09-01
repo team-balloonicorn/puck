@@ -11,7 +11,7 @@ import puck/config.{Config}
 import puck/database
 import puck/email
 import puck/pushover
-import puck/router
+import puck/routes
 import puck/user
 import puck/web.{Context}
 import puck/web/templates
@@ -62,7 +62,7 @@ fn server(config: Config) {
           Nil
         },
       )
-    router.handle_request(req, ctx)
+    routes.handle_request(req, ctx)
   }
 
   // Start the web server process

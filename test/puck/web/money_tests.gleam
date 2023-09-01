@@ -1,12 +1,10 @@
 import gleam/erlang/process
-import gleam/http
-import gleam/http/request
 import gleam/int
 import gleam/string
 import gleam/map
 import puck/payment.{Payment}
 import puck/user
-import puck/router
+import puck/routes
 import tests
 import wisp/testing
 
@@ -84,7 +82,7 @@ pub fn webhook_matching_reference_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -118,7 +116,7 @@ pub fn webhook_wrong_case_matching_reference_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -165,7 +163,7 @@ pub fn webhook_duplicate_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([_]) = payment.list_all(ctx.db)
 
@@ -185,7 +183,7 @@ pub fn webhook_unknown_reference_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([
     Payment(
@@ -213,7 +211,7 @@ pub fn webhook_non_positive_amount_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
@@ -231,7 +229,7 @@ pub fn webhook_wrong_method_test() {
       [#("content-type", "application/json")],
       payload,
     )
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 405 = response.status
   let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
@@ -245,7 +243,7 @@ pub fn webhook_wrong_secret_test() {
   let payload = payload("m-0123456789ab", 100)
   let response =
     testing.post("/api/payment/nope", [], payload)
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 404 = response.status
   let assert Ok([]) = payment.list_all(ctx.db)
   let assert Error(Nil) = process.receive(emails, 0)
