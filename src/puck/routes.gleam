@@ -13,7 +13,7 @@ import puck/web/auth
 import puck/web/event
 import puck/web/money
 import puck/web/admin
-import puck/web/static
+import puck/web/templates
 import wisp.{Request, Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
@@ -44,7 +44,7 @@ fn middleware(
   ctx: Context,
   handle_request: fn(Request, Context) -> Response,
 ) -> Response {
-  let static_directory = static.priv_directory() <> "/static"
+  let static_directory = templates.priv_directory() <> "/static"
   let req = wisp.method_override(req)
   use <- wisp.rescue_crashes
   use <- wisp.log_request(req)

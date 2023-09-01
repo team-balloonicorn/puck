@@ -4,7 +4,7 @@ import gleam/option.{Some}
 import gleam/string
 import gleam/list
 import puck/user
-import puck/router
+import puck/routes
 import wisp/testing
 import tests
 
@@ -13,7 +13,7 @@ pub fn attendance_form_not_logged_in_test() {
   let secret = ctx.config.attend_secret
   let response =
     testing.get("/" <> secret, [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert True =
     response
@@ -38,7 +38,7 @@ pub fn attendance_form_logged_in_test() {
   let secret = ctx.config.attend_secret
   let response =
     testing.get("/" <> secret, [])
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 200 = response.status
   let assert True =
     response
@@ -72,7 +72,7 @@ pub fn register_attendance_ok_test() {
   ]
   let response =
     testing.post_form("/" <> secret, [], form)
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
   let assert Ok(Some(application)) = user.get_application(ctx.db, user.id)
@@ -95,7 +95,7 @@ pub fn register_attendance_not_logged_in_test() {
   let secret = ctx.config.attend_secret
   let response =
     testing.post("/" <> secret, [], "")
-    |> router.handle_request(ctx)
+    |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/login") = response.get_header(response, "location")
 }

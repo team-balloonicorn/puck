@@ -12,7 +12,7 @@ pub fn load(config: Config) -> Templates {
 }
 
 @external(erlang, "puck_ffi", "priv_directory")
-fn priv_directory() -> String
+pub fn priv_directory() -> String
 
 fn load_template(
   name: String,

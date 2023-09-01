@@ -1,6 +1,5 @@
 import gleam/int
 import gleam/option.{None, Some}
-import gleam/http/request.{Request}
 import gleam/erlang/process.{Subject}
 import puck/config.{Config}
 import puck/database
