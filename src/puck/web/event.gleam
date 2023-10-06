@@ -314,7 +314,7 @@ pub fn application_form(ctx: Context) -> Response {
     [Attr("role", "main"), attrs.class("content")],
     [
       web.flamingo(),
-      html.h1_text([], "Midsummer Night's Tea Party 2023"),
+      html.h1_text([], "Midsummer Night's Tea Party 2024"),
       web.page_nav(ctx.current_user),
       web.p(
         "One person per submission please! We need to know about everyone who is coming.",
@@ -348,7 +348,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
     [Attr("role", "main"), attrs.class("content")],
     [
       web.flamingo(),
-      html.h1_text([], "Midsummer Night's Tea Party 2023"),
+      html.h1_text([], "Midsummer Night's Tea Party 2024"),
       html.h2_text([], "What is it?"),
       p(
         "Midsummer is a delightful little festival in a wonderful wooded
