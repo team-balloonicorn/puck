@@ -171,15 +171,19 @@ pub fn get_and_increment_interaction(
   database.maybe_one(sql, conn, arguments, decoder)
 }
 
-/// Create a login token for a user, storing the hash in the database.
+/// Get a login token for a user, creating and storing a new one if there is not
+/// one in the database that has not expired.
 ///
-pub fn create_login_token(
+/// Resets the timer on the token in the database if it is fresh.
+///
+pub fn get_or_create_login_token(
   conn: database.Connection,
   user_id: Int,
 ) -> Result(Option(String), Error) {
-  let token =
-    crypto.strong_random_bytes(24)
-    |> base.url_encode64(False)
+  let token = case get_login_token_hash(conn, user_id) {
+    Ok(option.Some(token)) -> token
+    _ -> base.url_encode64(crypto.strong_random_bytes(24), False)
+  }
   let hash = beecrypt.hash(token)
   let sql =
     "
@@ -192,7 +196,7 @@ pub fn create_login_token(
       id
     "
   let arguments = [sqlight.int(user_id), sqlight.text(hash)]
-  use row <- result.then(database.maybe_one(sql, conn, arguments, Ok))
+  use row <- result.try(database.maybe_one(sql, conn, arguments, Ok))
   row
   |> option.map(fn(_) { token })
   |> Ok

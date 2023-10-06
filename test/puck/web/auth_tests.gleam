@@ -71,7 +71,7 @@ pub fn login_by_token_no_token_test() {
 pub fn login_by_token_wrong_token_test() {
   use ctx <- tests.with_logged_in_context
   let assert Some(user) = ctx.current_user
-  let assert Ok(Some(_)) = user.create_login_token(ctx.db, user.id)
+  let assert Ok(Some(_)) = user.get_or_create_login_token(ctx.db, user.id)
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/token", [])
     |> routes.handle_request(ctx)
@@ -82,7 +82,7 @@ pub fn login_by_token_wrong_token_test() {
 pub fn login_by_token_ok_test() {
   use ctx <- tests.with_logged_in_context
   let assert Some(user) = ctx.current_user
-  let assert Ok(Some(token)) = user.create_login_token(ctx.db, user.id)
+  let assert Ok(Some(token)) = user.get_or_create_login_token(ctx.db, user.id)
   let response =
     testing.get("/login/" <> int.to_string(user.id) <> "/" <> token, [])
     |> routes.handle_request(ctx)
@@ -94,7 +94,7 @@ pub fn login_by_token_ok_test() {
 pub fn login_by_token_expired_test() {
   use ctx <- tests.with_logged_in_context
   let assert Some(user) = ctx.current_user
-  let assert Ok(Some(token)) = user.create_login_token(ctx.db, user.id)
+  let assert Ok(Some(token)) = user.get_or_create_login_token(ctx.db, user.id)
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
   let assert Ok(Nil) = database.exec(sql, ctx.db)
   let response =

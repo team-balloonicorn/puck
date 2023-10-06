@@ -189,7 +189,7 @@ pub fn login_token_hash_test() {
   let id = user.id
 
   // Create a token and fetch it
-  let assert Ok(Some(token)) = user.create_login_token(db, id)
+  let assert Ok(Some(token)) = user.get_or_create_login_token(db, id)
   let assert Ok(Some(hash)) = user.get_login_token_hash(db, id)
 
   // Verify it

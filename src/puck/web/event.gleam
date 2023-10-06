@@ -359,7 +359,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         them!",
       ),
       html.h2_text([], "When is it?"),
-      p("5pm Thursday the 6th June to 10am Monday the 12th June"),
+      p("5pm Thursday the 6th June to 10am Monday the 10th June"),
       html.h2_text([], "Where is it?"),
       p(
         "A wonderful little woodland festival site, 20 minutes drive from King's

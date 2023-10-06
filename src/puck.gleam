@@ -137,6 +137,6 @@ fn ask_confirmation(prompt: String, next: fn() -> Nil) -> Nil {
 fn login_url(user_id: String, config: Config) -> Nil {
   use db <- database.with_connection(config.database_path)
   let assert Ok(id) = int.parse(user_id)
-  let assert Ok(Some(token)) = user.create_login_token(db, id)
+  let assert Ok(Some(token)) = user.get_or_create_login_token(db, id)
   io.println("https://puck.midsummer.lpil.uk/login/" <> user_id <> "/" <> token)
 }

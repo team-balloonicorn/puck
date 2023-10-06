@@ -101,7 +101,7 @@ pub fn sign_up(request: Request, ctx: Context) {
 }
 
 fn login_email(user: User, db: database.Connection) -> Email {
-  let assert Ok(Some(token)) = user.create_login_token(db, user.id)
+  let assert Ok(Some(token)) = user.get_or_create_login_token(db, user.id)
   let id = int.to_string(user.id)
   let content =
     "Hello! 

@@ -82,8 +82,8 @@ pub fn register_attendance_ok_test() {
     #("accessibility-requirements", "I walk with a stick"),
     #("attended", "Yes"),
     #("dietary-requirements", "Vegan"),
-    #("support-network-attended", "Lauren"),
     #("support-network", "Lauren, Bell"),
+    #("support-network-attended", "Lauren"),
   ] =
     application.answers
     |> map.to_list
