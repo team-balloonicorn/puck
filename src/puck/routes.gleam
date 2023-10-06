@@ -1,5 +1,6 @@
 import gleam/string_builder.{StringBuilder}
 import gleam/http/response
+import gleam/bool
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
@@ -50,7 +51,18 @@ fn middleware(
   use <- wisp.log_request(req)
   use <- wisp.serve_static(req, from: static_directory, under: "/")
 
-  handle_request(req, ctx)
+  let resp = handle_request(req, ctx)
+
+  use <- bool.guard(when: resp.body != wisp.Empty, return: resp)
+
+  let body = case resp.status {
+    500 -> "Sorry, there was an internal server error. Please try again later."
+    422 -> "Sorry, the request failed. Please try again later"
+    _ -> "Sorry, something went wrong. Please try again later."
+  }
+
+  resp
+  |> response.set_body(wisp.Text(string_builder.from_string(body)))
 }
 
 fn home(ctx: Context) -> Response {
