@@ -20,7 +20,7 @@ with money as (
 select
   users.name as name,
   applications.answers ->> 'attended' as "attended before",
-  applications.answers ->> 'pod-members' as "support network"
+  applications.answers ->> 'support-network' as "support network"
 from users
 join
   applications on applications.user_id = users.id

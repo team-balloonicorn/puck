@@ -10,7 +10,7 @@ ANSWER="$4"
 VALID_QUESTIONS=$(cat <<EOF
 accessibility-requirements
 dietary-requirements
-pod-members
+support-network
 EOF
 )
 
@@ -18,7 +18,7 @@ EOF
 # error message if not.
 if ! echo "$VALID_QUESTIONS" | grep -q "^$QUESTION\$"; then
   echo "Invalid question: $QUESTION" >&2
-  echo "Valid questions are:" $VALID_QUESTIONS >&2
+  echo "Valid questions are: $VALID_QUESTIONS" >&2
   exit 1
 fi
 

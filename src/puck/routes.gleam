@@ -79,16 +79,15 @@ fn dashboard_html(
   user: User,
   application: Application,
   payments: List(Payment),
-  total_contributions: Int,
+  _total_contributions: Int,
   config: Config,
 ) -> StringBuilder {
   let user_contributed =
-    payments
-    |> list.fold(0, fn(total, payment) { total + payment.amount })
-    |> money.pence_to_pounds
-  let remaining =
-    money.pence_to_pounds(event.total_cost() - total_contributions)
-  let event_cost = money.pence_to_pounds(event.total_cost())
+    list.fold(payments, 0, fn(total, payment) { total + payment.amount })
+  let user_contributed_text = money.pence_to_pounds(user_contributed)
+  // let remaining =
+  //   money.pence_to_pounds(event.total_cost() - total_contributions)
+  // let event_cost = money.pence_to_pounds(event.total_cost())
 
   let funding_section =
     html.Fragment([
@@ -96,16 +95,21 @@ fn dashboard_html(
       html.p(
         [],
         [
-          html.Text("We need " <> remaining <> " more to reach "),
-          html.a([attrs.href("/costs")], [html.Text(event_cost)]),
-          html.Text(
-            " and break even. You have contributed " <> user_contributed <> ".",
-          ),
+          // html.Text("We need " <> remaining <> " more to reach "),
+          // html.a([attrs.href("/costs")], [html.Text(event_cost)]),
+          // html.Text(
+          //   " and break even. "
+          // ),
+          html.Text("You have contributed " <> user_contributed_text <> "."),
+          case user_contributed > 0 {
+            False -> html.Text("")
+            True -> html.Text(" Thank you! 💖")
+          },
         ],
       ),
       p(
-        "We don't make any money off this event and the core team typically pay
-        around £500 each. Please contribute what you can. Recommended contributions:",
+        "We don't make any money off this event. Please contribute what you can.
+        Recommended contributions:",
       ),
       event.costs_table(),
       p(
@@ -130,7 +134,7 @@ fn dashboard_html(
   let info_list = [
     web.dt_dl("What's your name?", user.name),
     web.dt_dl("What's your email?", user.email),
-    web.dt_dl("How much have you contributed?", user_contributed),
+    web.dt_dl("How much have you contributed?", user_contributed_text),
     html.Fragment(event.application_answers_list_html(application)),
   ]
 

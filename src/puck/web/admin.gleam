@@ -41,7 +41,7 @@ pub fn dashboard(request: Request, ctx: Context) -> Response {
       table(
         [
           "Id", "Name", "Email", "Visits", "Paid", "Reference", "Attended",
-          "Pod", "Pod attended", "Diet", "Accessibility",
+          "Support network", "Support network attended", "Diet", "Accessibility",
         ],
         list.map(users, user),
       ),
@@ -83,8 +83,8 @@ fn user_row(user: User, ctx: Context) -> html.Node(a) {
         money.pence_to_pounds(total),
         application.payment_reference,
         get(event.field_attended),
-        get(event.field_pod_members),
-        get(event.field_pod_attended),
+        get(event.field_support_network),
+        get(event.field_support_network_attended),
         get(event.field_dietary_requirements),
         get(event.field_accessibility_requirements),
       ]

@@ -34,9 +34,9 @@ pub fn total_cost() {
 
 pub const field_attended = "attended"
 
-pub const field_pod_members = "pod-members"
+pub const field_support_network = "support-network"
 
-pub const field_pod_attended = "pod-attended"
+pub const field_support_network_attended = "support-network-attended"
 
 pub const field_dietary_requirements = "dietary-requirements"
 
@@ -61,7 +61,7 @@ const questions = [
   ),
   Question(
     text: "Who is in your support network?",
-    key: field_pod_members,
+    key: field_support_network,
     blurb: [
       "Your support network are the people who are responsible for you. If
       you are unwell, having a bad time, or otherwise need help then your
@@ -73,7 +73,7 @@ const questions = [
   ),
   Question(
     text: "Who in your support network has attended before?",
-    key: field_pod_attended,
+    key: field_support_network_attended,
     blurb: [],
     kind: Text("Titania"),
   ),
@@ -352,19 +352,24 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
       html.h2_text([], "What is it?"),
       p(
         "Midsummer is a delightful little festival in a wonderful wooded
-        location. Expect fun and joy with a delightful group of people.
+        location. Expect fun and joy with a delightful group of people, and
+        luxuries you might not expect from a little festival, such as communal
+        hot meals and hot showers.
         If you're here you should know someone who has been before, so ask
         them!",
       ),
       html.h2_text([], "When is it?"),
-      p("5pm Thursday the 8th June to 10am Monday the 12th June"),
+      p("5pm Thursday the 6th June to 10am Monday the 12th June"),
       html.h2_text([], "Where is it?"),
-      p("The same site as usual, 20 minutes drive from King's Lynn in Norfolk."),
+      p(
+        "A wonderful little woodland festival site, 20 minutes drive from King's
+        Lynn in Norfolk.",
+      ),
       html.h2_text([], "How much does it cost?"),
       p(
         "This is a collaborative event where people contribute what they can
-        afford. We don't make any money off this event and the core team
-        typically pay around £500 each. Please contribute what you can.
+        afford. We don't make any money off this event. Please contribute what
+        you can.
         Recommended contributions:",
       ),
       costs_table(),
@@ -380,9 +385,8 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         dinner on Friday, Saturday, and Sunday.",
       ),
       p(
-        "If we get enough financial contributions early enough and get enough
-        kitchen volunteers we may be able to offer lunch also. We'll let you
-        know if this is the case.",
+        "We are hoping to do lunch too, just so long as we can get enough
+        kitchen volunteers.",
       ),
       html.h2_text([], "What facilities are there on site?"),
       p(
