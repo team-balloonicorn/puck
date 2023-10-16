@@ -1,4 +1,3 @@
-import beecrypt
 import gleam/map
 import gleam/option.{None, Some}
 import gleam/string
@@ -193,8 +192,8 @@ pub fn login_token_hash_test() {
   let assert Ok(Some(hash)) = user.get_login_token_hash(db, id)
 
   // Verify it
-  let assert True = beecrypt.verify(token, hash)
-  let assert False = beecrypt.verify("other", hash)
+  let assert True = token == hash
+  let assert False = "other" == hash
 
   // Old tokens are not valid
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"

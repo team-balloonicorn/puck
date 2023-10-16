@@ -78,6 +78,7 @@ create table if not exists users (
   is_admin integer not null default 0
     constraint valid_is_admin check (is_admin in (0, 1)),
 
+  -- Note this is no longer a hash, it's just the token.
   login_token_hash text unique,
 
   login_token_created_at text

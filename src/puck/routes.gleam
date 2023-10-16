@@ -58,6 +58,7 @@ fn middleware(
   let body = case resp.status {
     500 -> "Sorry, there was an internal server error. Please try again later."
     422 -> "Sorry, the request failed. Please try again later"
+    404 -> "Sorry, the page you were looking for could not be found."
     _ -> "Sorry, something went wrong. Please try again later."
   }
 

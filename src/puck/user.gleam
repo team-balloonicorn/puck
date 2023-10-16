@@ -1,4 +1,3 @@
-import beecrypt
 import gleam/base
 import gleam/crypto
 import gleam/dynamic.{Dynamic} as dy
@@ -184,7 +183,6 @@ pub fn get_or_create_login_token(
     Ok(option.Some(token)) -> token
     _ -> base.url_encode64(crypto.strong_random_bytes(24), False)
   }
-  let hash = beecrypt.hash(token)
   let sql =
     "
     update users set 
@@ -195,7 +193,7 @@ pub fn get_or_create_login_token(
     returning
       id
     "
-  let arguments = [sqlight.int(user_id), sqlight.text(hash)]
+  let arguments = [sqlight.int(user_id), sqlight.text(token)]
   use row <- result.try(database.maybe_one(sql, conn, arguments, Ok))
   row
   |> option.map(fn(_) { token })
