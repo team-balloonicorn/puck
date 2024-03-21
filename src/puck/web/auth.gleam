@@ -1,24 +1,25 @@
-import gleam/string_builder.{StringBuilder}
-import gleam/bit_string
+import gleam/bit_array
+import gleam/bool
 import gleam/crypto
 import gleam/http.{Https}
 import gleam/http/cookie
 import gleam/http/request
 import gleam/http/response
 import gleam/int
-import gleam/bool
 import gleam/list
-import gleam/option.{None, Option, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
+import gleam/string_builder.{type StringBuilder}
 import gleam/uri
 import nakai/html
-import nakai/html/attrs.{Attr}
+import nakai/html/attrs.{type Attr, Attr}
 import puck/database
-import puck/email.{Email}
-import puck/error.{Error}
-import puck/user.{User}
-import puck/web.{Context}
-import wisp.{Request, Response}
+import puck/email.{type Email, Email}
+import puck/error.{type Error}
+import puck/user.{type User}
+import puck/web.{type Context}
+import wisp.{type Request, type Response}
 
 const auth_cookie = "uid"
 
@@ -96,14 +97,15 @@ pub fn sign_up(request: Request, ctx: Context) {
       let query = uri.query_to_string([#("already-registered", email)])
       wisp.redirect("/login?" <> query)
     }
+
+    Error(e) -> panic as { string.inspect(e) }
   }
 }
 
 fn login_email(user: User, db: database.Connection) -> Email {
   let assert Ok(Some(token)) = user.get_or_create_login_token(db, user.id)
   let id = int.to_string(user.id)
-  let content =
-    "Hello! 
+  let content = "Hello! 
 
 Here's a link to log in: https://puck.midsummer.lpil.uk/login/" <> id <> "/" <> token <> "
 
@@ -151,25 +153,19 @@ fn login_page_html(mode: LoginPageMode) -> StringBuilder {
   }
 
   [
-    html.form(
-      [Attr("method", "POST")],
-      [
-        error,
-        web.flamingo(),
-        web.form_group(
-          "Welcome, friend. What's your email?",
-          web.email_input(
-            "email",
-            [Attr("required", "true"), attrs.value(email)],
-          ),
-        ),
-        web.submit_input_group("Login"),
-        html.p_text(
-          [],
-          "P.S. We use one essential 🍪 to record if you are logged in.",
-        ),
-      ],
-    ),
+    html.form([Attr("method", "POST")], [
+      error,
+      web.flamingo(),
+      web.form_group(
+        "Welcome, friend. What's your email?",
+        web.email_input("email", [Attr("required", "true"), attrs.value(email)]),
+      ),
+      web.submit_input_group("Login"),
+      html.p_text(
+        [],
+        "P.S. We use one essential 🍪 to record if you are logged in.",
+      ),
+    ]),
   ]
   |> layout
   |> web.html_page
@@ -205,20 +201,17 @@ fn bad_token_page() -> Response {
         expired, or because someone used the login page again to request a new
         link.",
     ),
-    html.p(
-      [],
-      [
-        html.Text(
-          "Please check your email for a new login link. If you can't find one
+    html.p([], [
+      html.Text(
+        "Please check your email for a new login link. If you can't find one
             request a new one using the ",
-        ),
-        html.a([Attr("href", "/login")], [html.Text("login page")]),
-        html.Text(
-          " and use that to login, ensuring the email was received at a time
+      ),
+      html.a([Attr("href", "/login")], [html.Text("login page")]),
+      html.Text(
+        " and use that to login, ensuring the email was received at a time
             after you used the login page to request it.",
-        ),
-      ],
-    ),
+      ),
+    ]),
   ]
   |> layout
   |> web.html_page
@@ -265,7 +258,7 @@ fn get_user_from_cookie(
     Ok(cookie) ->
       cookie
       |> crypto.verify_signed_message(<<signing_secret:utf8>>)
-      |> result.then(bit_string.to_string)
+      |> result.then(bit_array.to_string)
       |> result.then(int.parse)
       |> result.then(fn(user_id) {
         user.get_and_increment_interaction(db, user_id)

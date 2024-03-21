@@ -3,11 +3,11 @@ import gleam/http.{Post}
 import gleam/int
 import gleam/option.{None, Some}
 import gleam/string
-import puck/email.{Email}
-import puck/payment.{Payment}
-import puck/user.{User}
-import puck/web.{Context}
-import wisp.{Request, Response}
+import puck/email.{type Email, Email}
+import puck/payment.{type Payment}
+import puck/user.{type User}
+import puck/web.{type Context}
+import wisp.{type Request, type Response}
 
 pub fn payment_webhook(request: Request, ctx: Context) -> Response {
   use <- wisp.require_method(request, Post)

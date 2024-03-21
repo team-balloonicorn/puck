@@ -1,17 +1,17 @@
+import gleam/dict
 import gleam/http
-import gleam/option.{None, Some}
-import gleam/string
-import gleam/result
-import gleam/list
-import gleam/map
 import gleam/int
+import gleam/list
+import gleam/option.{None, Some}
+import gleam/result
+import gleam/string
+import markdown
 import nakai/html
 import nakai/html/attrs.{Attr}
-import puck/user.{Application}
 import puck/fact
-import puck/web.{Context, p}
-import markdown
-import wisp.{Request, Response}
+import puck/user.{type Application}
+import puck/web.{type Context, p}
+import wisp.{type Request, type Response}
 
 pub const costs = [
   #("Site fee", 300_000),
@@ -126,8 +126,8 @@ fn save_fact(request: Request, ctx: Context) -> Response {
   )
   use section_id <- web.try_(
     params
-    |> list.key_find("section_id")
-    |> result.then(int.parse),
+      |> list.key_find("section_id")
+      |> result.then(int.parse),
     wisp.unprocessable_entity,
   )
   let assert Ok(_) = fact.insert(ctx.db, section_id, summary, detail, 0.0)
@@ -190,7 +190,7 @@ fn show_information(ctx: Context) -> Response {
       ],
       [
         html.summary_text([], fact.summary),
-        html.UnsafeText(markdown.to_html(fact.detail)),
+        html.UnsafeInlineHtml(markdown.to_html(fact.detail)),
       ],
     )
   }
@@ -201,7 +201,7 @@ fn show_information(ctx: Context) -> Response {
 
     html.Fragment([
       html.h2_text([attrs.id(id)], section.title),
-      html.UnsafeText(markdown.to_html(section.blurb)),
+      html.UnsafeInlineHtml(markdown.to_html(section.blurb)),
       html.Fragment(list.map(facts, fact_html)),
     ])
   }
@@ -213,24 +213,20 @@ document.getElementById(document.location.hash.slice(1))
 "
 
   let html =
-    web.html_page(html.main(
-      [Attr("role", "main"), attrs.class("content")],
-      [
+    web.html_page(
+      html.main([Attr("role", "main"), attrs.class("content")], [
         web.flamingo(),
         html.h1_text([], "All the deets"),
         web.page_nav(Some(user)),
-        html.p(
-          [],
-          [
-            html.Text("Can't find what you wanna know? "),
-            web.mailto("Send us an email!", ctx.config.help_email),
-          ],
-        ),
+        html.p([], [
+          html.Text("Can't find what you wanna know? "),
+          web.mailto("Send us an email!", ctx.config.help_email),
+        ]),
         html.Fragment(list.map(sections, section_html)),
         form,
         html.Element("script", [], [html.Text(js)]),
-      ],
-    ))
+      ]),
+    )
 
   html
   |> wisp.html_response(200)
@@ -248,13 +244,13 @@ fn register_attendance(request: Request, ctx: Context) -> Response {
   use user <- web.require_user(ctx)
   use form <- wisp.require_form(request)
   let params = form.values
-  let get_answer = fn(map, name) {
+  let get_answer = fn(dict, name) {
     case list.key_find(params, name) {
-      Ok(value) -> map.insert(map, name, value)
-      Error(_) -> map
+      Ok(value) -> dict.insert(dict, name, value)
+      Error(_) -> dict
     }
   }
-  let answers = list.fold(all_fields(), map.new(), get_answer)
+  let answers = list.fold(all_fields(), dict.new(), get_answer)
   let assert Ok(_) = user.insert_application(ctx.db, user.id, answers)
   wisp.redirect("/")
 }
@@ -262,10 +258,10 @@ fn register_attendance(request: Request, ctx: Context) -> Response {
 fn field_html(question: Question) -> html.Node(a) {
   let field = case question.kind {
     Text(placeholder) ->
-      web.text_input(
-        question.key,
-        [Attr("required", ""), Attr("placeholder", placeholder)],
-      )
+      web.text_input(question.key, [
+        Attr("required", ""),
+        Attr("placeholder", placeholder),
+      ])
 
     Textarea(placeholder) ->
       html.textarea_text(
@@ -310,29 +306,26 @@ fn field_html(question: Question) -> html.Node(a) {
 }
 
 pub fn application_form(ctx: Context) -> Response {
-  html.main(
-    [Attr("role", "main"), attrs.class("content")],
-    [
-      web.flamingo(),
-      html.h1_text([], "Midsummer Night's Tea Party 2024"),
-      web.page_nav(ctx.current_user),
-      web.p(
-        "One person per submission please! We need to know about everyone who is coming.",
-      ),
-      html.form(
-        [
-          attrs.class("attendee-form"),
-          attrs.action("/" <> ctx.config.attend_secret),
-          Attr("method", "post"),
-          Attr("onsubmit", "this.disable = true"),
-        ],
-        [
-          html.div([], list.map(questions, field_html)),
-          web.submit_input_group("Sign up!"),
-        ],
-      ),
-    ],
-  )
+  html.main([Attr("role", "main"), attrs.class("content")], [
+    web.flamingo(),
+    html.h1_text([], "Midsummer Night's Tea Party 2024"),
+    web.page_nav(ctx.current_user),
+    web.p(
+      "One person per submission please! We need to know about everyone who is coming.",
+    ),
+    html.form(
+      [
+        attrs.class("attendee-form"),
+        attrs.action("/" <> ctx.config.attend_secret),
+        Attr("method", "post"),
+        Attr("onsubmit", "this.disable = true"),
+      ],
+      [
+        html.div([], list.map(questions, field_html)),
+        web.submit_input_group("Sign up!"),
+      ],
+    ),
+  ])
   |> web.html_page
   |> wisp.html_response(200)
 }
@@ -344,154 +337,134 @@ fn attendance_form(ctx: Context) -> Response {
 }
 
 fn attendance_html(ctx: Context) -> html.Node(a) {
-  html.main(
-    [Attr("role", "main"), attrs.class("content")],
-    [
-      web.flamingo(),
-      html.h1_text([], "Midsummer Night's Tea Party 2024"),
-      html.h2_text([], "What is it?"),
-      p(
-        "Midsummer is a delightful little festival in a wonderful wooded
+  html.main([Attr("role", "main"), attrs.class("content")], [
+    web.flamingo(),
+    html.h1_text([], "Midsummer Night's Tea Party 2024"),
+    html.h2_text([], "What is it?"),
+    p(
+      "Midsummer is a delightful little festival in a wonderful wooded
         location. Expect fun and joy with a delightful group of people, and
         luxuries you might not expect from a little festival, such as communal
         hot meals and hot showers.
         If you're here you should know someone who has been before, so ask
         them!",
-      ),
-      html.h2_text([], "When is it?"),
-      p("5pm Thursday the 6th June to 10am Monday the 10th June"),
-      html.h2_text([], "Where is it?"),
-      p(
-        "A wonderful little woodland festival site, 20 minutes drive from King's
+    ),
+    html.h2_text([], "When is it?"),
+    p("5pm Thursday the 6th June to 10am Monday the 10th June"),
+    html.h2_text([], "Where is it?"),
+    p(
+      "A wonderful little woodland festival site, 20 minutes drive from King's
         Lynn in Norfolk.",
-      ),
-      html.h2_text([], "How much does it cost?"),
-      p(
-        "This is a collaborative event where people contribute what they can
+    ),
+    html.h2_text([], "How much does it cost?"),
+    p(
+      "This is a collaborative event where people contribute what they can
         afford. We don't make any money off this event. Please contribute what
         you can.
         Recommended contributions:",
-      ),
-      costs_table(),
-      p(
-        "If you cannot afford this much please get in touch. No one is excluded
+    ),
+    costs_table(),
+    p(
+      "If you cannot afford this much please get in touch. No one is excluded
         from Midsummer.",
-      ),
-      html.h2_text([], "How many people will there be?"),
-      p("We are aiming for 100 people."),
-      html.h2_text([], "Will meals be included?"),
-      p(
-        "Yes! We will be providing the breakfast buffet, and a delicious hot
+    ),
+    html.h2_text([], "How many people will there be?"),
+    p("We are aiming for 100 people."),
+    html.h2_text([], "Will meals be included?"),
+    p(
+      "Yes! We will be providing the breakfast buffet, and a delicious hot
         dinner on Friday, Saturday, and Sunday.",
-      ),
-      p(
-        "We are hoping to do lunch too, just so long as we can get enough
+    ),
+    p(
+      "We are hoping to do lunch too, just so long as we can get enough
         kitchen volunteers.",
-      ),
-      html.h2_text([], "What facilities are there on site?"),
-      p(
-        "There are flushing toilets, running water, hot showers, and a dreamy
+    ),
+    html.h2_text([], "What facilities are there on site?"),
+    p(
+      "There are flushing toilets, running water, hot showers, and a dreamy
         outdoor bath. There is no mains electricity and the kitchen cannot be
         used by people other than kitchen crew.",
-      ),
-      html.h2_text([], "Where will people be sleeping?"),
-      p(
-        "Most people will be camping (so bring your tent), but there are a
+    ),
+    html.h2_text([], "Where will people be sleeping?"),
+    p(
+      "Most people will be camping (so bring your tent), but there are a
         limited number of sleeping structures. These structures will be
         allocated with priority going to people with accessibility
         requirements.",
-      ),
-      html.h2_text([], "Can I refund or sell my ticket?"),
-      p(
-        "Tickets can not be sold for safety reasons. We need to know who
+    ),
+    html.h2_text([], "Can I refund or sell my ticket?"),
+    p(
+      "Tickets can not be sold for safety reasons. We need to know who
         everyone is on site, any unexpected guests will be asked to leave. If we
         get enough contributions to cover our costs then we be able to offer
         refunds.",
-      ),
-      html.h2_text([], "Can I come?"),
-      html.p(
-        [],
-        [
-          html.Text(
-            "Yes! So long as you are with someone who has attended before.",
+    ),
+    html.h2_text([], "Can I come?"),
+    html.p([], [
+      html.Text("Yes! So long as you are with someone who has attended before."),
+      html.ol([], [
+        html.li_text(
+          [],
+          "You submit your details using the form on the next page.",
+        ),
+        html.li_text(
+          [],
+          "We give you a reference number and bank details on the next page.",
+        ),
+        html.li_text([], "You make a bank transfer to us with these details."),
+        html.li_text(
+          [],
+          "We send you an email confirmation and get everything ready.",
+        ),
+        html.li_text([], "We all have a delightful time in the woods ✨"),
+      ]),
+      html.p([], [
+        html.Text("If you've any questions before or after payment "),
+        html.a_text(
+          [attrs.href("mailto:" <> ctx.config.help_email)],
+          "email us",
+        ),
+        html.Text(" and we'll help you out."),
+      ]),
+    ]),
+    html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
+    case ctx.current_user {
+      Some(_) ->
+        html.div([attrs.class("center form-group")], [
+          html.a_text(
+            [attrs.class("button"), attrs.href("/")],
+            "Continue to your account",
           ),
-          html.ol(
-            [],
-            [
-              html.li_text(
-                [],
-                "You submit your details using the form on the next page.",
-              ),
-              html.li_text(
-                [],
-                "We give you a reference number and bank details on the next page.",
-              ),
-              html.li_text(
-                [],
-                "You make a bank transfer to us with these details.",
-              ),
-              html.li_text(
-                [],
-                "We send you an email confirmation and get everything ready.",
-              ),
-              html.li_text([], "We all have a delightful time in the woods ✨"),
-            ],
-          ),
-          html.p(
-            [],
-            [
-              html.Text("If you've any questions before or after payment "),
-              html.a_text(
-                [attrs.href("mailto:" <> ctx.config.help_email)],
-                "email us",
-              ),
-              html.Text(" and we'll help you out."),
-            ],
-          ),
-        ],
-      ),
-      html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
-      case ctx.current_user {
-        Some(_) ->
-          html.div(
-            [attrs.class("center form-group")],
-            [
-              html.a_text(
-                [attrs.class("button"), attrs.href("/")],
-                "Continue to your account",
-              ),
-            ],
-          )
-        None ->
-          html.form(
-            [
-              attrs.class("attendee-form"),
-              attrs.action("/sign-up/" <> ctx.config.attend_secret),
-              Attr("method", "post"),
-              Attr("onsubmit", "this.disable = true"),
-            ],
-            [
-              web.form_group(
-                "What's your name?",
-                web.text_input("name", [Attr("required", "")]),
-              ),
-              web.form_group(
-                "What's your email?",
-                div([
-                  p(
-                    "We will use this to send you an email with additional
+        ])
+      None ->
+        html.form(
+          [
+            attrs.class("attendee-form"),
+            attrs.action("/sign-up/" <> ctx.config.attend_secret),
+            Attr("method", "post"),
+            Attr("onsubmit", "this.disable = true"),
+          ],
+          [
+            web.form_group(
+              "What's your name?",
+              web.text_input("name", [Attr("required", "")]),
+            ),
+            web.form_group(
+              "What's your email?",
+              div([
+                p(
+                  "We will use this to send you an email with additional
                     information closer to the date. Your email will be viewable
                     by the organisers and will not be shared with anyone else.",
-                  ),
-                  web.email_input("email", []),
-                ]),
-              ),
-              web.submit_input_group("Let's go"),
-            ],
-          )
-      },
-    ],
-  )
+                ),
+                web.email_input("email", []),
+              ]),
+            ),
+            web.submit_input_group("Let's go"),
+          ],
+        )
+    },
+  ])
 }
 
 fn label(children) -> html.Node(a) {
@@ -508,21 +481,18 @@ pub fn application_answers_list_html(
   questions
   |> list.map(fn(question) {
     let answer =
-      result.unwrap(map.get(application.answers, question.key), "n/a")
+      result.unwrap(dict.get(application.answers, question.key), "n/a")
     web.dt_dl(question.text, answer)
   })
 }
 
 pub fn costs_table() -> html.Node(a) {
-  html.table(
-    [],
-    [
-      web.table_row("Low income", "£60+"),
-      web.table_row("Median income", "£80+"),
-      web.table_row("High income", "£100+"),
-      web.table_row("Superstar 💖", "£120+"),
-    ],
-  )
+  html.table([], [
+    web.table_row("Low income", "£60+"),
+    web.table_row("Median income", "£80+"),
+    web.table_row("High income", "£100+"),
+    web.table_row("Superstar 💖", "£120+"),
+  ])
 }
 
 fn slug(text: String) {

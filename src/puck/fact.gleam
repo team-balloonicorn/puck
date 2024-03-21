@@ -1,10 +1,10 @@
 //// Facts about the event! FAQs and what have you!
 
-import gleam/dynamic.{Dynamic} as dy
-import gleam/option.{Option}
+import gleam/dynamic.{type Dynamic} as dy
+import gleam/option.{type Option}
 import gleam/result
 import puck/database
-import puck/error.{Error}
+import puck/error.{type Error}
 import sqlight
 
 pub type Fact {

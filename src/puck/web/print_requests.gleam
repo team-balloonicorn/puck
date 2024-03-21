@@ -1,7 +1,8 @@
 // TODO: work out if we want to steal this timing stuff and put it in Wisp.
 import gleam/http
-import gleam/http/request.{Request}
-import gleam/http/response.{Response}
+
+import gleam/http/request.{type Request}
+import gleam/http/response.{type Response}
 import gleam/int
 import gleam/io
 import gleam/string
@@ -18,8 +19,8 @@ fn format_log_line(
 
   string.concat([
     request.method
-    |> http.method_to_string
-    |> string.uppercase,
+      |> http.method_to_string
+      |> string.uppercase,
     " ",
     request.path,
     " ",

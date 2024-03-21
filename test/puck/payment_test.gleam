@@ -1,10 +1,10 @@
-import tests
+import gleam/dict
+import gleam/json
+import gleam/result
 import gleeunit/should
 import puck/payment.{Payment}
 import puck/user
-import gleam/json
-import gleam/map
-import gleam/result
+import tests
 
 pub fn from_json_transfer_test() {
   "{
@@ -64,13 +64,15 @@ pub fn from_json_transfer_test() {
     payment.from_dynamic(d)
     |> result.nil_error
   })
-  |> should.equal(Ok(Payment(
-    id: "tx_0000AG2o6vNOP3W9owpal8",
-    created_at: "2022-02-01T20:47:19.022Z",
-    amount: 100,
-    counterparty: "Louis Pilfold",
-    reference: "test1234",
-  )))
+  |> should.equal(
+    Ok(Payment(
+      id: "tx_0000AG2o6vNOP3W9owpal8",
+      created_at: "2022-02-01T20:47:19.022Z",
+      amount: 100,
+      counterparty: "Louis Pilfold",
+      reference: "test1234",
+    )),
+  )
 }
 
 pub fn from_json_purchase_test() {
@@ -112,13 +114,15 @@ pub fn from_json_purchase_test() {
     payment.from_dynamic(d)
     |> result.nil_error
   })
-  |> should.equal(Ok(Payment(
-    id: "tx_00008zjky19HyFLAzlUk7t",
-    created_at: "2015-09-04T14:28:40Z",
-    amount: -350,
-    counterparty: "The De Beauvoir Deli Co.",
-    reference: "ozone coffee roasters",
-  )))
+  |> should.equal(
+    Ok(Payment(
+      id: "tx_00008zjky19HyFLAzlUk7t",
+      created_at: "2015-09-04T14:28:40Z",
+      amount: -350,
+      counterparty: "The De Beauvoir Deli Co.",
+      reference: "ozone coffee roasters",
+    )),
+  )
 }
 
 pub fn insert_test() {
@@ -245,9 +249,9 @@ pub fn total_test() {
   let assert Ok(0) = payment.total(db)
 
   let assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(a1) = user.insert_application(db, u1.id, map.new())
+  let assert Ok(a1) = user.insert_application(db, u1.id, dict.new())
   let assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
-  let assert Ok(a2) = user.insert_application(db, u2.id, map.new())
+  let assert Ok(a2) = user.insert_application(db, u2.id, dict.new())
 
   let assert Ok(True) =
     payment.insert(db, Payment("tx1", date, "Lou", 1, a1.payment_reference))

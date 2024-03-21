@@ -1,14 +1,14 @@
-import gleam/string_builder.{StringBuilder}
-import gleam/option.{None, Option, Some}
-import puck/config.{Config}
-import puck/database
-import puck/user.{User}
-import puck/email.{Email}
-import puck/web/templates.{Templates}
+import gleam/option.{type Option, None, Some}
+import gleam/string_builder.{type StringBuilder}
 import nakai
 import nakai/html
-import nakai/html/attrs.{Attr}
-import wisp.{Response}
+import nakai/html/attrs.{type Attr, Attr}
+import puck/config.{type Config}
+import puck/database
+import puck/email.{type Email}
+import puck/user.{type User, User}
+import puck/web/templates.{type Templates}
+import wisp.{type Response}
 
 const login_path = "/login"
 
@@ -68,78 +68,66 @@ pub fn some(
 }
 
 pub fn html_page(page_html: html.Node(a)) -> StringBuilder {
-  html.div(
-    [],
-    [
-      html.Head([
-        html.meta([attrs.charset("utf-8")]),
-        html.meta([
-          attrs.name("viewport"),
-          attrs.content("width=device-width, initial-scale=1"),
-        ]),
-        html.title("Midsummer Night's Tea Party"),
-        html.link([
-          attrs.rel("preconnect"),
-          attrs.href("https://fonts.googleapis.com"),
-        ]),
-        html.link([
-          attrs.rel("preconnect"),
-          attrs.href("https://fonts.gstatic.com"),
-          attrs.crossorigin(),
-        ]),
-        html.link([
-          attrs.rel("icon"),
-          attrs.type_("image/x-icon"),
-          attrs.href("/assets/favicon.png"),
-        ]),
-        html.link([
-          attrs.rel("shortcut icon"),
-          attrs.type_("image/x-icon"),
-          attrs.href("/assets/favicon.png"),
-        ]),
-        html.link([attrs.rel("stylesheet"), attrs.href("/assets/index.css")]),
-        html.link([
-          attrs.rel("stylesheet"),
-          attrs.href(
-            "https://fonts.googleapis.com/css2?family=Average&family=Quintessential&display=swap",
-          ),
-        ]),
+  html.div([], [
+    html.Head([
+      html.meta([attrs.charset("utf-8")]),
+      html.meta([
+        attrs.name("viewport"),
+        attrs.content("width=device-width, initial-scale=1"),
       ]),
-      page_html,
-      html.footer(
-        [attrs.class("site-footer")],
-        [
-          html.div(
-            [],
-            [
-              html.Text("© Louis Pilfold. Made with "),
-              html.a([attrs.href("http://gleam.run/")], [html.Text("Gleam")]),
-              html.Text("."),
-            ],
-          ),
-          html.div(
-            [],
-            [
-              html.Text("Source code "),
-              html.a_text(
-                [
-                  attrs.href("http://github.com/team-balloonicorn/puck"),
-                  attrs.target("_blank"),
-                  attrs.rel("noopener noreferrer"),
-                ],
-                "available",
-              ),
-              html.Text(" under the "),
-              html.a_text(
-                [attrs.href("/licence"), attrs.target("_blank")],
-                "Anti-Capitalist Software Licence v1.4",
-              ),
-            ],
-          ),
-        ],
-      ),
-    ],
-  )
+      html.title("Midsummer Night's Tea Party"),
+      html.link([
+        attrs.rel("preconnect"),
+        attrs.href("https://fonts.googleapis.com"),
+      ]),
+      html.link([
+        attrs.rel("preconnect"),
+        attrs.href("https://fonts.gstatic.com"),
+        attrs.crossorigin(),
+      ]),
+      html.link([
+        attrs.rel("icon"),
+        attrs.type_("image/x-icon"),
+        attrs.href("/assets/favicon.png"),
+      ]),
+      html.link([
+        attrs.rel("shortcut icon"),
+        attrs.type_("image/x-icon"),
+        attrs.href("/assets/favicon.png"),
+      ]),
+      html.link([attrs.rel("stylesheet"), attrs.href("/assets/index.css")]),
+      html.link([
+        attrs.rel("stylesheet"),
+        attrs.href(
+          "https://fonts.googleapis.com/css2?family=Average&family=Quintessential&display=swap",
+        ),
+      ]),
+    ]),
+    page_html,
+    html.footer([attrs.class("site-footer")], [
+      html.div([], [
+        html.Text("© Louis Pilfold. Made with "),
+        html.a([attrs.href("http://gleam.run/")], [html.Text("Gleam")]),
+        html.Text("."),
+      ]),
+      html.div([], [
+        html.Text("Source code "),
+        html.a_text(
+          [
+            attrs.href("http://github.com/team-balloonicorn/puck"),
+            attrs.target("_blank"),
+            attrs.rel("noopener noreferrer"),
+          ],
+          "available",
+        ),
+        html.Text(" under the "),
+        html.a_text(
+          [attrs.href("/licence"), attrs.target("_blank")],
+          "Anti-Capitalist Software Licence v1.4",
+        ),
+      ]),
+    ]),
+  ])
   |> nakai.to_string_builder
 }
 
@@ -156,10 +144,9 @@ pub fn text_input(name: String, attrs: List(Attr(a))) -> html.Node(a) {
 }
 
 pub fn submit_input_group(text: String) -> html.Node(a) {
-  html.div(
-    [attrs.class("form-group center")],
-    [html.button_text([attrs.type_("submit")], text)],
-  )
+  html.div([attrs.class("form-group center")], [
+    html.button_text([attrs.type_("submit")], text),
+  ])
 }
 
 pub fn flamingo() -> html.Node(a) {
@@ -189,13 +176,10 @@ pub fn page_nav(user: Option(User)) -> html.Node(a) {
     _ -> html.Nothing
   }
 
-  html.nav(
-    [attrs.class("page-nav")],
-    [
-      html.a([attrs.href("/")], [html.Text("Home")]),
-      html.a([attrs.href("/costs")], [html.Text("Costs")]),
-      html.a([attrs.href("/information")], [html.Text("FAQs")]),
-      admin,
-    ],
-  )
+  html.nav([attrs.class("page-nav")], [
+    html.a([attrs.href("/")], [html.Text("Home")]),
+    html.a([attrs.href("/costs")], [html.Text("Costs")]),
+    html.a([attrs.href("/information")], [html.Text("FAQs")]),
+    admin,
+  ])
 }

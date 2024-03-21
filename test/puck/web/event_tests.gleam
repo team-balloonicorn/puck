@@ -1,12 +1,12 @@
+import gleam/dict
 import gleam/http/response
-import gleam/map
+import gleam/list
 import gleam/option.{Some}
 import gleam/string
-import gleam/list
-import puck/user
 import puck/routes
-import wisp/testing
+import puck/user
 import tests
+import wisp/testing
 
 pub fn attendance_form_not_logged_in_test() {
   use ctx <- tests.with_context
@@ -86,7 +86,7 @@ pub fn register_attendance_ok_test() {
     #("support-network-attended", "Lauren"),
   ] =
     application.answers
-    |> map.to_list
+    |> dict.to_list
     |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
 }
 

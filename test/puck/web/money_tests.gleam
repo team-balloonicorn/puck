@@ -1,10 +1,10 @@
+import gleam/dict
 import gleam/erlang/process
 import gleam/int
 import gleam/string
-import gleam/map
 import puck/payment.{Payment}
-import puck/user
 import puck/routes
+import puck/user
 import tests
 import wisp/testing
 
@@ -15,9 +15,7 @@ fn payload(reference: String, amount: Int) {
     \"id\": \"tx_0000AG2o6vNOP3W9owpal8\",
     \"created\": \"2022-02-01T20:47:19.022Z\",
     \"description\": \"" <> reference <> "\",
-    \"amount\": " <> int.to_string(
-    amount,
-  ) <> ",
+    \"amount\": " <> int.to_string(amount) <> ",
     \"fees\": {},
     \"currency\": \"GBP\",
     \"merchant\": null,
@@ -34,14 +32,10 @@ fn payload(reference: String, amount: Int) {
     \"attachments\": null,
     \"international\": null,
     \"category\": \"transfers\",
-    \"categories\": { \"transfers\": " <> int.to_string(
-    amount,
-  ) <> " },
+    \"categories\": { \"transfers\": " <> int.to_string(amount) <> " },
     \"is_load\": false,
     \"settled\": \"2022-02-02T07:00:00Z\",
-    \"local_amount\": " <> int.to_string(
-    amount,
-  ) <> ",
+    \"local_amount\": " <> int.to_string(amount) <> ",
     \"local_currency\": \"GBP\",
     \"updated\": \"2022-02-01T20:47:19.153Z\",
     \"account_id\": \"acc_00009QOPJC8rGUzAsElwMT\",
@@ -72,7 +66,7 @@ pub fn webhook_matching_reference_test() {
   use ctx <- tests.with_context
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, map.new())
+    user.insert_application(ctx.db, user.id, dict.new())
   let #(ctx, emails) = tests.track_sent_emails(ctx)
   let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload(application.payment_reference, 12_000)
@@ -106,7 +100,7 @@ pub fn webhook_wrong_case_matching_reference_test() {
   use ctx <- tests.with_context
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, map.new())
+    user.insert_application(ctx.db, user.id, dict.new())
   let #(ctx, emails) = tests.track_sent_emails(ctx)
   let #(ctx, notifications) = tests.track_sent_notifications(ctx)
   let payload = payload(string.uppercase(application.payment_reference), 12_000)
@@ -145,7 +139,7 @@ pub fn webhook_duplicate_test() {
 
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
   let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, map.new())
+    user.insert_application(ctx.db, user.id, dict.new())
   let payment =
     Payment(
       id: "tx_0000AG2o6vNOP3W9owpal8",

@@ -1,5 +1,4 @@
 import gleam/erlang
-import gleam/erlang/file
 import gleam/erlang/process
 import gleam/int
 import gleam/io
@@ -7,20 +6,22 @@ import gleam/list
 import gleam/option.{Some}
 import gleam/string
 import mist
-import puck/config.{Config}
+import puck/config.{type Config}
 import puck/database
 import puck/email
 import puck/pushover
 import puck/routes
 import puck/user
-import puck/web.{Context}
-import puck/web/templates
+import puck/web.{type Context, Context}
 import puck/web/auth
+import puck/web/templates
+import simplifile
 import wisp
 
 const usage = "USAGE:
   puck server
   puck email <subject> <body.txt> <addresses.txt>
+  puck login-url <user_id>
 "
 
 pub fn main() {
@@ -100,8 +101,8 @@ fn email(
   addresses: String,
   config: Config,
 ) -> Nil {
-  let assert Ok(addresses) = file.read(addresses)
-  let assert Ok(body) = file.read(body)
+  let assert Ok(addresses) = simplifile.read(addresses)
+  let assert Ok(body) = simplifile.read(body)
   let addresses = string.split(string.trim(addresses), "\n")
 
   list.each(addresses, io.println)

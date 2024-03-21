@@ -1,8 +1,8 @@
-import sqlight
-import puck/error.{Error}
 import gleam/dynamic
+import gleam/option.{type Option}
 import gleam/result
-import gleam/option.{Option}
+import puck/error.{type Error}
+import sqlight
 
 pub type Connection =
   sqlight.Connection
@@ -55,6 +55,7 @@ pub fn maybe_one(
     case rows {
       [] -> option.None
       [row] -> option.Some(row)
+      _ -> panic as "Expected 0 or 1 rows"
     }
   })
 }

@@ -1,11 +1,11 @@
-import gleam/json
-import gleam/string
-import gleam/result
 import gleam/hackney
 import gleam/http.{Post}
 import gleam/http/request
-import puck/config.{Config}
-import puck/error.{Error}
+import gleam/json
+import gleam/result
+import gleam/string
+import puck/config.{type Config}
+import puck/error.{type Error}
 
 pub fn notify(
   config: Config,
@@ -13,12 +13,14 @@ pub fn notify(
   message message: String,
 ) -> Result(Nil, Error) {
   let json =
-    json.to_string(json.object([
-      #("token", json.string(config.pushover_key)),
-      #("user", json.string(config.pushover_user)),
-      #("title", json.string(string.slice(title, 0, length: 1024))),
-      #("message", json.string(string.slice(message, 0, length: 250))),
-    ]))
+    json.to_string(
+      json.object([
+        #("token", json.string(config.pushover_key)),
+        #("user", json.string(config.pushover_user)),
+        #("title", json.string(string.slice(title, 0, length: 1024))),
+        #("message", json.string(string.slice(message, 0, length: 250))),
+      ]),
+    )
 
   let request =
     request.new()

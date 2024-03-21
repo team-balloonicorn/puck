@@ -1,6 +1,6 @@
-import puck/config.{Config}
-import gleam/string
 import gleam/bbmustache as bbm
+import gleam/string
+import puck/config.{type Config}
 
 pub type Templates {
   Templates(licence: fn() -> String)

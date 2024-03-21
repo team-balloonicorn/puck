@@ -1,4 +1,4 @@
-import gleam/map
+import gleam/dict
 import gleam/option.{None, Some}
 import gleam/string
 import puck/database
@@ -96,13 +96,13 @@ pub fn insert_application_test() {
     user.insert_application(
       db,
       user.id,
-      map.from_list([#("a", "b"), #("c", "d")]),
+      dict.from_list([#("a", "b"), #("c", "d")]),
     )
 
   let assert 14 = string.length(reference)
   let assert True = string.starts_with(reference, "m-")
   let assert True = uid == user.id
-  let assert [#("a", "b"), #("c", "d")] = map.to_list(answers)
+  let assert [#("a", "b"), #("c", "d")] = dict.to_list(answers)
 }
 
 pub fn insert_application_already_existing_test() {
@@ -118,7 +118,7 @@ pub fn insert_application_already_existing_test() {
     user.insert_application(
       db,
       user.id,
-      map.from_list([#("a", "b"), #("c", "d")]),
+      dict.from_list([#("a", "b"), #("c", "d")]),
     )
   let assert Ok(Application(
     id: 1,
@@ -129,13 +129,13 @@ pub fn insert_application_already_existing_test() {
     user.insert_application(
       db,
       user.id,
-      map.from_list([#("a", "changed"), #("c", "d"), #("e", "f")]),
+      dict.from_list([#("a", "changed"), #("c", "d"), #("e", "f")]),
     )
 
   let assert True = reference1 == reference2
   let assert True = uid1 == uid2
   let assert [#("a", "changed"), #("c", "d"), #("e", "f")] =
-    map.to_list(answers)
+    dict.to_list(answers)
 }
 
 pub fn get_application_test() {
@@ -145,7 +145,7 @@ pub fn get_application_test() {
   let assert Ok(None) = user.get_application(db, user.id)
 
   let assert Ok(application1) =
-    user.insert_application(db, user.id, map.from_list([#("a", "b")]))
+    user.insert_application(db, user.id, dict.from_list([#("a", "b")]))
 
   let assert Ok(Some(application2)) = user.get_application(db, user.id)
 
@@ -155,7 +155,7 @@ pub fn get_application_test() {
 pub fn get_user_by_payment_reference_found_test() {
   use db <- tests.with_connection
   let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(app) = user.insert_application(db, user.id, map.new())
+  let assert Ok(app) = user.insert_application(db, user.id, dict.new())
   let assert Ok(Some(user2)) =
     user.get_user_by_payment_reference(db, app.payment_reference)
   let assert True = user.id == user2.id
@@ -164,7 +164,7 @@ pub fn get_user_by_payment_reference_found_test() {
 pub fn get_user_by_payment_reference_case_insensitive_test() {
   use db <- tests.with_connection
   let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(app) = user.insert_application(db, user.id, map.new())
+  let assert Ok(app) = user.insert_application(db, user.id, dict.new())
   let ref = app.payment_reference
 
   let assert Ok(Some(user2)) =

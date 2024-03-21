@@ -1,12 +1,12 @@
-import sqlight.{ConstraintPrimarykey, SqlightError}
-import gleam/list
-import gleam/string.{lowercase} as stringmod
-import gleam/result
-import gleam/dynamic.{Dynamic, element, field, int, string}
-import puck/error.{Error}
-import puck/database
 import gleam/bool
+import gleam/dynamic.{type Dynamic, element, field, int, string}
+import gleam/list
 import gleam/pair
+import gleam/result
+import gleam/string.{lowercase}
+import puck/database
+import puck/error.{type Error}
+import sqlight.{ConstraintPrimarykey, SqlightError}
 
 pub type Payment {
   Payment(
@@ -227,13 +227,10 @@ pub fn per_day(
   use rows <- result.then(database.query(sql, conn, [], decoder))
   rows
   |> list.drop_while(fn(row) { row.1 == 0 })
-  |> list.map_fold(
-    0,
-    fn(total, row) {
-      let total = total + row.1
-      #(total, #(row.0, row.1, total))
-    },
-  )
+  |> list.map_fold(0, fn(total, row) {
+    let total = total + row.1
+    #(total, #(row.0, row.1, total))
+  })
   |> pair.second
   |> list.reverse
   |> Ok

@@ -1,6 +1,6 @@
-import puck/config.{Config}
 import gleam/hackney
 import gleam/io
+import puck/config.{type Config, Config}
 import zeptomail
 
 pub type Email {

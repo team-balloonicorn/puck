@@ -1,11 +1,11 @@
+import gleam/erlang/process.{type Subject}
 import gleam/int
 import gleam/option.{None, Some}
-import gleam/erlang/process.{Subject}
-import puck/config.{Config}
+import puck/config.{type Config, Config}
 import puck/database
+import puck/email.{type Email}
 import puck/user
-import puck/email.{Email}
-import puck/web.{Context}
+import puck/web.{type Context, Context}
 import puck/web/templates
 import sqlight
 
@@ -17,7 +17,7 @@ pub fn with_connection(f: fn(sqlight.Connection) -> a) -> a {
 }
 
 pub fn config() -> Config {
-  let random = fn() { int.to_string(int.random(0, 1_000_000)) }
+  let random = fn() { int.to_string(int.random(1_000_000)) }
   Config(
     environment: random(),
     database_path: random(),

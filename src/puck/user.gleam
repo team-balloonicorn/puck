@@ -1,15 +1,14 @@
-import gleam/base
+import gleam/bit_array
 import gleam/crypto
-import gleam/dynamic.{Dynamic} as dy
-import gleam/map.{Map}
-import gleam/option.{Option}
-import gleam/result
+import gleam/dict.{type Dict}
+import gleam/dynamic.{type Dynamic} as dy
 import gleam/json
-import puck/database
-import puck/error.{Error}
-import sqlight
+import gleam/option.{type Option}
+import gleam/result
 import gleam/string
-import gleam/bit_string
+import puck/database
+import puck/error.{type Error}
+import sqlight
 
 pub type User {
   User(id: Int, name: String, email: String, interactions: Int, is_admin: Bool)
@@ -20,7 +19,7 @@ pub type Application {
     id: Int,
     payment_reference: String,
     user_id: Int,
-    answers: Map(String, String),
+    answers: Dict(String, String),
   )
 }
 
@@ -43,10 +42,10 @@ pub fn insert(
   case database.one(sql, conn, arguments, decoder) {
     Ok(user) -> Ok(user)
     Error(error.Database(sqlight.SqlightError(
-      sqlight.ConstraintUnique,
-      "UNIQUE constraint failed: users.email",
-      _,
-    ))) -> Error(error.EmailAlreadyInUse)
+        sqlight.ConstraintUnique,
+        "UNIQUE constraint failed: users.email",
+        _,
+      ))) -> Error(error.EmailAlreadyInUse)
     Error(err) -> Error(err)
   }
 }
@@ -89,7 +88,7 @@ pub fn get_by_email(
 pub fn insert_application(
   conn: database.Connection,
   user_id user_id: Int,
-  answers answers: Map(String, String),
+  answers answers: Dict(String, String),
 ) -> Result(Application, Error) {
   let sql =
     "
@@ -105,8 +104,8 @@ pub fn insert_application(
   let json =
     json.to_string(json.object(
       answers
-      |> map.map_values(fn(_, v) { json.string(v) })
-      |> map.to_list,
+      |> dict.map_values(fn(_, v) { json.string(v) })
+      |> dict.to_list,
     ))
   let arguments = [
     sqlight.int(user_id),
@@ -181,7 +180,7 @@ pub fn get_or_create_login_token(
 ) -> Result(Option(String), Error) {
   let token = case get_login_token_hash(conn, user_id) {
     Ok(option.Some(token)) -> token
-    _ -> base.url_encode64(crypto.strong_random_bytes(24), False)
+    _ -> bit_array.base64_url_encode(crypto.strong_random_bytes(24), False)
   }
   let sql =
     "
@@ -244,10 +243,10 @@ fn application_decoder(data: Dynamic) {
   )
 }
 
-fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Map(String, t)) {
+fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Dict(String, t)) {
   fn(data: Dynamic) {
     use string <- result.then(dy.string(data))
-    json.decode(string, using: dy.map(dy.string, inner))
+    json.decode(string, using: dy.dict(dy.string, inner))
     |> result.map_error(fn(error) {
       case error {
         json.UnexpectedFormat(errors) -> errors
@@ -260,7 +259,7 @@ fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Map(String, t)) {
 fn generate_reference() -> String {
   // Generate random string
   crypto.strong_random_bytes(50)
-  |> base.url_encode64(False)
+  |> bit_array.base64_url_encode(False)
   |> string.lowercase
   // Remove ambiguous characters
   |> string.replace("o", "")
@@ -272,10 +271,10 @@ fn generate_reference() -> String {
   |> string.replace("_", "")
   |> string.replace("-", "")
   // Slice it down to a desired size
-  |> bit_string.from_string
-  |> bit_string.slice(0, 12)
+  |> bit_array.from_string
+  |> bit_array.slice(0, 12)
   // Convert it back to a string. This should never fail.
-  |> result.then(bit_string.to_string)
+  |> result.then(bit_array.to_string)
   |> result.map(string.append("m-", _))
   // Try again it if fails. It never should.
   |> result.lazy_unwrap(fn() { generate_reference() })
