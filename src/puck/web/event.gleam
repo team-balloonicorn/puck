@@ -345,10 +345,11 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         html.p_text([attrs.class("center")], "Welcome, friend!"),
       ]),
     ]),
-    image_grid([
-      "entrance", "firepit", "roundhouse", "tea",
+    image_grid(
+      // "entrance", "firepit", "roundhouse", "tea",
       // "tipi", "flag", "belltent", "boat",
-    ]),
+      [],
+    ),
     html.div([attrs.class("content")], [
       html.h2_text([], "What is it?"),
       p(
