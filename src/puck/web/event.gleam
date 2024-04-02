@@ -346,8 +346,8 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
       ]),
     ]),
     image_grid([
-      "entrance", "firepit", "roundhouse", "tea", "tipi", "flag", "belltent",
-      "boat",
+      "entrance", "firepit", "roundhouse", "tea",
+      // "tipi", "flag", "belltent", "boat",
     ]),
     html.div([attrs.class("content")], [
       html.h2_text([], "What is it?"),
