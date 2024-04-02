@@ -337,133 +337,146 @@ fn attendance_form(ctx: Context) -> Response {
 }
 
 fn attendance_html(ctx: Context) -> html.Node(a) {
-  html.main([Attr("role", "main"), attrs.class("content")], [
-    web.flamingo(),
-    html.h1_text([], "Midsummer Night's Tea Party 2024"),
-    html.h2_text([], "What is it?"),
-    p(
-      "Midsummer is a delightful little festival in a wonderful wooded
+  html.main([Attr("role", "main")], [
+    html.div([attrs.class("content")], [
+      web.flamingo(),
+      html.Element("hgroup", [], [
+        html.h1_text([], "Midsummer Night's Tea Party 2024"),
+        html.p_text([attrs.class("center")], "Welcome, friend!"),
+      ]),
+    ]),
+    image_grid([
+      "entrance", "firepit", "roundhouse", "tea", "tipi", "flag", "belltent",
+      "boat",
+    ]),
+    html.div([attrs.class("content")], [
+      html.h2_text([], "What is it?"),
+      p(
+        "Midsummer is a delightful little festival in a wonderful wooded
         location. Expect fun and joy with a delightful group of people, and
         luxuries you might not expect from a little festival, such as communal
         hot meals and hot showers.
         If you're here you should know someone who has been before, so ask
         them!",
-    ),
-    html.h2_text([], "When is it?"),
-    p("5pm Thursday the 6th June to 10am Monday the 10th June"),
-    html.h2_text([], "Where is it?"),
-    p(
-      "A wonderful little woodland festival site, 20 minutes drive from King's
+      ),
+      html.h2_text([], "When is it?"),
+      p("5pm Thursday the 6th June to 10am Monday the 10th June"),
+      html.h2_text([], "Where is it?"),
+      p(
+        "A wonderful little woodland festival site, 20 minutes drive from King's
         Lynn in Norfolk.",
-    ),
-    html.h2_text([], "How much does it cost?"),
-    p(
-      "This is a collaborative event where people contribute what they can
+      ),
+      html.h2_text([], "How much does it cost?"),
+      p(
+        "This is a collaborative event where people contribute what they can
         afford. We don't make any money off this event. Please contribute what
         you can.
         Recommended contributions:",
-    ),
-    costs_table(),
-    p(
-      "If you cannot afford this much please get in touch. No one is excluded
+      ),
+      costs_table(),
+      p(
+        "If you cannot afford this much please get in touch. No one is excluded
         from Midsummer.",
-    ),
-    html.h2_text([], "How many people will there be?"),
-    p("We are aiming for 100 people."),
-    html.h2_text([], "Will meals be included?"),
-    p(
-      "Yes! We will be providing the breakfast buffet, and a delicious hot
+      ),
+      html.h2_text([], "How many people will there be?"),
+      p("We are aiming for 100 people."),
+      html.h2_text([], "Will meals be included?"),
+      p(
+        "Yes! We will be providing the breakfast buffet, and a delicious hot
         dinner on Friday, Saturday, and Sunday.",
-    ),
-    p(
-      "We are hoping to do lunch too, just so long as we can get enough
+      ),
+      p(
+        "We are hoping to do lunch too, just so long as we can get enough
         kitchen volunteers.",
-    ),
-    html.h2_text([], "What facilities are there on site?"),
-    p(
-      "There are flushing toilets, running water, hot showers, and a dreamy
+      ),
+      html.h2_text([], "What facilities are there on site?"),
+      p(
+        "There are flushing toilets, running water, hot showers, and a dreamy
         outdoor bath. There is no mains electricity and the kitchen cannot be
         used by people other than kitchen crew.",
-    ),
-    html.h2_text([], "Where will people be sleeping?"),
-    p(
-      "Most people will be camping (so bring your tent), but there are a
+      ),
+      html.h2_text([], "Where will people be sleeping?"),
+      p(
+        "Most people will be camping (so bring your tent), but there are a
         limited number of sleeping structures. These structures will be
         allocated with priority going to people with accessibility
         requirements.",
-    ),
-    html.h2_text([], "Can I refund or sell my ticket?"),
-    p(
-      "Tickets can not be sold for safety reasons. We need to know who
+      ),
+      html.h2_text([], "Can I refund or sell my ticket?"),
+      p(
+        "Tickets can not be sold for safety reasons. We need to know who
         everyone is on site, any unexpected guests will be asked to leave. If we
         get enough contributions to cover our costs then we be able to offer
         refunds.",
-    ),
-    html.h2_text([], "Can I come?"),
-    html.p([], [
-      html.Text("Yes! So long as you are with someone who has attended before."),
-      html.ol([], [
-        html.li_text(
-          [],
-          "You submit your details using the form on the next page.",
-        ),
-        html.li_text(
-          [],
-          "We give you a reference number and bank details on the next page.",
-        ),
-        html.li_text([], "You make a bank transfer to us with these details."),
-        html.li_text(
-          [],
-          "We send you an email confirmation and get everything ready.",
-        ),
-        html.li_text([], "We all have a delightful time in the woods ✨"),
-      ]),
+      ),
+      html.h2_text([], "Can I come?"),
       html.p([], [
-        html.Text("If you've any questions before or after payment "),
-        html.a_text(
-          [attrs.href("mailto:" <> ctx.config.help_email)],
-          "email us",
+        html.Text(
+          "Yes! So long as you are with someone who has attended before.",
         ),
-        html.Text(" and we'll help you out."),
-      ]),
-    ]),
-    html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
-    case ctx.current_user {
-      Some(_) ->
-        html.div([attrs.class("center form-group")], [
-          html.a_text(
-            [attrs.class("button"), attrs.href("/")],
-            "Continue to your account",
+        html.ol([], [
+          html.li_text(
+            [],
+            "You submit your details using the form on the next page.",
           ),
-        ])
-      None ->
-        html.form(
-          [
-            attrs.class("attendee-form"),
-            attrs.action("/sign-up/" <> ctx.config.attend_secret),
-            Attr("method", "post"),
-            Attr("onsubmit", "this.disable = true"),
-          ],
-          [
-            web.form_group(
-              "What's your name?",
-              web.text_input("name", [Attr("required", "")]),
+          html.li_text(
+            [],
+            "We give you a reference number and bank details on the next page.",
+          ),
+          html.li_text([], "You make a bank transfer to us with these details."),
+          html.li_text(
+            [],
+            "We send you an email confirmation and get everything ready.",
+          ),
+          html.li_text([], "We all have a delightful time in the woods ✨"),
+        ]),
+        html.p([], [
+          html.Text("If you've any questions before or after payment "),
+          html.a_text(
+            [attrs.href("mailto:" <> ctx.config.help_email)],
+            "email us",
+          ),
+          html.Text(" and we'll help you out."),
+        ]),
+      ]),
+      html.div([attrs.class("heart-rule")], [html.Text("Alright, here we go")]),
+      case ctx.current_user {
+        Some(_) ->
+          html.div([attrs.class("center form-group")], [
+            html.a_text(
+              [attrs.class("button"), attrs.href("/")],
+              "Continue to your account",
             ),
-            web.form_group(
-              "What's your email?",
-              div([
-                p(
-                  "We will use this to send you an email with additional
+          ])
+        None ->
+          html.form(
+            [
+              attrs.class("attendee-form"),
+              attrs.action("/sign-up/" <> ctx.config.attend_secret),
+              Attr("method", "post"),
+              Attr("onsubmit", "this.disable = true"),
+            ],
+            [
+              web.form_group(
+                "What's your name?",
+                web.text_input("name", [Attr("required", "")]),
+              ),
+              web.form_group(
+                "What's your email?",
+                div([
+                  p(
+                    "We will use this to send you an email with additional
                     information closer to the date. Your email will be viewable
                     by the organisers and will not be shared with anyone else.",
-                ),
-                web.email_input("email", []),
-              ]),
-            ),
-            web.submit_input_group("Let's go"),
-          ],
-        )
-    },
+                  ),
+                  web.email_input("email", []),
+                ]),
+              ),
+              web.submit_input_group("Let's go"),
+            ],
+          )
+      },
+    ]),
   ])
 }
 
@@ -502,4 +515,16 @@ fn slug(text: String) {
   |> string.to_graphemes
   |> list.filter(string.contains("abcdefghijklmnopqrstuvwxyz-", _))
   |> string.concat
+}
+
+fn image_grid(images: List(String)) -> html.Node(a) {
+  html.div(
+    [attrs.class("image-grid")],
+    list.map(images, fn(image) {
+      let image = "/photos/" <> image <> ".jpg"
+      html.a([attrs.href(image), Attr("target", "_blank")], [
+        html.img([attrs.src(image)]),
+      ])
+    }),
+  )
 }
