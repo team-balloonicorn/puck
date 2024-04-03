@@ -7,11 +7,16 @@ import sqlight
 pub type Connection =
   sqlight.Connection
 
+const connection_config = "
+pragma foreign_keys = on;
+pragma auto_vacuum = incremental;
+"
+
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
   use db <- sqlight.with_connection(path)
 
   // Enable configuration we want for all connections
-  let assert Ok(_) = sqlight.exec("pragma foreign_keys = on;", db)
+  let assert Ok(_) = sqlight.exec(connection_config, db)
 
   f(db)
 }
