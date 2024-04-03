@@ -345,10 +345,10 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         html.p_text([attrs.class("center")], "Welcome, friend!"),
       ]),
     ]),
-    // image_grid([
-    //   "entrance", "firepit", "roundhouse", "tea", "tipi", "flag", "belltent",
-    //   "boat",
-    // ]),
+    image_grid([
+      "entrance", "firepit", "roundhouse", "tea", "tipi", "flag", "belltent",
+      "boat",
+    ]),
     html.div([attrs.class("content")], [
       html.h2_text([], "What is it?"),
       p(
@@ -521,7 +521,8 @@ fn image_grid(images: List(String)) -> html.Node(a) {
   html.div(
     [attrs.class("image-grid")],
     list.map(images, fn(image) {
-      let image = "/photos/" <> image <> ".jpg"
+      let image =
+        "https://team-balloonicorn.github.io/puck/photos/" <> image <> ".jpg"
       html.a([attrs.href(image), Attr("target", "_blank")], [
         html.img([attrs.src(image)]),
       ])
