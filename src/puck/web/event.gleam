@@ -66,8 +66,8 @@ const questions = [
       "Your support network are the people who are responsible for you. If
       you are unwell, having a bad time, or otherwise need help then your
       support network are to look after you.",
-      "At least one of your support network should have attended Midsummer
-      Night's Teaparty before.",
+      "If you're not sure which of your friends are going put down everyone who
+      might go, and you can email us to make changes later.",
     ],
     kind: Text("Oberon, Titania, Nick Bottom"),
   ),
