@@ -17,7 +17,8 @@ with money as (
 )
 
 select
-  users.name as name
+  users.name as name,
+  users.email as email
 from users
 inner join
   applications on applications.user_id = users.id
