@@ -382,7 +382,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
       p("We are aiming for 100 people."),
       html.h2_text([], "Will meals be included?"),
       p(
-        "Yes! We will be providing the breakfast buffet, and a delicious hot
+        "Yes! We will be providing breakfast and luch buffets, and a delicious hot
         dinner on Friday, Saturday, and Sunday.",
       ),
       p(
