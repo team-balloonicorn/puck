@@ -72,7 +72,18 @@ We received your contribution of ",
 Love,
 The Midsummer crew
 
-P.S. View your details and more at https://puck.midsummer.lpil.uk/
+P.S.
+View your details and more on the website
+https://puck.midsummer.lpil.uk/
+
+Sign up for shifts, activities, and ride sharing on the Rainbow Rotas
+https://docs.google.com/spreadsheets/d/1KYZ5DDBR8mwpsY6IdRWlQi9qhhDa_RJl94EygqoKdDk/edit#gid=0
+
+To keep up with future messages from crew join the announcement Signal group
+https://signal.group/#CjQKIGoG6EPia7XSm6rnZlpAFcMDpiZbHkNXVWINGZ1GcvTwEhC3SlPeRsVyGIPZZmeOIAiQ
+
+To chat and organise fun with your fellow midsummer folks join the chat Signal group
+https://signal.group/#CjQKIC_y_Jak_0XZ1eXYNd-Ab05EKsL8XL7Fv_z_i83SSASXEhA83ubXV-WoilMdGU4FDrcU
 ",
     ])
 
