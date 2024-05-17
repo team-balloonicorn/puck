@@ -76,9 +76,6 @@ P.S.
 View your details and more on the website
 https://puck.midsummer.lpil.uk/
 
-Sign up for shifts, activities, and ride sharing on the Rainbow Rotas
-https://docs.google.com/spreadsheets/d/1KYZ5DDBR8mwpsY6IdRWlQi9qhhDa_RJl94EygqoKdDk/edit#gid=0
-
 To keep up with future messages from crew join the announcement Signal group
 https://signal.group/#CjQKIGoG6EPia7XSm6rnZlpAFcMDpiZbHkNXVWINGZ1GcvTwEhC3SlPeRsVyGIPZZmeOIAiQ
 
