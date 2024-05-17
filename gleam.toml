@@ -16,6 +16,7 @@ sqlight = "~> 0.5"
 nakai = "~> 0.4"
 wisp = "~> 0.4"
 simplifile = "~> 1.5"
+argv = ">= 1.0.2 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

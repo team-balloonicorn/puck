@@ -1,3 +1,4 @@
+import argv
 import gleam/erlang
 import gleam/erlang/process
 import gleam/int
@@ -27,7 +28,7 @@ const usage = "USAGE:
 pub fn main() {
   let config = config.load_from_env_or_crash()
 
-  case erlang.start_arguments() {
+  case argv.load().arguments {
     ["server"] -> server(config)
     ["login-url", user_id] -> login_url(user_id, config)
     ["email", subject, body, addresses] ->
