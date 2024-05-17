@@ -1,5 +1,5 @@
-import sqlight
 import gleam/hackney
+import sqlight
 
 pub type Error {
   Database(sqlight.Error)

@@ -1,7 +1,7 @@
 import gleam/http/response
 import puck/routes
-import wisp/testing
 import tests
+import wisp/testing
 
 pub fn unknown_page_test() {
   use ctx <- tests.with_context

@@ -1,11 +1,11 @@
-import gleam/http/response
 import gleam/erlang/process
+import gleam/http/response
 import gleam/int
 import gleam/option.{Some}
 import gleam/string
-import puck/user
 import puck/database
 import puck/routes
+import puck/user
 import puck/web/auth
 import tests
 import wisp/testing

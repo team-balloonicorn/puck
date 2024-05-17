@@ -14,16 +14,10 @@ import puck/web.{type Context, p}
 import wisp.{type Request, type Response}
 
 pub const costs = [
-  #("Site fee", 300_000),
-  #("Site camping fee", 80_000),
-  #("Rubbish collection", 10_000),
-  #("Food", 180_000),
-  #("Bar", 50_000),
-  #("Kitchen equipment hire", 34_000),
-  #("Tables + chairs hire", 20_000),
-  #("Firewood", 10_000),
-  #("Transportation", 50_000),
-  #("Speakers", 0),
+  #("Site fee", 300_000), #("Site camping fee", 80_000),
+  #("Rubbish collection", 10_000), #("Food", 180_000), #("Bar", 50_000),
+  #("Kitchen equipment hire", 34_000), #("Tables + chairs hire", 20_000),
+  #("Firewood", 10_000), #("Transportation", 50_000), #("Speakers", 0),
   #("Cleaning supplies, etc", 30_000),
 ]
 
