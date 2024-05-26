@@ -19,12 +19,12 @@ with money as (
 
 select
   users.name as name,
-  money.amount / 100 as paid,
+  money.amount is not null and money.amount > 0 as "has paid",
   applications.answers ->> 'dietary-requirements' as diet
 from users
-left join
+join
   applications on applications.user_id = users.id
-left join
+join
   money on money.reference = applications.payment_reference
 where
   diet is not null
@@ -39,6 +39,7 @@ where
   and diet != 'None'
   and diet != 'None, thank you x'
   and diet != 'Nope'
+  and diet != 'Nope!'
   and diet != 'none';
 
 .quit

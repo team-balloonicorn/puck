@@ -20,7 +20,7 @@ with money as (
 select
   users.name as name,
   users.email as email,
-  money.amount / 100 as paid,
+  money.amount is not null and money.amount > 0 as "has paid",
   applications.answers ->> 'accessibility-requirements' as access
 from users
 left join
