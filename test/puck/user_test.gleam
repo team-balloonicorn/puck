@@ -182,14 +182,14 @@ pub fn get_user_by_payment_reference_not_found_test() {
     user.get_user_by_payment_reference(db, "m-12345678901234")
 }
 
-pub fn login_token_hash_test() {
+pub fn login_token_test() {
   use db <- tests.with_connection
   let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
   let id = user.id
 
   // Create a token and fetch it
   let assert Ok(Some(token)) = user.get_or_create_login_token(db, id)
-  let assert Ok(Some(hash)) = user.get_login_token_hash(db, id)
+  let assert Ok(Some(hash)) = user.get_login_token(db, id)
 
   // Verify it
   let assert True = token == hash
@@ -198,7 +198,7 @@ pub fn login_token_hash_test() {
   // Old tokens are not valid
   let sql = "update users set login_token_created_at = '2019-01-01 00:00:00'"
   let assert Ok(Nil) = database.exec(sql, db)
-  let assert Ok(None) = user.get_login_token_hash(db, id)
+  let assert Ok(None) = user.get_login_token(db, id)
 }
 
 pub fn get_by_email_test() {

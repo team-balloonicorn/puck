@@ -178,14 +178,14 @@ pub fn get_or_create_login_token(
   conn: database.Connection,
   user_id: Int,
 ) -> Result(Option(String), Error) {
-  let token = case get_login_token_hash(conn, user_id) {
+  let token = case get_login_token(conn, user_id) {
     Ok(option.Some(token)) -> token
     _ -> bit_array.base64_url_encode(crypto.strong_random_bytes(24), False)
   }
   let sql =
     "
     update users set 
-      login_token_hash = ?2,
+      login_token = ?2,
       login_token_created_at = datetime('now')
     where
       id = ?1
@@ -199,14 +199,14 @@ pub fn get_or_create_login_token(
   |> Ok
 }
 
-pub fn get_login_token_hash(
+pub fn get_login_token(
   conn: database.Connection,
   user_id: Int,
 ) -> Result(Option(String), Error) {
   let sql =
     "
     select
-      login_token_hash
+      login_token
     from
       users
     where

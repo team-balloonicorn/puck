@@ -181,7 +181,7 @@ pub fn login_via_token(user_id: String, token: String, ctx: Context) {
   // a hash in a constant time way.
   use user_id <- web.try_(int.parse(user_id), bad_token_page)
   use db_token <- web.try_(
-    user.get_login_token_hash(ctx.db, user_id),
+    user.get_login_token(ctx.db, user_id),
     bad_token_page,
   )
   use db_token <- web.some(db_token, bad_token_page)
