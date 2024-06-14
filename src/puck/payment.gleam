@@ -153,8 +153,8 @@ pub fn total(conn: database.Connection) -> Result(Int, Error) {
       coalesce(sum(amount), 0) as total
     from
       payments
-    inner join applications on
-      payments.reference = applications.payment_reference
+    inner join users on
+      payments.reference = users.payment_reference
     "
 
   database.one(sql, conn, [], dynamic.element(0, dynamic.int))

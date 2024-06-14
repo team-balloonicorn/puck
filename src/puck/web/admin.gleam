@@ -2,7 +2,6 @@ import gleam/dict
 import gleam/http
 import gleam/int
 import gleam/list
-import gleam/option.{Some}
 import gleam/result
 import nakai/html
 import puck/payment.{type Payment}
@@ -65,26 +64,19 @@ fn day_income(payment: #(String, Int, Int)) -> html.Node(a) {
 }
 
 fn user_row(user: User, ctx: Context) -> html.Node(a) {
-  let application_data = case user.get_application(ctx.db, user.id) {
-    Ok(Some(application)) -> {
-      let assert Ok(total) =
-        payment.total_for_reference(ctx.db, application.payment_reference)
-      let get = fn(key) {
-        result.unwrap(dict.get(application.answers, key), "")
-      }
-      [
-        money.pence_to_pounds(total),
-        application.payment_reference,
-        get(event.field_attended),
-        get(event.field_support_network),
-        get(event.field_support_network_attended),
-        get(event.field_dietary_requirements),
-        get(event.field_accessibility_requirements),
-      ]
-    }
+  let assert Ok(total) =
+    payment.total_for_reference(ctx.db, user.payment_reference)
+  let get = fn(key) { result.unwrap(dict.get(user.answers, key), "") }
 
-    _ -> ["", "", "", "", "", "", ""]
-  }
+  let user_data = [
+    money.pence_to_pounds(total),
+    user.payment_reference,
+    get(event.field_attended),
+    get(event.field_support_network),
+    get(event.field_support_network_attended),
+    get(event.field_dietary_requirements),
+    get(event.field_accessibility_requirements),
+  ]
 
   html.tr(
     [],
@@ -94,7 +86,7 @@ fn user_row(user: User, ctx: Context) -> html.Node(a) {
         user.name,
         user.email,
         int.to_string(user.interactions),
-        ..application_data
+        ..user_data
       ],
       td,
     ),

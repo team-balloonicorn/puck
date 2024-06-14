@@ -11,14 +11,13 @@ import puck/error.{type Error}
 import sqlight
 
 pub type User {
-  User(id: Int, name: String, email: String, interactions: Int, is_admin: Bool)
-}
-
-pub type Application {
-  Application(
+  User(
     id: Int,
+    name: String,
+    email: String,
+    interactions: Int,
+    is_admin: Bool,
     payment_reference: String,
-    user_id: Int,
     answers: Dict(String, String),
   )
 }
@@ -31,13 +30,17 @@ pub fn insert(
   let sql =
     "
     insert into users
-      (name, email) 
+      (name, email, payment_reference) 
     values
-      (?1, ?2)
+      (?1, ?2, ?3)
     returning
-      id, name, email, interactions, is_admin
+      id, name, email, interactions, is_admin, payment_reference, answers
     "
-  let arguments = [sqlight.text(name), sqlight.text(string.lowercase(email))]
+  let arguments = [
+    sqlight.text(name),
+    sqlight.text(string.lowercase(email)),
+    sqlight.text(generate_reference()),
+  ]
 
   case database.one(sql, conn, arguments, decoder) {
     Ok(user) -> Ok(user)
@@ -54,7 +57,7 @@ pub fn list_all(conn: database.Connection) -> Result(List(User), Error) {
   let sql =
     "
     select
-      id, name, email, interactions, is_admin
+      id, name, email, interactions, is_admin, payment_reference, answers
     from users
     limit 1000
     "
@@ -69,7 +72,7 @@ pub fn get_by_email(
   let sql =
     "
     select 
-      id, name, email, interactions, is_admin
+      id, name, email, interactions, is_admin, payment_reference, answers
     from
       users
     where
@@ -85,21 +88,17 @@ pub fn get_by_email(
 
 /// Insert the application for a user. If the user already has an application then
 /// the answers are merged into the existing record.
-pub fn insert_application(
+pub fn record_answers(
   conn: database.Connection,
   user_id user_id: Int,
   answers answers: Dict(String, String),
-) -> Result(Application, Error) {
+) -> Result(Nil, Error) {
   let sql =
     "
-    insert into applications 
-      (user_id, payment_reference, answers)
-    values
-      (?1, ?2, ?3)
-    on conflict (user_id) do
-      update set answers = json_patch(answers, excluded.answers)
-    returning
-      id, payment_reference, user_id, answers
+    update users set
+      answers = json_patch(answers, ?2)
+    where
+      id = ?1
     "
   let json =
     json.to_string(json.object(
@@ -107,30 +106,9 @@ pub fn insert_application(
       |> dict.map_values(fn(_, v) { json.string(v) })
       |> dict.to_list,
     ))
-  let arguments = [
-    sqlight.int(user_id),
-    sqlight.text(generate_reference()),
-    sqlight.text(json),
-  ]
-  database.one(sql, conn, arguments, application_decoder)
-}
-
-/// Get the application for a user.
-pub fn get_application(
-  conn: database.Connection,
-  user_id: Int,
-) -> Result(Option(Application), Error) {
-  let sql =
-    "
-    select
-      id, payment_reference, user_id, answers
-    from
-      applications 
-    where
-      user_id = ?1
-    "
-  let arguments = [sqlight.int(user_id)]
-  database.maybe_one(sql, conn, arguments, application_decoder)
+  let arguments = [sqlight.int(user_id), sqlight.text(json)]
+  use _ <- result.try(database.query(sql, conn, arguments, Ok))
+  Ok(Nil)
 }
 
 pub fn get_user_by_payment_reference(
@@ -140,11 +118,9 @@ pub fn get_user_by_payment_reference(
   let sql =
     "
     select
-      users.id, name, email, interactions, is_admin
+      users.id, name, email, interactions, is_admin, payment_reference, answers
     from
       users
-    join
-      applications on users.id = applications.user_id
     where
       payment_reference = ?1
     "
@@ -163,7 +139,7 @@ pub fn get_and_increment_interaction(
     where
       id = ?1
     returning
-      id, name, email, interactions, is_admin
+      id, name, email, interactions, is_admin, payment_reference, answers
     "
   let arguments = [sqlight.int(user_id)]
   database.maybe_one(sql, conn, arguments, decoder)
@@ -222,24 +198,15 @@ pub fn get_login_token(
 
 fn decoder(data: Dynamic) {
   data
-  |> dy.decode5(
+  |> dy.decode7(
     User,
     dy.element(0, dy.int),
     dy.element(1, dy.string),
     dy.element(2, dy.string),
     dy.element(3, dy.int),
     dy.element(4, sqlight.decode_bool),
-  )
-}
-
-fn application_decoder(data: Dynamic) {
-  data
-  |> dy.decode4(
-    Application,
-    dy.element(0, dy.int),
-    dy.element(1, dy.string),
-    dy.element(2, dy.int),
-    dy.element(3, json_object(dy.string)),
+    dy.element(5, dy.string),
+    dy.element(6, json_object(dy.string)),
   )
 }
 

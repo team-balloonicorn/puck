@@ -90,13 +90,7 @@ create table if not exists users (
     constraint valid_login_token_created_at check (
       login_token_created_at is null 
       or datetime(login_token_created_at) not null
-    )
-) strict;
-
-create table if not exists applications (
-  id integer primary key autoincrement not null,
-
-  user_id integer not null unique,
+    ),
 
   payment_reference text not null unique collate nocase
     constraint valid_payment_reference check (
@@ -104,9 +98,7 @@ create table if not exists applications (
     ),
 
   answers text not null default '{}'
-    constraint valid_answers_json check (json(answers) not null),
-
-  foreign key (user_id) references users (id)
+    constraint valid_answers_json check (json(answers) not null)
 ) strict;
 
 create table if not exists payments (

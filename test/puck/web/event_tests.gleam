@@ -75,9 +75,7 @@ pub fn register_attendance_ok_test() {
     |> routes.handle_request(ctx)
   let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
-  let assert Ok(Some(application)) = user.get_application(ctx.db, user.id)
-  let assert "m-" <> _ = application.payment_reference
-  let assert True = application.user_id == user.id
+  let assert Ok(Some(user)) = user.get_by_email(ctx.db, user.email)
   let assert [
     #("accessibility-requirements", "I walk with a stick"),
     #("attended", "Yes"),
@@ -85,7 +83,7 @@ pub fn register_attendance_ok_test() {
     #("support-network", "Lauren, Bell"),
     #("support-network-attended", "Lauren"),
   ] =
-    application.answers
+    user.answers
     |> dict.to_list
     |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
 }

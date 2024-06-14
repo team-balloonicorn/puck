@@ -9,7 +9,7 @@ import markdown
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/fact
-import puck/user.{type Application}
+import puck/user.{type User}
 import puck/web.{type Context, p}
 import wisp.{type Request, type Response}
 
@@ -245,7 +245,7 @@ fn register_attendance(request: Request, ctx: Context) -> Response {
     }
   }
   let answers = list.fold(all_fields(), dict.new(), get_answer)
-  let assert Ok(_) = user.insert_application(ctx.db, user.id, answers)
+  let assert Ok(_) = user.record_answers(ctx.db, user.id, answers)
   wisp.redirect("/")
 }
 
@@ -482,13 +482,10 @@ fn div(children) -> html.Node(a) {
   html.div([], children)
 }
 
-pub fn application_answers_list_html(
-  application: Application,
-) -> List(html.Node(a)) {
+pub fn application_answers_list_html(user: User) -> List(html.Node(a)) {
   questions
   |> list.map(fn(question) {
-    let answer =
-      result.unwrap(dict.get(application.answers, question.key), "n/a")
+    let answer = result.unwrap(dict.get(user.answers, question.key), "n/a")
     web.dt_dl(question.text, answer)
   })
 }

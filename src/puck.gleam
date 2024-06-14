@@ -43,6 +43,8 @@ fn unknown() {
 }
 
 fn server(config: Config) {
+  wisp.configure_logger()
+
   case config.environment {
     "development" -> Nil
     _ -> install_log_handler(send_error_email(_, config))

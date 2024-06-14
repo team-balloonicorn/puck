@@ -1,4 +1,3 @@
-import gleam/dict
 import gleam/erlang/process
 import gleam/int
 import gleam/string
@@ -65,11 +64,9 @@ fn payload(reference: String, amount: Int) {
 pub fn webhook_matching_reference_test() {
   use ctx <- tests.with_context
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
-  let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, dict.new())
   let #(ctx, emails) = tests.track_sent_emails(ctx)
   let #(ctx, notifications) = tests.track_sent_notifications(ctx)
-  let payload = payload(application.payment_reference, 12_000)
+  let payload = payload(user.payment_reference, 12_000)
   let response =
     testing.post(
       "/api/payment/" <> ctx.config.payment_secret,
@@ -99,11 +96,9 @@ pub fn webhook_matching_reference_test() {
 pub fn webhook_wrong_case_matching_reference_test() {
   use ctx <- tests.with_context
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
-  let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, dict.new())
   let #(ctx, emails) = tests.track_sent_emails(ctx)
   let #(ctx, notifications) = tests.track_sent_notifications(ctx)
-  let payload = payload(string.uppercase(application.payment_reference), 12_000)
+  let payload = payload(string.uppercase(user.payment_reference), 12_000)
   let response =
     testing.post(
       "/api/payment/" <> ctx.config.payment_secret,
@@ -138,19 +133,17 @@ pub fn webhook_duplicate_test() {
   let #(ctx, notifications) = tests.track_sent_notifications(ctx)
 
   let assert Ok(user) = user.insert(ctx.db, "Louis", "louis@example.com")
-  let assert Ok(application) =
-    user.insert_application(ctx.db, user.id, dict.new())
   let payment =
     Payment(
       id: "tx_0000AG2o6vNOP3W9owpal8",
       created_at: "2022-02-01T20:47:19.022Z",
       amount: 12_000,
       counterparty: "Louis Pilfold",
-      reference: application.payment_reference,
+      reference: user.payment_reference,
     )
   let assert Ok(True) = payment.insert(ctx.db, payment)
 
-  let payload = payload(application.payment_reference, 12_000)
+  let payload = payload(user.payment_reference, 12_000)
   let response =
     testing.post(
       "/api/payment/" <> ctx.config.payment_secret,

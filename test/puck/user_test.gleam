@@ -3,7 +3,7 @@ import gleam/option.{None, Some}
 import gleam/string
 import puck/database
 import puck/error.{Database}
-import puck/user.{Application, User}
+import puck/user.{User}
 import tests
 
 pub fn insert_new_users_test() {
@@ -15,7 +15,11 @@ pub fn insert_new_users_test() {
     email: "jay@example.com",
     interactions: 0,
     is_admin: False,
+    payment_reference: ref1,
+    answers: answers,
   )) = user.insert(db, "Jay", "jay@example.com")
+  let assert "m-" <> _ = ref1
+  let assert True = answers == dict.new()
 
   let assert Ok(User(
     id: 2,
@@ -23,7 +27,12 @@ pub fn insert_new_users_test() {
     email: "al@example.com",
     interactions: 0,
     is_admin: False,
+    payment_reference: ref2,
+    answers: _,
   )) = user.insert(db, "Al", "al@example.com")
+  let assert "m-" <> _ = ref2
+
+  let assert True = ref1 != ref2
 
   let assert Ok(User(
     id: 3,
@@ -31,6 +40,8 @@ pub fn insert_new_users_test() {
     email: "louis@example.com",
     interactions: 0,
     is_admin: False,
+    payment_reference: _,
+    answers: _,
   )) = user.insert(db, "Louis", "louis@example.com")
 }
 
@@ -42,6 +53,8 @@ pub fn insert_lowercases_email_test() {
     email: "jay@example.com",
     interactions: 0,
     is_admin: False,
+    payment_reference: _,
+    answers: _,
   )) = user.insert(db, "Jay", "JAY@EXAMPLE.COM")
 }
 
@@ -64,6 +77,8 @@ pub fn insert_already_inserted_test() {
     email: "louis@example.com",
     interactions: 0,
     is_admin: False,
+    payment_reference: _,
+    answers: _,
   )) = user.insert(db, "Louis", "louis@example.com")
 
   let assert Error(error.EmailAlreadyInUse) =
@@ -83,89 +98,18 @@ pub fn get_by_id_incrementing_interaction_test() {
     user.get_and_increment_interaction(db, 1)
 }
 
-pub fn insert_application_test() {
-  use db <- tests.with_connection
-  let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-
-  let assert Ok(Application(
-    id: 1,
-    payment_reference: reference,
-    user_id: uid,
-    answers: answers,
-  )) =
-    user.insert_application(
-      db,
-      user.id,
-      dict.from_list([#("a", "b"), #("c", "d")]),
-    )
-
-  let assert 14 = string.length(reference)
-  let assert True = string.starts_with(reference, "m-")
-  let assert True = uid == user.id
-  let assert [#("a", "b"), #("c", "d")] = dict.to_list(answers)
-}
-
-pub fn insert_application_already_existing_test() {
-  use db <- tests.with_connection
-  let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-
-  let assert Ok(Application(
-    id: 1,
-    payment_reference: reference1,
-    user_id: uid1,
-    ..,
-  )) =
-    user.insert_application(
-      db,
-      user.id,
-      dict.from_list([#("a", "b"), #("c", "d")]),
-    )
-  let assert Ok(Application(
-    id: 1,
-    payment_reference: reference2,
-    user_id: uid2,
-    answers: answers,
-  )) =
-    user.insert_application(
-      db,
-      user.id,
-      dict.from_list([#("a", "changed"), #("c", "d"), #("e", "f")]),
-    )
-
-  let assert True = reference1 == reference2
-  let assert True = uid1 == uid2
-  let assert [#("a", "changed"), #("c", "d"), #("e", "f")] =
-    dict.to_list(answers)
-}
-
-pub fn get_application_test() {
-  use db <- tests.with_connection
-  let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-
-  let assert Ok(None) = user.get_application(db, user.id)
-
-  let assert Ok(application1) =
-    user.insert_application(db, user.id, dict.from_list([#("a", "b")]))
-
-  let assert Ok(Some(application2)) = user.get_application(db, user.id)
-
-  let assert True = application1 == application2
-}
-
 pub fn get_user_by_payment_reference_found_test() {
   use db <- tests.with_connection
   let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(app) = user.insert_application(db, user.id, dict.new())
   let assert Ok(Some(user2)) =
-    user.get_user_by_payment_reference(db, app.payment_reference)
+    user.get_user_by_payment_reference(db, user.payment_reference)
   let assert True = user.id == user2.id
 }
 
 pub fn get_user_by_payment_reference_case_insensitive_test() {
   use db <- tests.with_connection
   let assert Ok(user) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(app) = user.insert_application(db, user.id, dict.new())
-  let ref = app.payment_reference
+  let ref = user.payment_reference
 
   let assert Ok(Some(user2)) =
     user.get_user_by_payment_reference(db, string.uppercase(ref))

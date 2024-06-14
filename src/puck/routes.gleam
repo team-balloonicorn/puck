@@ -1,14 +1,16 @@
 import gleam/bool
+import gleam/dict
 import gleam/http/response
+import gleam/io
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{Some}
 import gleam/result
 import gleam/string_builder.{type StringBuilder}
 import nakai/html
 import nakai/html/attrs.{Attr}
 import puck/config.{type Config}
 import puck/payment.{type Payment}
-import puck/user.{type Application, type User}
+import puck/user.{type User}
 import puck/web.{type Context, p}
 import puck/web/admin
 import puck/web/auth
@@ -32,7 +34,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["information"] -> event.information(req, ctx)
     ["sign-up", key] if key == attend -> auth.sign_up(req, ctx)
     ["login"] -> auth.login(req, ctx)
-    ["login", user_id, token] -> auth.login_via_token(user_id, token, ctx)
+    ["login", user_id, token] -> {
+      io.debug("login via token")
+      auth.login_via_token(user_id, token, ctx)
+    }
     ["api", "payment", key] if key == pay -> money.payment_webhook(req, ctx)
     _ -> wisp.not_found()
   }
@@ -68,19 +73,18 @@ fn middleware(
 
 fn home(ctx: Context) -> Response {
   use user <- web.require_user(ctx)
-  let assert Ok(application) = user.get_application(ctx.db, user.id)
 
-  case application {
-    Some(application) -> dashboard(user, application, ctx)
-    None -> event.application_form(ctx)
+  case user.answers == dict.new() {
+    True -> event.application_form(ctx)
+    False -> dashboard(user, ctx)
   }
 }
 
-fn dashboard(user: User, application: Application, ctx: Context) -> Response {
+fn dashboard(user: User, ctx: Context) -> Response {
   let assert Ok(payments) =
-    payment.for_reference(ctx.db, application.payment_reference)
+    payment.for_reference(ctx.db, user.payment_reference)
   let assert Ok(total) = payment.total(ctx.db)
-  dashboard_html(user, application, payments, total, ctx.config)
+  dashboard_html(user, payments, total, ctx.config)
   |> wisp.html_response(200)
 }
 
@@ -90,7 +94,6 @@ fn table_row(label, value) -> html.Node(a) {
 
 fn dashboard_html(
   user: User,
-  application: Application,
   payments: List(Payment),
   _total_contributions: Int,
   config: Config,
@@ -133,7 +136,7 @@ fn dashboard_html(
         table_row("Account holder", config.account_name),
         table_row("Account number", config.account_number),
         table_row("Sort code", config.sort_code),
-        table_row("Unique reference", application.payment_reference),
+        table_row("Unique reference", user.payment_reference),
       ]),
     ])
 
@@ -142,7 +145,7 @@ fn dashboard_html(
     web.dt_dl("What's your name?", user.name),
     web.dt_dl("What's your email?", user.email),
     web.dt_dl("How much have you contributed?", user_contributed_text),
-    html.Fragment(event.application_answers_list_html(application)),
+    html.Fragment(event.application_answers_list_html(user)),
   ]
 
   let expandable = fn(title, body) {

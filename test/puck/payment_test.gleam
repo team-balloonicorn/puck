@@ -1,4 +1,3 @@
-import gleam/dict
 import gleam/json
 import gleam/result
 import gleeunit/should
@@ -249,16 +248,14 @@ pub fn total_test() {
   let assert Ok(0) = payment.total(db)
 
   let assert Ok(u1) = user.insert(db, "Louis", "louis@example.com")
-  let assert Ok(a1) = user.insert_application(db, u1.id, dict.new())
   let assert Ok(u2) = user.insert(db, "Jay", "jay@example.com")
-  let assert Ok(a2) = user.insert_application(db, u2.id, dict.new())
 
   let assert Ok(True) =
-    payment.insert(db, Payment("tx1", date, "Lou", 1, a1.payment_reference))
+    payment.insert(db, Payment("tx1", date, "Lou", 1, u1.payment_reference))
   let assert Ok(True) =
-    payment.insert(db, Payment("tx2", date, "Jay", 2, a2.payment_reference))
+    payment.insert(db, Payment("tx2", date, "Jay", 2, u2.payment_reference))
   let assert Ok(True) =
-    payment.insert(db, Payment("tx3", date, "Jay", 3, a2.payment_reference))
+    payment.insert(db, Payment("tx3", date, "Jay", 3, u2.payment_reference))
   let assert Ok(False) =
     payment.insert(db, Payment("tx3", date, "Other", 4, "Unknown"))
 
