@@ -180,22 +180,16 @@ pub fn login_via_token(user_id: String, token: String, ctx: Context) {
   // This application isn't very sensitive, so we're just comparing tokens
   // rather than doing the much more secure thing of storing and comparing
   // a hash in a constant time way.
-  io.debug(0)
   use user_id <- web.try_(int.parse(user_id), bad_token_page)
-  io.debug(1)
   use db_token <- web.try_(
     user.get_login_token(ctx.db, user_id),
     bad_token_page,
   )
-  io.debug(2)
   use db_token <- web.some(db_token, bad_token_page)
-  io.debug(3)
-  case io.debug(token == db_token) {
+  case token == db_token {
     True ->
       wisp.redirect("/")
-      |> response.set_header("x-louis", "hello!!!!")
       |> set_signed_user_id_cookie(user_id, ctx.config.signing_secret)
-      |> io.debug
     False -> bad_token_page()
   }
 }
@@ -232,7 +226,7 @@ fn set_signed_user_id_cookie(
 ) -> Response {
   <<int.to_string(user_id):utf8>>
   |> crypto.sign_message(<<signing_secret:utf8>>, crypto.Sha256)
-  |> response.set_cookie(response, auth_cookie, _, cookie.defaults(Https))
+  |> response.set_cookie(response, auth_cookie, _, cookie.defaults(http.Http))
 }
 
 pub fn get_user_from_session(

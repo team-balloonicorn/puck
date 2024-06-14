@@ -34,10 +34,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["information"] -> event.information(req, ctx)
     ["sign-up", key] if key == attend -> auth.sign_up(req, ctx)
     ["login"] -> auth.login(req, ctx)
-    ["login", user_id, token] -> {
-      io.debug("login via token")
-      auth.login_via_token(user_id, token, ctx)
-    }
+    ["login", user_id, token] -> auth.login_via_token(user_id, token, ctx)
     ["api", "payment", key] if key == pay -> money.payment_webhook(req, ctx)
     _ -> wisp.not_found()
   }
