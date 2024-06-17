@@ -1,9 +1,7 @@
 import gleam/bool
-import gleam/dict
 import gleam/http/response
-import gleam/io
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/result
 import gleam/string_builder.{type StringBuilder}
 import nakai/html
@@ -71,9 +69,9 @@ fn middleware(
 fn home(ctx: Context) -> Response {
   use user <- web.require_user(ctx)
 
-  case user.answers == dict.new() {
-    True -> event.application_form(ctx)
-    False -> dashboard(user, ctx)
+  case user.attended_before {
+    None -> event.application_form(ctx)
+    Some(_) -> dashboard(user, ctx)
   }
 }
 

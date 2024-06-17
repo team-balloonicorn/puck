@@ -1,4 +1,3 @@
-import gleam/dict
 import gleam/http
 import gleam/int
 import gleam/list
@@ -90,12 +89,6 @@ const questions = [
   ),
 ]
 
-fn all_fields() -> List(String) {
-  questions
-  |> list.map(fn(x) { x.key })
-}
-
-// TODO: fact editing
 pub fn information(request: Request, ctx: Context) -> Response {
   case request.method {
     http.Get -> show_information(ctx)
@@ -237,16 +230,32 @@ pub fn attendance(request: Request, ctx: Context) -> Response {
 fn register_attendance(request: Request, ctx: Context) -> Response {
   use user <- web.require_user(ctx)
   use form <- wisp.require_form(request)
-  let params = form.values
-  let get_answer = fn(dict, name) {
-    case list.key_find(params, name) {
-      Ok(value) -> dict.insert(dict, name, value)
-      Error(_) -> dict
+
+  case form.values {
+    [
+      #("accessibility-requirements", accessibility_requirements),
+      #("attended", attended_before),
+      #("dietary-requirements", dietary_requirements),
+      #("support-network", support_network),
+      #("support-network-attended", support_network_attended),
+    ] -> {
+      let assert Ok(_) =
+        user.record_answers(
+          ctx.db,
+          user.id,
+          attended_before: attended_before == "Yes",
+          accessibility_requirements: accessibility_requirements,
+          dietary_requirements: dietary_requirements,
+          support_network: support_network,
+          support_network_attended: support_network_attended,
+        )
+      wisp.redirect("/")
+    }
+
+    _ -> {
+      attendance_form(ctx)
     }
   }
-  let answers = list.fold(all_fields(), dict.new(), get_answer)
-  let assert Ok(_) = user.record_answers(ctx.db, user.id, answers)
-  wisp.redirect("/")
 }
 
 fn field_html(question: Question) -> html.Node(a) {
@@ -483,11 +492,25 @@ fn div(children) -> html.Node(a) {
 }
 
 pub fn application_answers_list_html(user: User) -> List(html.Node(a)) {
-  questions
-  |> list.map(fn(question) {
-    let answer = result.unwrap(dict.get(user.answers, question.key), "n/a")
-    web.dt_dl(question.text, answer)
-  })
+  [
+    web.dt_dl("Have you attended before?", case user.attended_before {
+      Some(True) -> "Yes"
+      None | Some(False) -> "No"
+    }),
+    web.dt_dl("Who is in your support network?", user.support_network),
+    web.dt_dl(
+      "Who in your support network has attended before?",
+      user.support_network_attended,
+    ),
+    web.dt_dl(
+      "Do you have any dietary requirements?",
+      user.dietary_requirements,
+    ),
+    web.dt_dl(
+      "Do you have any accessibility requirements?",
+      user.accessibility_requirements,
+    ),
+  ]
 }
 
 pub fn costs_table() -> html.Node(a) {

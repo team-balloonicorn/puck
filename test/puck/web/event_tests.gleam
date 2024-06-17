@@ -1,6 +1,4 @@
-import gleam/dict
 import gleam/http/response
-import gleam/list
 import gleam/option.{Some}
 import gleam/string
 import puck/routes
@@ -68,7 +66,6 @@ pub fn register_attendance_ok_test() {
     #("support-network-attended", "Lauren"),
     #("dietary-requirements", "Vegan"),
     #("accessibility-requirements", "I walk with a stick"),
-    #("other", "This should not be recorded"),
   ]
   let response =
     testing.post_form("/" <> secret, [], form)
@@ -76,16 +73,24 @@ pub fn register_attendance_ok_test() {
   let assert 303 = response.status
   let assert Ok("/") = response.get_header(response, "location")
   let assert Ok(Some(user)) = user.get_by_email(ctx.db, user.email)
-  let assert [
-    #("accessibility-requirements", "I walk with a stick"),
-    #("attended", "Yes"),
-    #("dietary-requirements", "Vegan"),
-    #("support-network", "Lauren, Bell"),
-    #("support-network-attended", "Lauren"),
-  ] =
-    user.answers
-    |> dict.to_list
-    |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
+  let assert Some(True) = user.attended_before
+  let assert "I walk with a stick" = user.accessibility_requirements
+  let assert "Vegan" = user.dietary_requirements
+  let assert "Lauren, Bell" = user.support_network
+  let assert "Lauren" = user.support_network_attended
+}
+
+pub fn register_attendance_invalid_field_test() {
+  use ctx <- tests.with_logged_in_context
+  let assert Some(user) = ctx.current_user
+  let secret = ctx.config.attend_secret
+  let form = [#("is-admin", "Yes")]
+  let response =
+    testing.post_form("/" <> secret, [], form)
+    |> routes.handle_request(ctx)
+  let assert 200 = response.status
+  let assert Ok(Some(user)) = user.get_by_email(ctx.db, user.email)
+  let assert False = user.is_admin
 }
 
 pub fn register_attendance_not_logged_in_test() {

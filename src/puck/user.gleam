@@ -1,8 +1,6 @@
 import gleam/bit_array
 import gleam/crypto
-import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic} as dy
-import gleam/json
 import gleam/option.{type Option}
 import gleam/result
 import gleam/string
@@ -18,8 +16,42 @@ pub type User {
     interactions: Int,
     is_admin: Bool,
     payment_reference: String,
-    answers: Dict(String, String),
+    attended_before: Option(Bool),
+    support_network: String,
+    support_network_attended: String,
+    dietary_requirements: String,
+    accessibility_requirements: String,
   )
+}
+
+fn decoder(data: Dynamic) {
+  let optional_bool = dy.optional(sqlight.decode_bool)
+
+  use id <- result.try(dy.element(0, dy.int)(data))
+  use name <- result.try(dy.element(1, dy.string)(data))
+  use email <- result.try(dy.element(2, dy.string)(data))
+  use interactions <- result.try(dy.element(3, dy.int)(data))
+  use is_admin <- result.try(dy.element(4, sqlight.decode_bool)(data))
+  use payment_reference <- result.try(dy.element(5, dy.string)(data))
+  use attended_before <- result.try(dy.element(6, optional_bool)(data))
+  use support_network <- result.try(dy.element(7, dy.string)(data))
+  use support_network_attended <- result.try(dy.element(8, dy.string)(data))
+  use dietary_requirements <- result.try(dy.element(9, dy.string)(data))
+  use accessibility_requirements <- result.try(dy.element(10, dy.string)(data))
+
+  Ok(User(
+    id: id,
+    name: name,
+    email: email,
+    interactions: interactions,
+    is_admin: is_admin,
+    payment_reference: payment_reference,
+    attended_before: attended_before,
+    support_network: support_network,
+    support_network_attended: support_network_attended,
+    dietary_requirements: dietary_requirements,
+    accessibility_requirements: accessibility_requirements,
+  ))
 }
 
 pub fn insert(
@@ -34,7 +66,9 @@ pub fn insert(
     values
       (?1, ?2, ?3)
     returning
-      id, name, email, interactions, is_admin, payment_reference, answers
+      id, name, email, interactions, is_admin, payment_reference,
+      attended_before, support_network, support_network_attended,
+      dietary_requirements, accessibility_requirements
     "
   let arguments = [
     sqlight.text(name),
@@ -57,7 +91,9 @@ pub fn list_all(conn: database.Connection) -> Result(List(User), Error) {
   let sql =
     "
     select
-      id, name, email, interactions, is_admin, payment_reference, answers
+      id, name, email, interactions, is_admin, payment_reference,
+      attended_before, support_network, support_network_attended,
+      dietary_requirements, accessibility_requirements
     from users
     limit 1000
     "
@@ -72,7 +108,9 @@ pub fn get_by_email(
   let sql =
     "
     select 
-      id, name, email, interactions, is_admin, payment_reference, answers
+      id, name, email, interactions, is_admin, payment_reference,
+      attended_before, support_network, support_network_attended,
+      dietary_requirements, accessibility_requirements
     from
       users
     where
@@ -91,22 +129,31 @@ pub fn get_by_email(
 pub fn record_answers(
   conn: database.Connection,
   user_id user_id: Int,
-  answers answers: Dict(String, String),
+  attended_before attended_before: Bool,
+  accessibility_requirements accessibility_requirements: String,
+  dietary_requirements dietary_requirements: String,
+  support_network support_network: String,
+  support_network_attended support_network_attended: String,
 ) -> Result(Nil, Error) {
   let sql =
     "
     update users set
-      answers = json_patch(answers, ?2)
+      attended_before = ?2,
+      accessibility_requirements = ?3,
+      dietary_requirements = ?4,
+      support_network = ?5,
+      support_network_attended = ?6
     where
       id = ?1
     "
-  let json =
-    json.to_string(json.object(
-      answers
-      |> dict.map_values(fn(_, v) { json.string(v) })
-      |> dict.to_list,
-    ))
-  let arguments = [sqlight.int(user_id), sqlight.text(json)]
+  let arguments = [
+    sqlight.int(user_id),
+    sqlight.bool(attended_before),
+    sqlight.text(accessibility_requirements),
+    sqlight.text(dietary_requirements),
+    sqlight.text(support_network),
+    sqlight.text(support_network_attended),
+  ]
   use _ <- result.try(database.query(sql, conn, arguments, Ok))
   Ok(Nil)
 }
@@ -118,7 +165,9 @@ pub fn get_user_by_payment_reference(
   let sql =
     "
     select
-      users.id, name, email, interactions, is_admin, payment_reference, answers
+      users.id, name, email, interactions, is_admin, payment_reference,
+      attended_before, support_network, support_network_attended,
+      dietary_requirements, accessibility_requirements
     from
       users
     where
@@ -139,7 +188,9 @@ pub fn get_and_increment_interaction(
     where
       id = ?1
     returning
-      id, name, email, interactions, is_admin, payment_reference, answers
+      id, name, email, interactions, is_admin, payment_reference,
+      attended_before, support_network, support_network_attended,
+      dietary_requirements, accessibility_requirements
     "
   let arguments = [sqlight.int(user_id)]
   database.maybe_one(sql, conn, arguments, decoder)
@@ -194,33 +245,6 @@ pub fn get_login_token(
   let decoder = dy.element(0, dy.optional(dy.string))
   database.maybe_one(sql, conn, arguments, decoder)
   |> result.map(option.flatten)
-}
-
-fn decoder(data: Dynamic) {
-  data
-  |> dy.decode7(
-    User,
-    dy.element(0, dy.int),
-    dy.element(1, dy.string),
-    dy.element(2, dy.string),
-    dy.element(3, dy.int),
-    dy.element(4, sqlight.decode_bool),
-    dy.element(5, dy.string),
-    dy.element(6, json_object(dy.string)),
-  )
-}
-
-fn json_object(inner: dy.Decoder(t)) -> dy.Decoder(Dict(String, t)) {
-  fn(data: Dynamic) {
-    use string <- result.then(dy.string(data))
-    json.decode(string, using: dy.dict(dy.string, inner))
-    |> result.map_error(fn(error) {
-      case error {
-        json.UnexpectedFormat(errors) -> errors
-        _ -> [dy.DecodeError(expected: "Json", found: "String", path: [])]
-      }
-    })
-  }
 }
 
 fn generate_reference() -> String {

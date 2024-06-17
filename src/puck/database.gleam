@@ -97,8 +97,13 @@ create table if not exists users (
       length(payment_reference) = 14 and payment_reference like 'm-%'
     ),
 
-  answers text not null default '{}'
-    constraint valid_answers_json check (json(answers) not null)
+  attended_before integer
+    constraint valid_attended_before check (is_admin in (0, 1)),
+
+  support_network text not null default '',
+  support_network_attended text not null default '',
+  dietary_requirements text not null default '',
+  accessibility_requirements text not null default ''
 ) strict;
 
 create table if not exists payments (

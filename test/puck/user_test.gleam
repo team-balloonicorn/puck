@@ -1,4 +1,3 @@
-import gleam/dict
 import gleam/option.{None, Some}
 import gleam/string
 import puck/database
@@ -16,10 +15,13 @@ pub fn insert_new_users_test() {
     interactions: 0,
     is_admin: False,
     payment_reference: ref1,
-    answers: answers,
+    attended_before: None,
+    support_network: "",
+    support_network_attended: "",
+    dietary_requirements: "",
+    accessibility_requirements: "",
   )) = user.insert(db, "Jay", "jay@example.com")
   let assert "m-" <> _ = ref1
-  let assert True = answers == dict.new()
 
   let assert Ok(User(
     id: 2,
@@ -28,7 +30,11 @@ pub fn insert_new_users_test() {
     interactions: 0,
     is_admin: False,
     payment_reference: ref2,
-    answers: _,
+    attended_before: None,
+    support_network: "",
+    support_network_attended: "",
+    dietary_requirements: "",
+    accessibility_requirements: "",
   )) = user.insert(db, "Al", "al@example.com")
   let assert "m-" <> _ = ref2
 
@@ -41,7 +47,11 @@ pub fn insert_new_users_test() {
     interactions: 0,
     is_admin: False,
     payment_reference: _,
-    answers: _,
+    attended_before: None,
+    support_network: "",
+    support_network_attended: "",
+    dietary_requirements: "",
+    accessibility_requirements: "",
   )) = user.insert(db, "Louis", "louis@example.com")
 }
 
@@ -54,7 +64,11 @@ pub fn insert_lowercases_email_test() {
     interactions: 0,
     is_admin: False,
     payment_reference: _,
-    answers: _,
+    attended_before: None,
+    support_network: "",
+    support_network_attended: "",
+    dietary_requirements: "",
+    accessibility_requirements: "",
   )) = user.insert(db, "Jay", "JAY@EXAMPLE.COM")
 }
 
@@ -78,7 +92,11 @@ pub fn insert_already_inserted_test() {
     interactions: 0,
     is_admin: False,
     payment_reference: _,
-    answers: _,
+    attended_before: None,
+    support_network: "",
+    support_network_attended: "",
+    dietary_requirements: "",
+    accessibility_requirements: "",
   )) = user.insert(db, "Louis", "louis@example.com")
 
   let assert Error(error.EmailAlreadyInUse) =

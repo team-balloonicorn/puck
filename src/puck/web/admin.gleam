@@ -1,13 +1,12 @@
-import gleam/dict
 import gleam/http
 import gleam/int
 import gleam/list
-import gleam/result
+import gleam/option
+import gleam/string
 import nakai/html
 import puck/payment.{type Payment}
 import puck/user.{type User}
 import puck/web.{type Context}
-import puck/web/event
 import puck/web/money
 import wisp.{type Request, type Response}
 
@@ -66,16 +65,15 @@ fn day_income(payment: #(String, Int, Int)) -> html.Node(a) {
 fn user_row(user: User, ctx: Context) -> html.Node(a) {
   let assert Ok(total) =
     payment.total_for_reference(ctx.db, user.payment_reference)
-  let get = fn(key) { result.unwrap(dict.get(user.answers, key), "") }
 
   let user_data = [
     money.pence_to_pounds(total),
     user.payment_reference,
-    get(event.field_attended),
-    get(event.field_support_network),
-    get(event.field_support_network_attended),
-    get(event.field_dietary_requirements),
-    get(event.field_accessibility_requirements),
+    user.attended_before |> option.map(string.inspect) |> option.unwrap(""),
+    user.support_network,
+    user.support_network_attended,
+    user.dietary_requirements,
+    user.accessibility_requirements,
   ]
 
   html.tr(

@@ -6,7 +6,6 @@ import gleam/http/cookie
 import gleam/http/request
 import gleam/http/response
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
