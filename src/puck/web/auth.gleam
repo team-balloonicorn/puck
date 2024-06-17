@@ -225,8 +225,7 @@ fn set_signed_user_id_cookie(
 ) -> Response {
   <<int.to_string(user_id):utf8>>
   |> crypto.sign_message(<<signing_secret:utf8>>, crypto.Sha256)
-  // TODO: re-enable secure cookies
-  |> response.set_cookie(response, auth_cookie, _, cookie.defaults(http.Http))
+  |> response.set_cookie(response, auth_cookie, _, cookie.defaults(http.Https))
 }
 
 pub fn get_user_from_session(
