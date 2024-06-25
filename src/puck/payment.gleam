@@ -172,10 +172,10 @@ pub fn unmatched(conn: database.Connection) -> Result(List(Payment), Error) {
       reference
     from
       payments
-    left join applications on
-      payments.reference = applications.payment_reference
+    left join users on
+      payments.reference = users.payment_reference
     where
-      applications.id is null
+      users.id is null
     "
 
   database.query(sql, conn, [], decoder)
@@ -206,8 +206,8 @@ pub fn per_day(
         payments.created_at
       from
         payments
-      inner join applications on
-        payments.reference = applications.payment_reference
+      inner join users on
+        payments.reference = users.payment_reference
     )
 
     select

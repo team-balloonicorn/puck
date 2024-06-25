@@ -282,11 +282,7 @@ pub fn count_users_with_payments(
     from
       users
     join
-      applications on users.id = applications.user_id
-    join
-      payments on payments.reference = applications.payment_reference
-    where
-      applications.id is not null
+      payments on payments.reference = users.payment_reference
     "
   let arguments = []
   database.one(sql, conn, arguments, dy.element(0, dy.int))
