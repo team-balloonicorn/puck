@@ -363,7 +363,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         them!",
       ),
       html.h2_text([], "When is it?"),
-      p("5pm Thursday the 6th June to 10am Monday the 10th June"),
+      p("5pm Thursday the 5th June to 10am Monday the 9th June"),
       html.h2_text([], "Where is it?"),
       p(
         "A wonderful little woodland festival site, 20 minutes drive from King's
@@ -414,9 +414,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
       ),
       html.h2_text([], "Can I come?"),
       html.p([], [
-        html.Text(
-          "Yes! So long as you are with someone who has attended before.",
-        ),
+        html.Text("Yes! So long as you know someone who has attended before."),
         html.ol([], [
           html.li_text(
             [],
