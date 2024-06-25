@@ -178,8 +178,10 @@ pub fn page_nav(user: Option(User)) -> html.Node(a) {
 
   html.nav([attrs.class("page-nav")], [
     html.a([attrs.href("/")], [html.Text("Home")]),
-    html.a([attrs.href("/costs")], [html.Text("Costs")]),
-    html.a([attrs.href("/information")], [html.Text("FAQs")]),
+    // TODO: costs
+    // html.a([attrs.href("/costs")], [html.Text("Costs")]),
+    // TODO: FAQs
+    // html.a([attrs.href("/information")], [html.Text("FAQs")]),
     admin,
   ])
 }
