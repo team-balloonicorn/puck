@@ -10,6 +10,7 @@ pub type Connection =
 const connection_config = "
 pragma foreign_keys = on;
 pragma auto_vacuum = incremental;
+pragma journal_mode = wal;
 "
 
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
