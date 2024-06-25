@@ -388,10 +388,6 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         "Yes! We will be providing breakfast and lunch buffets, and a delicious hot
         dinner on Friday, Saturday, and Sunday.",
       ),
-      p(
-        "We are hoping to do lunch too, just so long as we can get enough
-        kitchen volunteers.",
-      ),
       html.h2_text([], "What facilities are there on site?"),
       p(
         "There are flushing toilets, running water, hot showers, and a dreamy
