@@ -509,10 +509,10 @@ pub fn application_answers_list_html(user: User) -> List(html.Node(a)) {
 
 pub fn costs_table() -> html.Node(a) {
   html.table([], [
-    web.table_row("Low income", "£60+"),
-    web.table_row("Median income", "£80+"),
-    web.table_row("High income", "£100+"),
-    web.table_row("Superstar 💖", "£120+"),
+    web.table_row("Low income", "£70+"),
+    web.table_row("Median income", "£100+"),
+    web.table_row("High income", "£120+"),
+    web.table_row("Superstar 💖", "£160+"),
   ])
 }
 

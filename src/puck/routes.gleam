@@ -119,8 +119,7 @@ fn dashboard_html(
         "We don't make any money off this event. Please contribute what you can.
         Recommended contributions:",
       ),
-      // TODO: re-add costs table
-      // event.costs_table(),
+      event.costs_table(),
       p(
         "If you cannot afford this much please get in touch. No one is excluded
         from Midsummer.",
