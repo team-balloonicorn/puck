@@ -8,7 +8,7 @@ pub type Connection =
   sqlight.Connection
 
 const connection_config = "
-pragma foreign_keys = on
+pragma foreign_keys = on;
 pragma journal_mode=wal;
 pragma synchronous=normal;
 pragma mmap_size = 134217728;
