@@ -9,11 +9,10 @@ pub type Connection =
 
 const connection_config = "
 pragma foreign_keys = on;
-pragma journal_mode=wal;
-pragma synchronous=normal;
-pragma mmap_size = 134217728;
-pragma journal_size_limit = 27103364;
-pragma cache_size=2000;
+pragma journal_mode = wal;
+pragma temp_store = memory;
+pragma busy_timeout = 2000;
+pragma cache_size = -64000;
 "
 
 pub fn with_connection(path: String, f: fn(sqlight.Connection) -> a) -> a {
