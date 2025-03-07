@@ -25,6 +25,9 @@ pub type Config {
     account_name: String,
     account_number: String,
     sort_code: String,
+    // Signal channel URLs
+    signal_chat: String,
+    signal_announce: String,
   )
 }
 
@@ -45,6 +48,8 @@ pub fn load_from_env_or_crash() -> Config {
   let assert Ok(sort_code) = os.get_env("SORT_CODE")
   let assert Ok(help_email) = os.get_env("HELP_EMAIL")
   let assert Ok(signing_secret) = os.get_env("SIGNING_SECRET")
+  let assert Ok(signal_chat) = os.get_env("SIGNAL_CHAT")
+  let assert Ok(signal_announce) = os.get_env("SIGNAL_ANNOUNCE")
   let reload_templates = os.get_env("RELOAD_TEMPLATES") != Error(Nil)
 
   Config(
@@ -65,5 +70,7 @@ pub fn load_from_env_or_crash() -> Config {
     sort_code: sort_code,
     help_email: help_email,
     signing_secret: signing_secret,
+    signal_announce: signal_announce,
+    signal_chat: signal_chat,
   )
 }

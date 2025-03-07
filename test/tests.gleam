@@ -36,6 +36,8 @@ pub fn config() -> Config {
     account_name: random(),
     account_number: random(),
     sort_code: random(),
+    signal_chat: "https://signal.com/chat-" <> random(),
+    signal_announce: "https://signal.com/announce-" <> random(),
   )
 }
 
