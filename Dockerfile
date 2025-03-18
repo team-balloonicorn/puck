@@ -19,6 +19,8 @@ COPY \
   bin/split-joint-payment.sh \
   bin/edit-reference.sh \
   bin/edit-answer.sh \
+  bin/get-payment.sh \
+  bin/delete-payment.sh \
   /app/bin/
 
 USER puck
