@@ -21,12 +21,10 @@ select
   users.name as name,
   users.email as email,
   money.amount is not null and money.amount > 0 as "has paid",
-  applications.answers ->> 'accessibility-requirements' as access
+  users.accessibility_requirements as access
 from users
 left join
-  applications on applications.user_id = users.id
-left join
-  money on money.reference = applications.payment_reference
+  money on money.reference = users.payment_reference
 where
   access is not null
   and access != ''
