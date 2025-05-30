@@ -20,14 +20,16 @@ select reference, sum(amount) as amount, min(created_at) as paid_at
 select
   users.name as name,
   users.email as email,
-  applications.answers ->> 'support-network' as "support network",
+  users.attended_before as "attended previously",
+  users.support_network as "support network",
+  users.support_network_attended as "support network attended previously",
+  users.dietary_requirements as "dietary requirements",
+  users.accessibility_requirements as "access requirements",
   money.amount / 100 as "paid",
   money.paid_at as "paid at"
 from users
 join
-  applications on applications.user_id = users.id
-join
-  money on money.reference = applications.payment_reference
+  money on money.reference = users.payment_reference
 order by "paid at";
 
 .quit
