@@ -20,12 +20,10 @@ with money as (
 select
   users.name as name,
   money.amount is not null and money.amount > 0 as "has paid",
-  applications.answers ->> 'dietary-requirements' as diet
+  users.dietary_requirements as diet
 from users
 join
-  applications on applications.user_id = users.id
-join
-  money on money.reference = applications.payment_reference
+  money on money.reference = users.payment_reference
 where
   diet is not null
   and diet != ''
@@ -35,11 +33,15 @@ where
   and diet != 'Nada'
   and diet != 'No :)'
   and diet != 'No'
+  and diet != 'no'
   and diet != 'No.'
   and diet != 'None'
+  and diet != 'none'
   and diet != 'None, thank you x'
   and diet != 'Nope'
+  and diet != 'No, thank you'
   and diet != 'Nope!'
+  and diet != 'NA!'
   and diet != 'none';
 
 .quit
