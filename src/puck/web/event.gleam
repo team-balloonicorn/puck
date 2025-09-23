@@ -13,10 +13,16 @@ import puck/web.{type Context, p}
 import wisp.{type Request, type Response}
 
 pub const costs = [
-  #("Site fee", 300_000), #("Site camping fee", 80_000),
-  #("Rubbish collection", 10_000), #("Food", 180_000), #("Bar", 50_000),
-  #("Kitchen equipment hire", 34_000), #("Tables + chairs hire", 20_000),
-  #("Firewood", 10_000), #("Transportation", 50_000), #("Speakers", 0),
+  #("Site fee", 300_000),
+  #("Site camping fee", 80_000),
+  #("Rubbish collection", 10_000),
+  #("Food", 180_000),
+  #("Bar", 50_000),
+  #("Kitchen equipment hire", 34_000),
+  #("Tables + chairs hire", 20_000),
+  #("Firewood", 10_000),
+  #("Transportation", 50_000),
+  #("Speakers", 0),
   #("Cleaning supplies, etc", 30_000),
 ]
 
@@ -363,7 +369,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
         them!",
       ),
       html.h2_text([], "When is it?"),
-      p("5pm Thursday the 5th June to 10am Monday the 9th June"),
+      p("5pm Thursday the 30th April to 10am Monday the 4th May"),
       html.h2_text([], "Where is it?"),
       p(
         "A wonderful little woodland festival site, 20 minutes drive from King's
