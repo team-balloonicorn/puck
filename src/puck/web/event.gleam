@@ -317,7 +317,7 @@ fn field_html(question: Question) -> html.Node(a) {
 pub fn application_form(ctx: Context) -> Response {
   html.main([Attr("role", "main"), attrs.class("content")], [
     web.flamingo(),
-    html.h1_text([], "Midsummer Night's Tea Party 2025"),
+    html.h1_text([], "Midsummer Night's Tea Party 2026"),
     web.page_nav(ctx.current_user),
     web.p(
       "One person per submission please! We need to know about everyone who is coming.",
@@ -350,7 +350,7 @@ fn attendance_html(ctx: Context) -> html.Node(a) {
     html.div([attrs.class("content")], [
       web.flamingo(),
       html.Element("hgroup", [], [
-        html.h1_text([], "Midsummer Night's Tea Party 2025"),
+        html.h1_text([], "Midsummer Night's Tea Party 2026"),
         html.p_text([attrs.class("center")], "Welcome, friend!"),
       ]),
     ]),
